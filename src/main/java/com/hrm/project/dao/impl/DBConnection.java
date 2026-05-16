@@ -5,44 +5,33 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    // Đổi "ten_database_cua_ban" thành tên Database thực tế bạn đã tạo trong MySQL
     private static final String URL = "jdbc:mysql://localhost:3306/HRM_DB?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
     private static final String USER = "root";
     private static final String PASSWORD = "123456";
 
-    private static Connection connection = null;
+    // ĐÃ XÓA: Biến static connection dùng chung (Nguyên nhân gây sập luồng)
 
-    // Hàm lấy kết nối
-    public static Connection getConnection() {
-        if (connection == null) {
-            try {
-                // Đăng ký MySQL Driver
-                Class.forName("com.mysql.cj.jdbc.Driver");
+    /**
+     * Hàm lấy kết nối MỚI hoàn toàn mỗi lần gọi.
+     * Các hàm DAO sử dụng xong phải tự bọc try-with-resources để đóng kết nối lại.
+     */
+    public static Connection getConnection() throws SQLException {
+        try {
+            // Đăng ký MySQL Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
 
-                // Mở kết nối
-                connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("Chúc mừng! Kết nối MySQL thành công.");
-            } catch (ClassNotFoundException e) {
-                System.err.println("Lỗi: Không tìm thấy MySQL Driver JAR. Hãy add thư viện vào project!");
-                e.printStackTrace();
-            } catch (SQLException e) {
-                System.err.println("Lỗi kết nối: Sai URL hoặc Database chưa được tạo!");
-                e.printStackTrace();
-            }
+            // Luôn trả về một Connection độc lập mới tinh
+            return DriverManager.getConnection(URL, USER, PASSWORD);
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("Lỗi: Không tìm thấy MySQL Driver JAR. Hãy add thư viện vào project!");
+            throw new SQLException("MySQL Driver not found", e);
         }
-        return connection;
     }
 
-    // Hàm đóng kết nối
+    // Hàm này không cần thiết nữa vì các file DAO đã tự dùng try-with-resources để tự đóng kết nối an toàn
+    @Deprecated
     public static void closeConnection() {
-        if (connection != null) {
-            try {
-                connection.close();
-                connection = null;
-                System.out.println("Đã đóng kết nối an toàn!");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
+        // Để trống để tránh làm vỡ các code cũ của nhóm nếu có chỗ nào lỡ gọi hàm này
     }
 }
