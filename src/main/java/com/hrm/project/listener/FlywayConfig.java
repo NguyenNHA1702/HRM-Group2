@@ -13,25 +13,68 @@ import java.sql.Statement;
 public class FlywayConfig implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        String dbName = "HRM_Group2";
-        String masterUrl = "jdbc:sqlserver://localhost:1433;databaseName=master;encrypt=true;trustServerCertificate=true;";
-        String user = "sa";
-        String pass = "123"; // Mật khẩu của bạn
+        System.out.println("=========================================================");
+        System.out.println("[FLYWAY LOGGER] BẮT ĐẦU KHỞI CHẠY LÝ TRÌNH ĐỒNG BỘ DB...");
 
-        try (Connection conn = DriverManager.getConnection(masterUrl, user, pass);
-             Statement stmt = conn.createStatement()) {
+        String dbName = "HRM_DB";
+        String serverUrl = "jdbc:mysql://localhost:3306/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
+        String user = "root";
+        String pass = "123456";
 
-            // Lệnh kiểm tra và tạo Database nếu chưa tồn tại
-            stmt.executeUpdate("IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '" + dbName + "') " +
-                    "CREATE DATABASE " + dbName);
+        try {
+            System.out.println("[FLYWAY LOGGER] Bước 1: Đang nạp Driver kết nối MySQL...");
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("[FLYWAY LOGGER] -> Nạp Driver MySQL thành công!");
+        } catch (ClassNotFoundException e) {
+            System.err.println("[FLYWAY LOGGER] -> THẤT BẠI: Không tìm thấy Driver MySQL! Kiểm tra lại pom.xml");
+            e.printStackTrace();
+            return;
+        }
 
-            // Sau khi có DB rồi mới chạy Flyway
-            String dbUrl = "jdbc:sqlserver://localhost:1433;databaseName=" + dbName + ";encrypt=true;trustServerCertificate=true;";
-            Flyway flyway = Flyway.configure().dataSource(dbUrl, user, pass).load();
-            flyway.migrate();
+        // Dùng khối try-catch bổ sung bắt RuntimeException từ Flyway
+        try {
+            System.out.println("[FLYWAY LOGGER] Bước 2: Đang kết nối tới MySQL Server gốc (localhost:3306)...");
+            try (Connection conn = DriverManager.getConnection(serverUrl, user, pass);
+                 Statement stmt = conn.createStatement()) {
+
+                System.out.println("[FLYWAY LOGGER] Bước 3: Kiểm tra và tự động tạo Database [" + dbName + "] nếu chưa có...");
+                stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName +
+                        " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                System.out.println("[FLYWAY LOGGER] -> Tạo/Kiểm tra Database [" + dbName + "] thành công!");
+            }
+
+            System.out.println("[FLYWAY LOGGER] Bước 4: Khởi cấu hình tham số cho Flyway Engine...");
+            String dbUrl = "jdbc:mysql://localhost:3306/" + dbName + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
+
+            Flyway flyway = Flyway.configure()
+                    .dataSource(dbUrl, user, pass)
+                    .locations("classpath:db/migration") // Khóa cứng đường dẫn quét thư mục resources công khai
+                    .baselineOnMigrate(true)
+                    .load();
+
+            System.out.println("[FLYWAY LOGGER] Bước 5: Thực thi lệnh quét và chạy file Migration (flyway.migrate())...");
+            int migrationCount = flyway.migrate().migrationsExecuted;
+
+            System.out.println("[FLYWAY LOGGER] -> THÀNH CÔNG RỰC RỠ: Đã chạy thành công " + migrationCount + " file SQL migration!");
+            System.out.println(">>> Flyway Migration đã hoàn tất cấu trúc dữ liệu cho cả nhóm!");
 
         } catch (SQLException e) {
+            System.err.println("[FLYWAY LOGGER] >>> LỖI HỆ THỐNG: Sự cố tương tác JDBC/SQL!");
             e.printStackTrace();
+        } catch (Throwable t) {
+            // ĐÂY LÀ ĐOẠN KHÓA CHỐT: Bắt lỗi sập ngầm của Flyway
+            System.err.println("=========================================================");
+            System.err.println("[FLYWAY LOGGER] >>> PHÁT HIỆN LỖI CHÍ MẠNG KHIẾN APP BỊ SẬP (404):");
+            System.err.println("Lý do: " + t.getMessage());
+            System.err.println("Chi tiết Stack Trace lỗi ẩn dưới đây:");
+            t.printStackTrace();
+            System.err.println("=========================================================");
         }
+        System.out.println("=========================================================");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        // Hàm để trống khi kết thúc vòng đời ứng dụng
     }
 }
