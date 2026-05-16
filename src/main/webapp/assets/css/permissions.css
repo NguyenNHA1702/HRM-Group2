@@ -1,0 +1,22 @@
+/* Hiệu ứng viền mượt khi chuyển Card Role */
+.role-card {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Đổi màu nền mượt khi di chuột qua các ô tích ma trận */
+.perm-cell {
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+/* Tạo hiệu ứng nhấn lún nhẹ khi bấm chuột vào ô phân quyền */
+.perm-cell:active {
+    transform: scale(0.9);
+}
+
+/* Chặn hiện tượng bôi đen văn bản màu xanh khi admin click chuột liên tục */
+.select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
