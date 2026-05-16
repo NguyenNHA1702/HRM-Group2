@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class DBConnection {
     // Đổi "ten_database_cua_ban" thành tên Database thực tế bạn đã tạo trong MySQL
-    private static final String URL = "jdbc:mysql://localhost:3306/HRM_DB?useSSL=false&serverTimezone=UTC";
+    private static final String URL = "jdbc:mysql://localhost:3306/HRM_DB?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
     private static final String USER = "root";
     private static final String PASSWORD = "123456";
 
