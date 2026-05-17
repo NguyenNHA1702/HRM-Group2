@@ -13,7 +13,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet(name = "AuthController", urlPatterns = {"/login", "/logout"})
-public class LoginServlet extends HttpServlet {
+public class LoginController extends HttpServlet {
 
     private final AuthService authService = new AuthServiceImpl();
 
