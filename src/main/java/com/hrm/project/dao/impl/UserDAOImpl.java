@@ -15,7 +15,7 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT * FROM vw_my_profile WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -47,16 +47,45 @@ public class UserDAOImpl implements UserDAO {
         String sql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
+
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getPhone());
             ps.setString(3, user.getPersonalEmail());
             ps.setInt(4, user.getEmployeeId());
-            
+
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public String getPasswordHashByEmployeeId(int employeeId) {
+        String sql = "SELECT password_hash FROM user_accounts WHERE employee_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password_hash");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updatePassword(int employeeId, String newPasswordHash) {
+        String sql = "UPDATE user_accounts SET password_hash = ? WHERE employee_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newPasswordHash);
+            ps.setInt(2, employeeId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
