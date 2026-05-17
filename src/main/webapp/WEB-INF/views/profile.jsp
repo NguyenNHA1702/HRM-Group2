@@ -34,13 +34,14 @@
             color: #64748b;
             font-size: 0.85rem;
         }
-        input[type="text"], input[type="email"], select {
+        input[type="text"], input[type="email"], input[type="password"], select {
             width: 100%;
             padding: 10px 14px;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
             font-size: 0.95rem;
             color: #1e293b;
+            box-sizing: border-box;
         }
         input:read-only {
             background-color: #f8fafc;
@@ -64,6 +65,10 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-save:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
@@ -78,6 +83,7 @@
             <p style="margin: 0; color: #64748b;">Mã nhân viên: <strong>${user.employeeCode}</strong></p>
         </div>
 
+        <%-- Thông báo của phần cập nhật hồ sơ --%>
         <c:if test="${not empty param.success}">
             <div style="padding: 16px; background: #f0fdf4; color: #166534; border-radius: 10px; margin-bottom: 24px; border: 1px solid #bbf7d0;">
                 <i class="fas fa-check-circle"></i> Cập nhật thông tin thành công!
@@ -85,7 +91,6 @@
         </c:if>
 
         <div class="profile-container">
-            <!-- Cột trái: Ảnh và thông tin cố định -->
             <div class="profile-sidebar">
                 <div style="width: 120px; height: 120px; border-radius: 50%; background: #e2e8f0; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                     <c:choose>
@@ -100,7 +105,7 @@
                 <h2 style="margin: 0; font-size: 1.25rem;">${user.fullName}</h2>
                 <p style="color: #64748b; margin: 5px 0;">${user.positionName}</p>
                 <div class="info-badge badge-active">${user.status}</div>
-                
+
                 <div style="margin-top: 30px; text-align: left; background: #f8fafc; padding: 20px; border-radius: 12px;">
                     <div style="margin-bottom: 15px;">
                         <label>Phòng ban</label>
@@ -117,13 +122,13 @@
                 </div>
             </div>
 
-            <!-- Cột phải: Form chỉnh sửa -->
             <div class="profile-main">
+
                 <form action="profile" method="post">
                     <input type="hidden" name="id" value="${user.employeeId}">
-                    
+
                     <h3 style="margin: 0 0 20px 0; font-size: 1.1rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">Thông tin liên hệ</h3>
-                    
+
                     <div class="form-group">
                         <label>Họ và tên</label>
                         <input type="text" name="fullName" value="${user.fullName}" required>
@@ -145,10 +150,50 @@
                         <input type="email" name="personalEmail" value="${user.personalEmail}">
                     </div>
 
-                    <div style="margin-top: 30px;">
+                    <div style="margin-top: 24px;">
                         <button type="submit" class="btn-save">Cập nhật hồ sơ</button>
                     </div>
                 </form>
+
+                <div style="margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 30px;">
+                    <h3 style="margin: 0 0 20px 0; font-size: 1.1rem; color: #1e293b;">Đổi mật khẩu</h3>
+
+                    <%-- Thông báo lỗi/thành công riêng của phần đổi mật khẩu --%>
+                    <c:if test="${not empty param.pwdError}">
+                        <div style="padding: 12px; background: #fef2f2; color: #991b1b; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; border: 1px solid #fca5a5;">
+                            <i class="fas fa-exclamation-circle"></i> ${param.pwdError}
+                        </div>
+                    </c:if>
+
+                    <c:if test="${not empty param.pwdSuccess}">
+                        <div style="padding: 12px; background: #f0fdf4; color: #166534; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; border: 1px solid #bbf7d0;">
+                            <i class="fas fa-check-circle"></i> Đổi mật khẩu thành công!
+                        </div>
+                    </c:if>
+
+                    <form action="change-password" method="post">
+                        <div class="form-group">
+                            <label>Mật khẩu hiện tại</label>
+                            <input type="password" name="currentPassword" required>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group">
+                                <label>Mật khẩu mới</label>
+                                <input type="password" name="newPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Xác nhận mật khẩu mới</label>
+                                <input type="password" name="confirmPassword" required>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px;">
+                            <button type="submit" class="btn-save" style="background: #0f172a;">Đổi mật khẩu</button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
