@@ -10,4 +10,22 @@ public interface RoleDAO {
      * * @return Danh sách các đối tượng RoleWithCountDTO công khai
      */
     List<RoleWithCountDTO> getAllRolesWithCount();
+
+    /**
+     * Cập nhật thông tin vai trò chi tiết
+     * @return true nếu thành công
+     */
+    boolean updateRole(int id, String name, String description, int groupId);
+
+    /**
+     * Kích hoạt hoặc vô hiệu hóa vai trò
+     * @return true nếu thành công
+     */
+    boolean toggleRoleActive(int id, boolean isActive);
+
+    /**
+     * Tạo mới một vai trò
+     * @return true nếu thành công
+     */
+    boolean createRole(String name, String description, int groupId);
 }

@@ -20,4 +20,19 @@ public class RoleServiceImpl implements RoleService {
         // Gọi xuống tầng DAO để lấy dữ liệu trực tiếp từ MySQL
         return roleDAO.getAllRolesWithCount();
     }
+
+    @Override
+    public boolean updateRole(int id, String name, String description, int groupId) {
+        return roleDAO.updateRole(id, name, description, groupId);
+    }
+
+    @Override
+    public boolean toggleRoleActive(int id, boolean isActive) {
+        return roleDAO.toggleRoleActive(id, isActive);
+    }
+
+    @Override
+    public boolean createRole(String name, String description, int groupId) {
+        return roleDAO.createRole(name, description, groupId);
+    }
 }

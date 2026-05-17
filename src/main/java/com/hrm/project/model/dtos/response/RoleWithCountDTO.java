@@ -5,17 +5,52 @@ public class RoleWithCountDTO {
     private String name;
     private String description;
     private int userCount;
+    private boolean isActive;
+    private int groupId;
+    private String groupName;
 
     // Default Constructor
     public RoleWithCountDTO() {
     }
 
     // Full Constructor
-    public RoleWithCountDTO(int id, String name, String description, int userCount) {
+    public RoleWithCountDTO(int id, String name, String description, int userCount, boolean isActive, int groupId, String groupName) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.userCount = userCount;
+        this.isActive = isActive;
+        this.groupId = groupId;
+        this.groupName = groupName;
+    }
+
+    // Getters and Setters
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
     // Getters and Setters
