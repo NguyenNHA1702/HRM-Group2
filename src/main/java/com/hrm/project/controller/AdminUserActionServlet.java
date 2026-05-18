@@ -1,6 +1,7 @@
 package com.hrm.project.controller;
 
 import com.hrm.project.dao.UserDAO;
+import com.hrm.project.dao.impl.UserDAOImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -17,7 +18,7 @@ import java.sql.SQLException;
  */
 public class AdminUserActionServlet extends HttpServlet {
 
-    private final UserDAO userDAO = new UserDAO();
+    private final UserDAO userDAO = new UserDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)

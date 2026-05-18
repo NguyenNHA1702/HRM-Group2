@@ -1,6 +1,7 @@
 package com.hrm.project.controller;
 
 import com.hrm.project.dao.UserDAO;
+import com.hrm.project.dao.impl.UserDAOImpl;
 import com.hrm.project.model.UserAccountDTO;
 import com.hrm.project.model.UserStatDTO;
 
@@ -19,7 +20,7 @@ import java.util.List;
  */
 public class AdminUserServlet extends HttpServlet {
 
-    private final UserDAO userDAO = new UserDAO();
+    private final UserDAO userDAO = new UserDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

@@ -1,7 +1,7 @@
 // UserDAOImpl.java
 package com.hrm.project.dao.impl;
 
-import com.hrm.project.dao.RolePermissionDAO;
+import com.hrm.project.dao.UserDAO;
 import com.hrm.project.model.UserAccountDTO;
 import com.hrm.project.model.UserStatDTO;
 import com.hrm.project.util.DBUtil;
@@ -12,7 +12,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserDAOImpl implements RolePermissionDAO.UserDAO {
+public class UserDAOImpl implements UserDAO {
 
     @Override
     public int findEmployeeIdByEmail(String email) throws SQLException {
