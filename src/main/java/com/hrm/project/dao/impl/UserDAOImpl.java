@@ -406,7 +406,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public boolean updateUserByAdmin(UserAccount user) {
         String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, status = ? WHERE id = ?";
-        String updateUserAccountSql = "UPDATE user_accounts SET role_id = ?, is_active = ? WHERE employee_id = ?";
+        String updateUserAccountSql = "UPDATE user_accounts SET role_id = ? WHERE employee_id = ?";
 
         Connection conn = null;
         try {
@@ -436,8 +436,7 @@ public class UserDAOImpl implements UserDAO {
 
             try (PreparedStatement psAcc = conn.prepareStatement(updateUserAccountSql)) {
                 psAcc.setInt(1, user.getRoleId());
-                psAcc.setBoolean(2, user.isActive());
-                psAcc.setInt(3, user.getEmployeeId());
+                psAcc.setInt(2, user.getEmployeeId());
                 psAcc.executeUpdate();
             }
 
