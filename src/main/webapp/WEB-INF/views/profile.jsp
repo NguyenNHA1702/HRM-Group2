@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Hồ sơ cá nhân - HRMS</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
     <style>
         .profile-container {
             background: white;

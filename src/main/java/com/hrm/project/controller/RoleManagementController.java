@@ -33,7 +33,7 @@ public class RoleManagementController extends HttpServlet {
         // Đẩy danh sách roles vào request attribute để giao diện JSP có thể đọc được
         request.setAttribute("roles", roles);
 
-        // Chuyển tiếp (Forward) request sang giao diện permissions.jsp nằm trong thư mục view của admin
-        request.getRequestDispatcher("/WEB-INF/views/admin/permissions.jsp").forward(request, response);
+        // Chuyển tiếp (Forward) request sang giao diện permission.jsp nằm trong thư mục view của admin
+        request.getRequestDispatcher("/WEB-INF/views/admin/permission.jsp").forward(request, response);
     }
 }

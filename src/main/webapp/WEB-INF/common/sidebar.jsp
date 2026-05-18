@@ -132,14 +132,14 @@
                         Lương
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/quan-ly-users') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/quan-ly-users">
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/users') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/users">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         Quản lý Users
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/phan-quyen') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/phan-quyen">
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/permissions') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/permissions">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         Phân quyền
                     </a>
@@ -156,30 +156,32 @@
 
     <div class="sidebar-footer">
         <div class="sidebar-user">
-            <div class="user-avatar">
-                <c:choose>
-                    <c:when test="${not empty sessionScope.avatarUrl}">
-                        <img src="${pageContext.request.contextPath}${sessionScope.avatarUrl}" alt="Avatar">
-                    </c:when>
-                    <c:when test="${not empty sessionScope.fullName}">
-                        <c:out value="${sessionScope.fullName.substring(0, 1).toUpperCase()}" />
-                    </c:when>
-                    <c:otherwise>U</c:otherwise>
-                </c:choose>
-            </div>
-            <div class="user-info">
-                <span class="user-name">
-                    <c:out value="${not empty sessionScope.fullName ? sessionScope.fullName : 'Hệ thống'}" />
-                </span>
-                <span class="user-role">
+            <a href="${pageContext.request.contextPath}/profile" class="user-profile-link" title="Xem hồ sơ cá nhân">
+                <div class="user-avatar">
                     <c:choose>
-                        <c:when test="${sessionScope.roleGroup eq 'ADMIN'}">Admin</c:when>
-                        <c:when test="${sessionScope.roleGroup eq 'HR'}">Quản lý Nhân sự</c:when>
-                        <c:when test="${sessionScope.roleGroup eq 'MANAGER'}">Quản lý Bộ phận</c:when>
-                        <c:otherwise>Nhân viên</c:otherwise>
+                        <c:when test="${not empty sessionScope.avatarUrl}">
+                            <img src="${pageContext.request.contextPath}${sessionScope.avatarUrl}" alt="Avatar">
+                        </c:when>
+                        <c:when test="${not empty sessionScope.fullName}">
+                            <c:out value="${sessionScope.fullName.substring(0, 1).toUpperCase()}" />
+                        </c:when>
+                        <c:otherwise>U</c:otherwise>
                     </c:choose>
-                </span>
-            </div>
+                </div>
+                <div class="user-info">
+                    <span class="user-name">
+                        <c:out value="${not empty sessionScope.fullName ? sessionScope.fullName : 'Hệ thống'}" />
+                    </span>
+                    <span class="user-role">
+                        <c:choose>
+                            <c:when test="${sessionScope.roleGroup eq 'ADMIN'}">Admin</c:when>
+                            <c:when test="${sessionScope.roleGroup eq 'HR'}">Quản lý Nhân sự</c:when>
+                            <c:when test="${sessionScope.roleGroup eq 'MANAGER'}">Quản lý Bộ phận</c:when>
+                            <c:otherwise>Nhân viên</c:otherwise>
+                        </c:choose>
+                    </span>
+                </div>
+            </a>
             <a href="${pageContext.request.contextPath}/logout" class="logout-icon" title="Đăng xuất">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>

@@ -10,6 +10,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
 
     <style>
         :root {
@@ -54,30 +56,6 @@
             min-height: 100vh;
         }
 
-        /* ====================== SIDEBAR ====================== */
-        .sidebar {
-            width: var(--sidebar-w);
-            background: #1e2433;
-            position: fixed;
-            top: 0; left: 0; bottom: 0;
-            z-index: 200;
-            color: #94a3b8;
-        }
-        /* (Bạn có thể bổ sung nội dung sidebar nếu cần) */
-
-        /* ====================== MAIN CONTENT ====================== */
-        .main-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .page-content {
-            width: 100%;
-            max-width: 1280px;
-            padding: 40px 36px;
-            flex: 1;
-        }
 
         /* ====================== PAGE HEADER ====================== */
         .page-header {
@@ -406,11 +384,9 @@
     </style>
 </head>
 <body>
-
-<%-- sidebar.jsp — nếu project không dùng sidebar, có thể để trống file này --%>
-
-<div class="main-wrapper">
-    <div class="page-content">
+<div class="main-layout">
+    <%@ include file="../../common/sidebar.jsp" %>
+    <main class="content-area">
 
 <script>window.actionUrl = '${pageContext.request.contextPath}/admin/users/action';</script>
 
@@ -551,11 +527,11 @@
                             </td>
                             <td>
                                 <div class="actions">
-                                    <button class="action-btn edit"
-                                            title="Chỉnh sửa"
-                                            onclick="openModal('editModal_${u.id}')">
+                                    <a href="${pageContext.request.contextPath}/admin/user/update?id=${u.employeeId}"
+                                       class="action-btn edit"
+                                       title="Chỉnh sửa">
                                         <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
+                                    </a>
 
                                     <c:choose>
                                         <c:when test="${u.active}">
@@ -656,7 +632,7 @@
     <input type="hidden" name="userId" id="deleteUserId" value="">
 </form>
 
-</div><%-- /page-content --%>
+</main></div>
 
 <script>
 function openModal(id) {

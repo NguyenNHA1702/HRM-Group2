@@ -26,10 +26,6 @@
         <url-pattern>/admin/*</url-pattern>
     </filter-mapping>
 
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>/assets/*</url-pattern>
-    </servlet-mapping>
 
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
@@ -44,14 +40,6 @@
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>DashboardServlet</servlet-name>
-        <servlet-class>com.hrm.project.controller.DashboardServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>DashboardServlet</servlet-name>
-        <url-pattern>/dashboard</url-pattern>
-    </servlet-mapping>
 
     <servlet>
         <servlet-name>AuthServlet</servlet-name>
@@ -80,14 +68,7 @@
         <url-pattern>/admin/users/action</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>IndexServlet</servlet-name>
-        <servlet-class>com.hrm.project.controller.IndexServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>IndexServlet</servlet-name>
-        <url-pattern>/</url-pattern>
-    </servlet-mapping>
+
 
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>

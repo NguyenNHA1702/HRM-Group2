@@ -7,6 +7,8 @@
     <title>Cập nhật nhân viên - Admin</title>
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
     <style>
         body {
             font-family: 'Inter', sans-serif;

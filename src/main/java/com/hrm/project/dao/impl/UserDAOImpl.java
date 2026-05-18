@@ -107,6 +107,7 @@ public class UserDAOImpl implements UserDAO {
 
         StringBuilder sql = new StringBuilder(
                 "SELECT ua.id," +
+                        " ua.employee_id," +
                         " ua.username," +
                         " ua.is_active," +
                         " ua.last_login_at," +
@@ -542,6 +543,7 @@ public class UserDAOImpl implements UserDAO {
         UserAccountDTO dto = new UserAccountDTO();
 
         dto.setId(rs.getInt("id"));
+        dto.setEmployeeId(rs.getInt("employee_id"));
         dto.setUsername(rs.getString("username"));
         dto.setActive(rs.getBoolean("is_active"));
         dto.setForceResetPwd(rs.getBoolean("force_reset_pwd"));

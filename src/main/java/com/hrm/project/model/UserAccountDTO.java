@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class UserAccountDTO {
 
     private int     id;
+    private int     employeeId;        // linked employee ID
     private String  username;          // email dang nhap (work_email)
     private String  fullName;
     private String  roleGroupCode;     // ADMIN | HR | MANAGER | EMPLOYEE
@@ -24,6 +25,10 @@ public class UserAccountDTO {
     // --- Getters / Setters --------------------------------------
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+
+    public int getEmployeeId() { return employeeId; }
+    public void setEmployeeId(int employeeId) { this.employeeId = employeeId; }
+
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

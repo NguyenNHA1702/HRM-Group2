@@ -218,3 +218,21 @@
     transition: background .15s;
 }
 .login-page .demo-fill:hover { background: var(--brand-light); }
+
+.login-page .form-actions-helper {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+    margin-top: -6px;
+}
+.login-page .forgot-password-link {
+    font-size: 13px;
+    color: var(--brand);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+.login-page .forgot-password-link:hover {
+    color: var(--brand-dark);
+    text-decoration: underline;
+}
