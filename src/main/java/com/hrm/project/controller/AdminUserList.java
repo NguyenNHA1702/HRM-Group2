@@ -18,7 +18,7 @@ import java.util.List;
  * URL: GET /admin/users
  *      Params: keyword, roleGroup, status
  */
-public class AdminUserServlet extends HttpServlet {
+public class AdminUserList extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAOImpl();
 

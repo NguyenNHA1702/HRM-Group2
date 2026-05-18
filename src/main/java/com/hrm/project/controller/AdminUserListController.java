@@ -16,7 +16,7 @@ import java.sql.SQLException;
  * POST /admin/users/action
  * Param: action = create | lock | unlock | resetPwd | delete
  */
-public class AdminUserActionServlet extends HttpServlet {
+public class AdminUserListController extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAOImpl();
 

@@ -13,7 +13,7 @@
 
     <servlet>
         <servlet-name>AdminUserServlet</servlet-name>
-        <servlet-class>com.hrm.project.controller.AdminUserServlet</servlet-class>
+        <servlet-class>com.hrm.project.controller.AdminUserList</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AdminUserServlet</servlet-name>
@@ -22,7 +22,7 @@
 
     <servlet>
         <servlet-name>AdminUserActionServlet</servlet-name>
-        <servlet-class>com.hrm.project.controller.AdminUserActionServlet</servlet-class>
+        <servlet-class>com.hrm.project.controller.AdminUserListController</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>AdminUserActionServlet</servlet-name>
