@@ -110,7 +110,7 @@ public class UserDAOImpl implements UserDAO {
                         " ua.employee_id," +
                         " ua.username," +
                         " ua.is_active," +
-                        " ua.last_login_at," +
+                        " (SELECT MAX(created_at) FROM user_sessions us WHERE us.user_account_id = ua.id) AS last_login_at," + // Lay session moi nhat
                         " ua.force_reset_pwd," +
                         " e.full_name," +
                         " e.employee_code," +
