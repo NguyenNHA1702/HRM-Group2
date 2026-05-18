@@ -58,6 +58,10 @@
                 </div>
             </div>
 
+            <div class="form-actions-helper">
+                <a href="${pageContext.request.contextPath}/forgot-password" class="forgot-password-link">Quên mật khẩu?</a>
+            </div>
+
             <button type="submit" class="btn-login">Đăng nhập</button>
         </form>
         <%-- Danh sách tài khoản mẫu dùng nhanh --%>

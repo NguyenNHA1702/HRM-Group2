@@ -199,3 +199,38 @@
     background: #fee2e2;
     color: #ef4444;
 }
+
+/* ── Custom profile link inside sidebar footer ── */
+.user-profile-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none !important;
+    color: inherit !important;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 6px;
+    margin: -6px;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.user-profile-link:hover {
+    background: #f1f5f9;
+    text-decoration: none !important;
+}
+
+.user-profile-link:active {
+    transform: scale(0.98);
+}
+
+.user-profile-link .user-name {
+    text-decoration: none !important;
+    color: #1e293b !important;
+}
+
+.user-profile-link .user-role {
+    text-decoration: none !important;
+    color: #94a3b8 !important;
+}

@@ -26,7 +26,7 @@ public class RolePermissionDAOImpl implements RolePermissionDAO {
                 "ORDER BY m.id ASC";
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, roleId);
 
@@ -73,7 +73,8 @@ public class RolePermissionDAOImpl implements RolePermissionDAO {
                     psIns.setInt(1, roleId);
                     psIns.setInt(2, perm.getModuleId());
 
-                    // Chuyển đổi dữ liệu kiểu boolean từ Java sang dạng số 1/0 tương ứng trong MySQL
+                    // Chuyển đổi dữ liệu kiểu boolean từ Java sang dạng số 1/0 tương ứng trong
+                    // MySQL
                     psIns.setInt(3, perm.isView() ? 1 : 0);
                     psIns.setInt(4, perm.isCreate() ? 1 : 0);
                     psIns.setInt(5, perm.isEdit() ? 1 : 0);

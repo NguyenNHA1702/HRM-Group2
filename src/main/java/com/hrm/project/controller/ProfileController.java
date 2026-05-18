@@ -12,18 +12,23 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebServlet(name = "ProfileController", urlPatterns = {"/profile"})
+@WebServlet(name = "ProfileController", urlPatterns = { "/profile" })
 public class ProfileController extends HttpServlet {
 
     private UserDAO userDAO = new UserDAOImpl();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        
-        Integer userId = (Integer) session.getAttribute("userId");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("employeeId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        Integer userId = (Integer) session.getAttribute("employeeId");
         if (userId == null) {
-            userId = 1; // ID mẫu từ database Tùng gửi
+            userId = (Integer) session.getAttribute("userId");
         }
 
         UserAccount user = userDAO.getUserById(userId);
@@ -36,7 +41,14 @@ public class ProfileController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("employeeId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
         int id = Integer.parseInt(request.getParameter("id"));
         String fullName = request.getParameter("fullName");
