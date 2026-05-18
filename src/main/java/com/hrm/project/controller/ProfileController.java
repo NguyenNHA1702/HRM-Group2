@@ -43,6 +43,12 @@ public class ProfileController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("employeeId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
         int id = Integer.parseInt(request.getParameter("id"));
         String fullName = request.getParameter("fullName");
