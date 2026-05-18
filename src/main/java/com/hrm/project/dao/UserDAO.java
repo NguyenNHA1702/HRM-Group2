@@ -1,6 +1,10 @@
 package com.hrm.project.dao;
 
 import com.hrm.project.model.UserAccount;
+import com.hrm.project.model.Department;
+import com.hrm.project.model.Position;
+import com.hrm.project.model.Role;
+import java.util.List;
 
 public interface UserDAO {
     UserAccount getUserById(int id);
