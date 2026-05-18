@@ -25,6 +25,8 @@ public class AdminUserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
 
         String keyword   = req.getParameter("keyword");
         String roleGroup = req.getParameter("roleGroup");

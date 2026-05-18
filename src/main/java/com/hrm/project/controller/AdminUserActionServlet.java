@@ -23,6 +23,8 @@ public class AdminUserActionServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
 
         String action = req.getParameter("action");
         String ctx    = req.getContextPath();

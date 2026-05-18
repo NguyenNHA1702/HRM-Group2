@@ -434,7 +434,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Quản lý Users</h1>
-        <p class="page-sub">Xin chào, ${sessionScope.currentUser.fullName}</p>
+        <p class="page-sub">Xin chào, ${sessionScope.fullName}</p>
     </div>
     <div class="header-actions">
         <a href="#" class="bell-btn">
