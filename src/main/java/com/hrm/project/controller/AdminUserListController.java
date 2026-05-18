@@ -16,13 +16,15 @@ import java.sql.SQLException;
  * POST /admin/users/action
  * Param: action = create | lock | unlock | resetPwd | delete
  */
-public class AdminUserActionServlet extends HttpServlet {
+public class AdminUserListController extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAOImpl();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
 
         String action = req.getParameter("action");
         String ctx    = req.getContextPath();

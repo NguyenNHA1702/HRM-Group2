@@ -18,13 +18,15 @@ import java.util.List;
  * URL: GET /admin/users
  *      Params: keyword, roleGroup, status
  */
-public class AdminUserServlet extends HttpServlet {
+public class AdminUserList extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
 
         String keyword   = req.getParameter("keyword");
         String roleGroup = req.getParameter("roleGroup");

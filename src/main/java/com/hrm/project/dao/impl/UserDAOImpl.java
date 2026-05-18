@@ -9,9 +9,8 @@ import com.hrm.project.model.UserAccount;
 import com.hrm.project.model.UserAccountDTO;
 import com.hrm.project.model.UserStatDTO;
 import com.hrm.project.util.DBUtil;
+import org.mindrot.jbcrypt.BCrypt;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,8 +44,8 @@ public class UserDAOImpl implements UserDAO {
         String empCode = "EMP" + (System.currentTimeMillis() % 10_000_000_000L);
 
         String sql = "INSERT INTO employees"
-                + " (employee_code, full_name, personal_email, hire_date, status)"
-                + " VALUES (?, ?, ?, CURDATE(), 'ACTIVE')";
+                + " (employee_code, full_name, personal_email, work_email, hire_date, status)"
+                + " VALUES (?, ?, ?, ?, CURDATE(), 'ACTIVE')";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -54,6 +53,7 @@ public class UserDAOImpl implements UserDAO {
             ps.setString(1, empCode);
             ps.setString(2, fullName);
             ps.setString(3, email);
+            ps.setString(4, email);
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -94,7 +94,7 @@ public class UserDAOImpl implements UserDAO {
 
             ps.setInt(1, employeeId);
             ps.setString(2, email);
-            ps.setString(3, hashPassword(rawPassword));
+            ps.setString(3, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
             ps.setInt(4, roleId);
             ps.executeUpdate();
         }
@@ -257,7 +257,7 @@ public class UserDAOImpl implements UserDAO {
     public UserAccount getUserById(int id) {
         String sql = "SELECT * FROM vw_my_profile WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -289,7 +289,7 @@ public class UserDAOImpl implements UserDAO {
         // Cập nhật thông tin vào bảng employees
         String sql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getPhone());
@@ -312,9 +312,9 @@ public class UserDAOImpl implements UserDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(new Department(
-                    rs.getInt("id"),
-                    rs.getString("code"),
-                    rs.getString("name")
+                        rs.getInt("id"),
+                        rs.getString("code"),
+                        rs.getString("name")
                 ));
             }
         } catch (SQLException e) {
@@ -332,10 +332,10 @@ public class UserDAOImpl implements UserDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(new Position(
-                    rs.getInt("id"),
-                    rs.getString("code"),
-                    rs.getString("name"),
-                    rs.getInt("department_id")
+                        rs.getInt("id"),
+                        rs.getString("code"),
+                        rs.getString("name"),
+                        rs.getInt("department_id")
                 ));
             }
         } catch (SQLException e) {
@@ -353,13 +353,13 @@ public class UserDAOImpl implements UserDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(new Role(
-                    rs.getInt("id"),
-                    rs.getInt("group_id"),
-                    rs.getString("name"),
-                    rs.getString("description"),
-                    rs.getBoolean("is_active"),
-                    rs.getTimestamp("created_at"),
-                    rs.getTimestamp("updated_at")
+                        rs.getInt("id"),
+                        rs.getInt("group_id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getBoolean("is_active"),
+                        rs.getTimestamp("created_at"),
+                        rs.getTimestamp("updated_at")
                 ));
             }
         } catch (SQLException e) {
@@ -371,10 +371,10 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public UserAccount getUserForAdminUpdate(int id) {
         String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
-                     "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, ua.role_id, ua.is_active " +
-                     "FROM employees e " +
-                     "LEFT JOIN user_accounts ua ON e.id = ua.employee_id " +
-                     "WHERE e.id = ?";
+                "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, ua.role_id, ua.is_active " +
+                "FROM employees e " +
+                "LEFT JOIN user_accounts ua ON e.id = ua.employee_id " +
+                "WHERE e.id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -481,9 +481,9 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public UserAccount getUserByEmail(String email) {
         String sql = "SELECT e.id AS employee_id, e.work_email, e.personal_email, e.full_name " +
-                     "FROM employees e " +
-                     "JOIN user_accounts ua ON e.id = ua.employee_id " +
-                     "WHERE e.work_email = ? OR e.personal_email = ?";
+                "FROM employees e " +
+                "JOIN user_accounts ua ON e.id = ua.employee_id " +
+                "WHERE e.work_email = ? OR e.personal_email = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, email);
@@ -561,20 +561,4 @@ public class UserDAOImpl implements UserDAO {
         return dto;
     }
 
-    private String hashPassword(String raw) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] bytes = md.digest(raw.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-
-            StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
-                sb.append(String.format("%02x", b));
-            }
-
-            return sb.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 not available", e);
-        }
-    }
 }
