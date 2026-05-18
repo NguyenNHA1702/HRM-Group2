@@ -39,7 +39,7 @@
   <jsp:include page="/WEB-INF/common/sidebar.jsp" />
 
   <!-- 3. Main Dashboard Area -->
-  <main class="flex-1 p-8 space-y-8 overflow-y-auto max-w-[calc(100vw-260px)]">
+<main class="flex-1 p-8 space-y-8 overflow-y-auto overflow-x-hidden" style="margin-left: 260px; padding-bottom: 100px;">
 
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="toast-container"></div>
@@ -148,11 +148,11 @@
         </div>
       </div>
       
-      <div class="overflow-x-auto">
+<div class="overflow-x-auto w-full">
         <table class="w-full min-w-[700px]">
           <thead>
             <tr class="bg-slate-100/50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-xs font-bold">
-              <th class="px-8 py-4 text-left w-1/3">Module hệ thống</th>
+<th class="px-8 py-4 text-left" style="min-width:220px">Module hệ thống</th>
               <th class="px-6 py-4 text-center">Xem (View)</th>
               <th class="px-6 py-4 text-center">Tạo mới (Create)</th>
               <th class="px-6 py-4 text-center">Sửa (Edit)</th>
@@ -182,7 +182,7 @@
 <jsp:include page="/WEB-INF/common/footer.jsp" />
 
 <!-- 5. Edit/Create Role Modal -->
-<div id="role-modal" class="modal-overlay">
+<div id="role-modal" class="modal-overlay" style="z-index: 2000;">
   <div class="modal-content">
     <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
       <h3 id="modal-title" class="text-base font-bold text-slate-900">Chỉnh sửa vai trò</h3>
@@ -228,7 +228,7 @@
 </div>
 
 <!-- Custom Confirmation Dialog Box -->
-<div id="confirm-modal" class="modal-overlay">
+<div id="confirm-modal" class="modal-overlay" style="z-index: 2000;">
   <div class="modal-content max-w-sm p-6 text-center">
     <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-lg mx-auto mb-4">
       <i class="fa-solid fa-circle-question"></i>
