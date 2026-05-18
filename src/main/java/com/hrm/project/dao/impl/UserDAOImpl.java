@@ -12,6 +12,10 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class UserDAOImpl implements UserDAO {
 
@@ -275,6 +279,7 @@ public class UserDAOImpl implements UserDAO {
         return null;
     }
 
+    @Override
     public boolean updateProfile(UserAccount user) {
         // Cập nhật thông tin vào bảng employees
         String sql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ? WHERE id = ?";
@@ -297,7 +302,6 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT password_hash FROM user_accounts WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, employeeId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -314,7 +318,6 @@ public class UserDAOImpl implements UserDAO {
         String sql = "UPDATE user_accounts SET password_hash = ? WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, newPasswordHash);
             ps.setInt(2, employeeId);
             return ps.executeUpdate() > 0;
@@ -344,6 +347,7 @@ public class UserDAOImpl implements UserDAO {
         if (ts != null) {
             dto.setLastLoginAt(ts.toLocalDateTime());
         }
+
 
         return dto;
     }
