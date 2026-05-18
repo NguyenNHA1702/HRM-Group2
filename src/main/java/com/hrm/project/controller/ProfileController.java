@@ -20,14 +20,15 @@ public class ProfileController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("employeeId") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         Integer userId = (Integer) session.getAttribute("employeeId");
         if (userId == null) {
             userId = (Integer) session.getAttribute("userId");
-        }
-        if (userId == null) {
-            userId = 1;
         }
 
         UserAccount user = userDAO.getUserById(userId);
