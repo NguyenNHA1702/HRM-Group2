@@ -168,12 +168,12 @@ public class UserDAOImpl implements UserDAO {
     public boolean updateUserByAdmin(UserAccount user) {
         String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, status = ? WHERE id = ?";
         String updateUserAccountSql = "UPDATE user_accounts SET role_id = ?, is_active = ? WHERE employee_id = ?";
-        
+
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
-            
+
             try (PreparedStatement psEmp = conn.prepareStatement(updateEmployeeSql)) {
                 psEmp.setString(1, user.getFullName());
                 psEmp.setString(2, user.getPhone());
@@ -194,14 +194,14 @@ public class UserDAOImpl implements UserDAO {
                 psEmp.setInt(9, user.getEmployeeId());
                 psEmp.executeUpdate();
             }
-            
+
             try (PreparedStatement psAcc = conn.prepareStatement(updateUserAccountSql)) {
                 psAcc.setInt(1, user.getRoleId());
                 psAcc.setBoolean(2, user.isActive());
                 psAcc.setInt(3, user.getEmployeeId());
                 psAcc.executeUpdate();
             }
-            
+
             conn.commit();
             return true;
         } catch (SQLException e) {
@@ -265,17 +265,34 @@ public class UserDAOImpl implements UserDAO {
         return null;
     }
 
-    @Override
-    public boolean updatePassword(int employeeId, String hashedPassword) {
+
+
+    public String getPasswordHashByEmployeeId(int employeeId) {
+        String sql = "SELECT password_hash FROM user_accounts WHERE employee_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("password_hash");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updatePassword(int employeeId, String newPasswordHash) {
         String sql = "UPDATE user_accounts SET password_hash = ? WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, hashedPassword);
+            ps.setString(1, newPasswordHash);
             ps.setInt(2, employeeId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
 }

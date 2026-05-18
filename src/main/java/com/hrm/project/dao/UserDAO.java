@@ -1,14 +1,11 @@
 package com.hrm.project.dao;
 
-import com.hrm.project.model.Department;
-import com.hrm.project.model.Position;
-import com.hrm.project.model.Role;
 import com.hrm.project.model.UserAccount;
-import java.util.List;
 
 public interface UserDAO {
     UserAccount getUserById(int id);
     boolean updateProfile(UserAccount user);
+    String getPasswordHashByEmployeeId(int employeeId);
 
     List<Department> getAllDepartments();
     List<Position> getAllPositions();
