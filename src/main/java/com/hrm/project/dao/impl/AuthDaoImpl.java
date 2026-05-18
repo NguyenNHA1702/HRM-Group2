@@ -15,7 +15,6 @@ public class AuthDaoImpl implements AuthDao {
                 "JOIN user_accounts ua ON e.employee_id = ua.employee_id " +
                 "WHERE e.work_email = ? AND ua.is_active = 1";
 
-        System.out.println("[DEBUG LOGIN] Đang kiểm tra Email: [" + email + "] - Mật khẩu thô nhập vào: [" + passwordRaw + "]");
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

@@ -13,6 +13,14 @@ public class UserAccount {
     private String roleName;
     private String managerName;
     private String status;
+    
+    // Additional fields for Admin Update
+    private String dateOfBirth;
+    private String gender;
+    private int departmentId;
+    private int positionId;
+    private int roleId;
+    private boolean isActive;
 
     public UserAccount() {}
 
@@ -52,4 +60,22 @@ public class UserAccount {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+
+    public int getDepartmentId() { return departmentId; }
+    public void setDepartmentId(int departmentId) { this.departmentId = departmentId; }
+
+    public int getPositionId() { return positionId; }
+    public void setPositionId(int positionId) { this.positionId = positionId; }
+
+    public int getRoleId() { return roleId; }
+    public void setRoleId(int roleId) { this.roleId = roleId; }
+
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean isActive) { this.isActive = isActive; }
 }
