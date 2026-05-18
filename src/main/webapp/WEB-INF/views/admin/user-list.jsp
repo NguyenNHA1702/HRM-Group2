@@ -16,10 +16,15 @@
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"/>
 
     <link rel="stylesheet"
+          href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
+
+    <link rel="stylesheet"
           href="${pageContext.request.contextPath}/assets/css/user-list.css"/>
 </head>
 
 <body>
+
+<jsp:include page="/WEB-INF/common/sidebar.jsp" />
 
 <div class="main-wrapper">
     <div class="page-content">
@@ -55,12 +60,7 @@
                 </p>
             </div>
 
-            <div class="header-actions">
-                <a href="#" class="bell-btn">
-                    <i class="fa-solid fa-bell"></i>
-                    <span class="bell-badge">2</span>
-                </a>
-            </div>
+
         </div>
 
         <%-- Stats Cards --%>
@@ -386,7 +386,7 @@
                                placeholder="Nhập bất kỳ địa chỉ email nào"
                                required>
 
-                       
+
 
                     </div>
 
@@ -423,8 +423,6 @@
                         <input type="password"
                                id="password"
                                name="password"
-                               placeholder="Tối thiểu 8 ký tự"
-                               minlength="8"
                                required>
 
                     </div>

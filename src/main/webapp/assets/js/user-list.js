@@ -1,5 +1,6 @@
 function openModal(id) {
     const el = document.getElementById(id);
+
     if (el) {
         el.classList.add('open');
     }
@@ -7,6 +8,7 @@ function openModal(id) {
 
 function closeModal(id) {
     const el = document.getElementById(id);
+
     if (el) {
         el.classList.remove('open');
     }
@@ -33,13 +35,14 @@ document.addEventListener('keydown', e => {
 document.querySelectorAll('.filter-auto').forEach(sel => {
     sel.addEventListener('change', () => {
         const f = document.getElementById('filterForm');
+
         if (f) {
             f.submit();
         }
     });
 });
 
-/* Debounce search 600ms */
+/* Debounce search */
 (function () {
     const inp = document.getElementById('searchInput');
 
@@ -70,13 +73,13 @@ function _post(params) {
     form.action = ACTION_URL;
 
     Object.entries(params).forEach(([k, v]) => {
-        const i = document.createElement('input');
+        const input = document.createElement('input');
 
-        i.type = 'hidden';
-        i.name = k;
-        i.value = v;
+        input.type = 'hidden';
+        input.name = k;
+        input.value = v;
 
-        form.appendChild(i);
+        form.appendChild(input);
     });
 
     document.body.appendChild(form);
@@ -117,7 +120,7 @@ function confirmDelete(id, name) {
     }
 }
 
-/* Flash auto hide after 4s */
+/* Flash auto hide */
 setTimeout(() => {
     document.querySelectorAll('.flash').forEach(el => {
         el.style.transition = 'opacity .5s';
