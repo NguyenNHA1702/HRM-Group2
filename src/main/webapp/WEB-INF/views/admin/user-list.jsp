@@ -257,11 +257,10 @@
 
                                     <c:choose>
 
-                                        <c:when test="${u.lastLoginAt != null}">
-                                            <fmt:formatDate
-                                                    value="${u.lastLoginAt}"
-                                                    pattern="dd/MM/yyyy HH:mm"/>
-                                        </c:when>
+                                       <c:when test="${u.lastLoginAt != null}">
+                                                                                   <%-- Su dung cac thuoc tinh cua LocalDateTime va format so co 0 o dau --%>
+                                                                                   <fmt:formatNumber value="${u.lastLoginAt.dayOfMonth}" pattern="00"/>/<fmt:formatNumber value="${u.lastLoginAt.monthValue}" pattern="00"/>/${u.lastLoginAt.year} <fmt:formatNumber value="${u.lastLoginAt.hour}" pattern="00"/>:<fmt:formatNumber value="${u.lastLoginAt.minute}" pattern="00"/>
+                                                                               </c:when>
 
                                         <c:otherwise>-</c:otherwise>
 
