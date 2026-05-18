@@ -18,32 +18,21 @@
 
   <main class="content-area">
 
-    <!-- Page header -->
     <div class="page-header">
       <div>
         <h1>Dashboard Admin</h1>
         <p class="subtitle">Tổng quan hệ thống &amp; người dùng</p>
       </div>
-      <div class="page-header-right">
-        <a href="#" class="notif-btn" title="Thông báo">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-        </a>
-      </div>
     </div>
 
-    <!-- ── Stat cards — dùng stats (AdminStatsDto) ── -->
     <div class="stats-grid mb-24">
-
       <div class="stat-card">
         <div>
           <p class="stat-label">Tổng Users</p>
           <p class="stat-value">${stats.totalActiveUsers}</p>
         </div>
         <div class="stat-icon icon-blue">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
         </div>
       </div>
 
@@ -53,7 +42,7 @@
           <p class="stat-value">${stats.activeToday}</p>
         </div>
         <div class="stat-icon icon-green">
-          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
       </div>
 
@@ -63,57 +52,53 @@
           <p class="stat-value">${stats.totalRoles}</p>
         </div>
         <div class="stat-icon icon-purple">
-          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/></svg>
         </div>
       </div>
 
       <div class="stat-card">
         <div>
           <p class="stat-label">Tăng trưởng</p>
-          <p class="stat-value">
-            <fmt:formatNumber value="${stats.growthPercent}" maxFractionDigits="1"/>%
-          </p>
+          <p class="stat-value"><fmt:formatNumber value="${stats.growthPercent}" maxFractionDigits="1"/>%</p>
           <p class="stat-sub">↑ so với tháng trước</p>
         </div>
         <div class="stat-icon icon-orange">
-          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         </div>
       </div>
-
-    </div><!-- /stats-grid -->
-
-    <!-- ── Charts — dùng dailyLogins & usersByRole ── -->
-    <div class="grid-2 mb-24">
-
-      <div class="card">
-        <div class="card-header"><span class="card-title">Đăng nhập theo ngày</span></div>
-        <div class="card-body">
-          <canvas id="loginChart" height="140"></canvas>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><span class="card-title">Phân bổ Users theo Role</span></div>
-        <div class="card-body">
-          <canvas id="roleChart" height="140"></canvas>
-        </div>
-      </div>
-
     </div>
 
-    <!-- ── Recent activity — dùng recentActivities (List<Map>) ── -->
-    <%-- Map keys từ DB view vw_recent_activity: actor_name, action_desc, time_label --%>
+    <div class="grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Đăng nhập theo ngày</span></div>
+        <div class="card-body"><canvas id="loginChart" height="140"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Phân bổ Users theo Role</span></div>
+        <div class="card-body"><canvas id="roleChart" height="140"></canvas></div>
+      </div>
+    </div>
+
     <div class="card mb-24">
       <div class="card-header"><span class="card-title">Hoạt động gần đây</span></div>
       <c:choose>
         <c:when test="${not empty recentActivities}">
           <c:forEach var="act" items="${recentActivities}">
-            <div class="activity-row">
+            <%-- Tự động lấy Key bất kể Controller trả về chữ Hoa hay chữ Thường --%>
+            <c:set var="fName" value="${act['full_name'] != null ? act['full_name'] : act['FULL_NAME']}" />
+            <c:set var="fAction" value="${act['action'] != null ? act['action'] : act['ACTION']}" />
+            <c:set var="fModule" value="${act['module_code'] != null ? act['module_code'] : act['MODULE_CODE']}" />
+            <c:set var="fIp" value="${act['ip_address'] != null ? act['ip_address'] : act['IP_ADDRESS']}" />
+
+            <div class="activity-row" style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #f1f5f9;">
               <div>
-                <span class="activity-name">${act.actor_name}</span>
-                <span class="activity-desc"> ${act.action_desc}</span>
+                <span class="activity-name" style="font-weight:600; color:#1e293b;">${fName}</span>
+                <span class="activity-desc" style="color:#64748b;"> thực hiện hành động
+                  <span class="badge" style="background:#e2e8f0; color:#475569; padding:2px 6px; border-radius:4px;">${fAction}</span>
+                  trên phân hệ ${fModule}
+                </span>
               </div>
-              <span class="activity-time">${act.time_label}</span>
+              <span class="activity-time" style="color:#94a3b8; font-family:monospace;">${fIp}</span>
             </div>
           </c:forEach>
         </c:when>
@@ -128,25 +113,38 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
 <script>
-  // ── Line chart: dailyLogins — Map keys: login_date, login_count ──
-  (function () {
-    const raw = [
-      <c:forEach var="d" items="${dailyLogins}" varStatus="s">
-      { label: "${d.login_date}", value: ${d.login_count} }<c:if test="${!s.last}">,</c:if>
-      </c:forEach>
-    ];
-    createLineChart('loginChart', raw.map(r => r.label), raw.map(r => r.value), '#4F46E5');
-  })();
+  window.addEventListener("DOMContentLoaded", function () {
+    // 1. Line chart: dailyLogins
+    const loginLabels = [];
+    const loginValues = [];
+    <c:forEach var="d" items="${dailyLogins}">
+    if ("${d['login_date']}" !== "") {
+      loginLabels.push("${d['login_date']}");
+      loginValues.push(Number("${d['total_logins'] != null ? d['total_logins'] : (d['login_count'] != null ? d['login_count'] : 0)}"));
+    }
+    </c:forEach>
+    if (loginLabels.length > 0) {
+      createLineChart('loginChart', loginLabels, loginValues, '#4F46E5');
+    } else {
+      createLineChart('loginChart', ['Chưa có dữ liệu'], [0], '#4F46E5');
+    }
 
-  // ── Bar chart: usersByRole — Map keys: role_group, user_count ──
-  (function () {
-    const raw = [
-      <c:forEach var="r" items="${usersByRole}" varStatus="s">
-      { label: "${r.role_group}", value: ${r.user_count} }<c:if test="${!s.last}">,</c:if>
-      </c:forEach>
-    ];
-    createBarChart('roleChart', raw.map(r => r.label), raw.map(r => r.value), '#4F46E5');
-  })();
+    // 2. Bar chart: usersByRole
+    const roleLabels = [];
+    const roleValues = [];
+    <c:forEach var="r" items="${usersByRole}">
+    if ("${r['group_name']}" !== "" || "${r['role_group']}" !== "") {
+      <c:set var="roleLbl" value="${r['group_name'] != null ? r['group_name'] : r['role_group']}" />
+      roleLabels.push("${roleLbl}");
+      roleValues.push(Number("${r['user_count'] != null ? r['user_count'] : 0}"));
+    }
+    </c:forEach>
+    if (roleLabels.length > 0) {
+      createBarChart('roleChart', roleLabels, roleValues, '#6366F1');
+    } else {
+      createBarChart('roleChart', ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'], [0, 0, 0, 0], '#6366F1');
+    }
+  });
 </script>
 </body>
 </html>
