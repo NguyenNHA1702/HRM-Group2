@@ -64,7 +64,6 @@ public class AdminUpdateUserController extends HttpServlet {
             int positionId = Integer.parseInt(request.getParameter("positionId"));
             String status = request.getParameter("status");
             int roleId = Integer.parseInt(request.getParameter("roleId"));
-            boolean isActive = Boolean.parseBoolean(request.getParameter("isActive"));
 
             UserAccount user = new UserAccount();
             user.setEmployeeId(id);
@@ -77,7 +76,6 @@ public class AdminUpdateUserController extends HttpServlet {
             user.setPositionId(positionId);
             user.setStatus(status);
             user.setRoleId(roleId);
-            user.setActive(isActive);
 
             boolean success = userDAO.updateUserByAdmin(user);
             if (success) {

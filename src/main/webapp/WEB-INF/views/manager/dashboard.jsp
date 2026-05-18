@@ -24,16 +24,14 @@
             </div>
         </div>
 
-        <!-- ── Stat cards — dùng stats (ManagerStatsDto) ── -->
         <div class="stats-grid mb-24">
-
             <div class="stat-card">
                 <div>
                     <p class="stat-label">Nhân viên trong team</p>
                     <p class="stat-value">${stats.teamSize}</p>
                 </div>
                 <div class="stat-icon icon-blue">
-                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                 </div>
             </div>
 
@@ -43,7 +41,7 @@
                     <p class="stat-value">${stats.presentToday}</p>
                 </div>
                 <div class="stat-icon icon-green">
-                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
             </div>
 
@@ -53,7 +51,7 @@
                     <p class="stat-value">${stats.onLeave}</p>
                 </div>
                 <div class="stat-icon icon-red">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
                 </div>
             </div>
 
@@ -63,72 +61,68 @@
                     <p class="stat-value">${stats.pendingApprovals}</p>
                 </div>
                 <div class="stat-icon icon-orange">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </div>
             </div>
-
         </div>
 
-        <!-- ── Charts — teamKpi & (không có attendanceTrend trong Controller, dùng teamStatus) ── -->
-        <%-- teamKpi Map keys: employee_name, kpi_score --%>
         <div class="grid-2 mb-24">
             <div class="card">
-                <div class="card-header"><span class="card-title">KPI Team (tháng này)</span></div>
+                <div class="card-header"><span class="card-title">KPI Team</span></div>
                 <div class="card-body"><canvas id="kpiChart" height="150"></canvas></div>
             </div>
             <div class="card">
-                <div class="card-header"><span class="card-title">Xu hướng chấm công tuần này</span></div>
+                <div class="card-header"><span class="card-title">Trạng thái làm việc hôm nay</span></div>
                 <div class="card-body"><canvas id="attendChart" height="150"></canvas></div>
             </div>
         </div>
 
-        <!-- ── Team status table — dùng teamStatus (List<Map>) ── -->
-        <%-- Map keys: employee_name, check_in, check_out, attendance_status, kpi_score --%>
         <div class="card mb-24">
             <div class="card-header"><span class="card-title">Tình trạng team hôm nay</span></div>
             <div class="table-wrap">
-                <table>
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
                     <thead>
-                    <tr>
-                        <th>Nhân viên</th>
-                        <th>Check-in</th>
-                        <th>Check-out</th>
-                        <th>Trạng thái</th>
-                        <th>KPI</th>
+                    <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                        <th style="padding:12px;">Nhân viên</th>
+                        <th style="padding:12px;">Check-in</th>
+                        <th style="padding:12px;">Check-out</th>
+                        <th style="padding:12px;">Trạng thái</th>
+                        <th style="padding:12px;">KPI</th>
                     </tr>
                     </thead>
                     <tbody>
                     <c:choose>
                         <c:when test="${not empty teamStatus}">
                             <c:forEach var="emp" items="${teamStatus}">
-                                <tr>
-                                    <td class="fw-600">${emp.employee_name}</td>
-                                    <td>${empty emp.check_in ? '—' : emp.check_in}</td>
-                                    <td>${empty emp.check_out ? '—' : emp.check_out}</td>
-                                    <td>
+                                <tr style="border-bottom:1px solid #f1f5f9;">
+                                    <td style="padding:12px; font-weight:600;">${emp['employee_name'] != null ? emp['employee_name'] : emp['full_name']}</td>
+                                    <td style="padding:12px;">${empty emp['check_in'] ? '—' : emp['check_in']}</td>
+                                    <td style="padding:12px;">${empty emp['check_out'] ? '—' : emp['check_out']}</td>
+                                    <td style="padding:12px;">
+                                        <c:set var="statusLabel" value="${emp['attendance_status'] != null ? emp['attendance_status'] : emp['status']}" />
                                         <c:choose>
-                                            <c:when test="${emp.attendance_status == 'present'}">
-                                                <span class="badge badge-green">Có mặt</span>
+                                            <c:when test="${statusLabel == 'PRESENT'}">
+                                                <span class="badge badge-green" style="background:#dcfce7; color:#15803d; padding:4px 8px; border-radius:4px; font-size:12px;">Có mặt</span>
                                             </c:when>
-                                            <c:when test="${emp.attendance_status == 'late'}">
-                                                <span class="badge badge-orange">Đi muộn</span>
+                                            <c:when test="${statusLabel == 'LATE'}">
+                                                <span class="badge badge-orange" style="background:#fef3c7; color:#b45309; padding:4px 8px; border-radius:4px; font-size:12px;">Đi muộn</span>
+                                            </c:when>
+                                            <c:when test="${statusLabel == 'EARLY_LEAVE'}">
+                                                <span class="badge badge-blue" style="background:#dbeafe; color:#1d4ed8; padding:4px 8px; border-radius:4px; font-size:12px;">Về sớm</span>
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="badge badge-red">Nghỉ phép</span>
+                                                <span class="badge badge-red" style="background:#fee2e2; color:#b91c1c; padding:4px 8px; border-radius:4px; font-size:12px;">Vắng / Nghỉ</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td>
-                                        <span class="fw-600">${emp.kpi_score}%</span>
-                                        <span class="progress-bar">
-                        <span class="progress-fill" style="width:${emp.kpi_score}%"></span>
-                      </span>
+                                    <td style="padding:12px;">
+                                        <span class="fw-600">${emp['kpi_score'] != null ? emp['kpi_score'] : 0}%</span>
                                     </td>
                                 </tr>
                             </c:forEach>
                         </c:when>
                         <c:otherwise>
-                            <tr><td colspan="5" class="text-muted" style="text-align:center;padding:20px;">Không có dữ liệu.</td></tr>
+                            <tr><td colspan="5" class="text-muted" style="text-align:center; padding:20px;">Không có dữ liệu team.</td></tr>
                         </c:otherwise>
                     </c:choose>
                     </tbody>
@@ -136,31 +130,25 @@
             </div>
         </div>
 
-        <!-- ── Pending leave approvals — dùng pendingLeaves (List<Map>) ── -->
-        <%-- Map keys: employee_name, leave_type, start_date, end_date, reason, leave_request_id --%>
         <div class="card">
             <div class="card-header"><span class="card-title">Đơn từ cần duyệt</span></div>
             <div class="card-body">
                 <c:choose>
                     <c:when test="${not empty pendingLeaves}">
                         <c:forEach var="req" items="${pendingLeaves}">
-                            <div class="leave-row">
+                            <div class="leave-row" style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f1f5f9;">
                                 <div class="leave-info">
-                                    <h4>
-                                            ${req.employee_name}
-                                        <span class="badge badge-blue" style="margin-left:6px;">${req.leave_type}</span>
+                                    <h4 style="margin:0 0 4px 0;">
+                                            ${req['employee_name']}
+                                        <span class="badge badge-blue" style="background:#e0f2fe; color:#0369a1; margin-left:6px; padding:2px 6px; border-radius:4px; font-size:11px;">${req['leave_type']}</span>
                                     </h4>
-                                    <p>
-                                        Ngày: ${req.start_date}
-                                        <c:if test="${req.start_date != req.end_date}"> – ${req.end_date}</c:if>
-                                        · Lý do: ${req.reason}
+                                    <p style="margin:0; color:#64748b; font-size:13px;">
+                                        Ngày: ${req['start_date']} đến ${req['end_date']} · Lý do: ${req['reason']}
                                     </p>
                                 </div>
-                                <div class="leave-actions">
-                                    <a href="${pageContext.request.contextPath}/leave/approve?id=${req.leave_request_id}"
-                                       class="btn btn-success btn-sm">Duyệt</a>
-                                    <a href="${pageContext.request.contextPath}/leave/reject?id=${req.leave_request_id}"
-                                       class="btn btn-danger btn-sm">Từ chối</a>
+                                <div class="leave-actions" style="display:flex; gap:8px;">
+                                    <a href="${pageContext.request.contextPath}/leave/approve?id=${req['leave_request_id']}" style="background:#10b981; color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:13px;">Duyệt</a>
+                                    <a href="${pageContext.request.contextPath}/leave/reject?id=${req['leave_request_id']}" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:13px;">Từ chối</a>
                                 </div>
                             </div>
                         </c:forEach>
@@ -177,33 +165,42 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
 <script>
-    // ── KPI chart — teamKpi: employee_name, kpi_score ──
-    (function () {
-        const raw = [
-            <c:forEach var="k" items="${teamKpi}" varStatus="s">
-            { label: "${k.employee_name}", value: ${k.kpi_score} }<c:if test="${!s.last}">,</c:if>
-            </c:forEach>
-        ];
-        if (raw.length) {
-            createBarChart('kpiChart', raw.map(r => r.label), raw.map(r => r.value), '#4F46E5');
+    window.addEventListener("DOMContentLoaded", function () {
+        // 1. KPI Chart
+        const kpiLabels = [];
+        const kpiValues = [];
+        <c:forEach var="k" items="${teamKpi}">
+        if ("${k['employee_name']}" !== "" || "${k['full_name']}" !== "") {
+            <c:set var="kpiName" value="${k['employee_name'] != null ? k['employee_name'] : k['full_name']}" />
+            kpiLabels.push("${kpiName}");
+            kpiValues.push(Number("${k['kpi_score'] != null ? k['kpi_score'] : 0}"));
         }
-    })();
+        </c:forEach>
+        if (kpiLabels.length > 0) {
+            createBarChart('kpiChart', kpiLabels, kpiValues, '#4F46E5');
+        } else {
+            createBarChart('kpiChart', ['Chưa có dữ liệu'], [0], '#4F46E5');
+        }
 
-    // ── Attendance trend — teamStatus: attendance_status gom nhóm ──
-    (function () {
-        const rows = [
-            <c:forEach var="emp" items="${teamStatus}" varStatus="s">
-            { status: "${emp.attendance_status}" }<c:if test="${!s.last}">,</c:if>
-            </c:forEach>
-        ];
-        const present = rows.filter(r => r.status === 'present' || r.status === 'late').length;
-        const absent  = rows.filter(r => r.status === 'leave' || r.status === 'absent').length;
+        // 2. Attendance Status Doughnut
+        let presentCount = 0;
+        let absentCount = 0;
+        <c:forEach var="emp" items="${teamStatus}">
+        var st = "${emp['attendance_status'] != null ? emp['attendance_status'] : emp['status']}";
+        if (st === 'PRESENT' || st === 'LATE' || st === 'EARLY_LEAVE') {
+            presentCount++;
+        } else if (st !== "") {
+            absentCount++;
+        }
+        </c:forEach>
+
+        // Nếu cả 2 bằng 0 tức là mảng rỗng, cho số liệu mặc định 0 để không lỗi canvas
         createDoughnutChart('attendChart',
-            ['Có mặt / Muộn', 'Vắng mặt'],
-            [present, absent],
+            ['Có mặt / Muộn', 'Vắng / Nghỉ'],
+            [presentCount, absentCount],
             ['#10B981', '#EF4444']
         );
-    })();
+    });
 </script>
 </body>
 </html>

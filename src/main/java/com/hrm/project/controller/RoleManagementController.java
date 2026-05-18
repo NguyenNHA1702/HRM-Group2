@@ -33,6 +33,6 @@ public class RoleManagementController extends HttpServlet {
         request.setAttribute("roles", roles);
 
 
-        request.getRequestDispatcher("/WEB-INF/views/admin/permissions.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/permission.jsp").forward(request, response);
     }
 }

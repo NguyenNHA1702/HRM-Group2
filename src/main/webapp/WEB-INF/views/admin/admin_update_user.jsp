@@ -268,19 +268,6 @@
                     </div>
                 </div>
 
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Trạng thái tài khoản (Đăng nhập)</label>
-                        <select name="isActive" required>
-                            <option value="true" ${user.active ? 'selected' : ''}>Kích hoạt (Cho phép đăng nhập)</option>
-                            <option value="false" ${!user.active ? 'selected' : ''}>Vô hiệu hóa (Khóa đăng nhập)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <!-- Để trống để giữ layout grid-2 cân đối -->
-                    </div>
-                </div>
-
                 <!-- Nút thao tác -->
                 <div class="btn-container">
                     <a href="${pageContext.request.contextPath}/index.jsp" class="btn btn-secondary">

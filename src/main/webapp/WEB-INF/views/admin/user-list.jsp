@@ -272,13 +272,13 @@
 
                                     <div class="actions">
 
-                                        <button class="action-btn edit"
-                                                title="Chỉnh sửa"
-                                                onclick="openModal('editModal_${u.id}')">
+                                        <a href="${pageContext.request.contextPath}/admin/user/update?id=${u.employeeId}"
+                                           class="action-btn edit"
+                                           title="Chỉnh sửa">
 
                                             <i class="fa-solid fa-pen-to-square"></i>
 
-                                        </button>
+                                        </a>
 
                                         <c:choose>
 
