@@ -35,11 +35,19 @@ public class AdminUserListController extends HttpServlet {
 
         try {
             if ("create".equals(action)) {
-                String fullName  = req.getParameter("fullName");
-                // Chap nhan ca email cong ty lan email ca nhan
-                String email     = req.getParameter("email");
-                String roleIdStr = req.getParameter("roleId");
-                String rawPwd    = req.getParameter("password");
+                String fullName     = req.getParameter("fullName");
+                String email        = req.getParameter("email");
+                String roleIdStr    = req.getParameter("roleId");
+                String rawPwd       = req.getParameter("password");
+
+                // Cac truong mo rong
+                String phone        = req.getParameter("phone");
+                String dateOfBirth  = req.getParameter("dateOfBirth");
+                String gender       = req.getParameter("gender");
+                String personalEmail= req.getParameter("personalEmail");
+                String deptIdStr    = req.getParameter("departmentId");
+                String posIdStr     = req.getParameter("positionId");
+                String isActiveStr  = req.getParameter("isActive");
 
                 if (fullName  == null || fullName.trim().isEmpty()  ||
                         email     == null || email.trim().isEmpty()     ||
@@ -47,47 +55,60 @@ public class AdminUserListController extends HttpServlet {
                         rawPwd    == null || rawPwd.trim().isEmpty()) {
 
                     setFlash(req.getSession(), "error",
-                            "Vui long dien day du thong tin.");
+                            "Vui lòng điền đầy đủ thông tin bắt buộc.");
                 } else {
+                    Integer departmentId = (deptIdStr != null && !deptIdStr.trim().isEmpty())
+                            ? Integer.parseInt(deptIdStr) : null;
+                    Integer positionId   = (posIdStr  != null && !posIdStr.trim().isEmpty())
+                            ? Integer.parseInt(posIdStr)  : null;
+                    boolean isActive     = !"0".equals(isActiveStr); // Mac dinh la active
+
                     userDAO.createUser(
                             fullName.trim(),
                             email.trim(),
                             Integer.parseInt(roleIdStr),
-                            rawPwd
+                            rawPwd,
+                            phone        != null ? phone.trim()         : null,
+                            dateOfBirth  != null && !dateOfBirth.isEmpty() ? dateOfBirth : null,
+                            gender       != null && !gender.isEmpty()      ? gender      : null,
+                            personalEmail!= null && !personalEmail.isEmpty()? personalEmail.trim() : null,
+                            departmentId,
+                            positionId,
+                            isActive
                     );
                     setFlash(req.getSession(), "success",
-                            "Tao tai khoan thanh cong cho " + fullName.trim());
+                            "Tạo tài khoản thành công cho " + fullName.trim());
                 }
 
             } else if ("lock".equals(action)) {
                 int uid = Integer.parseInt(req.getParameter("userId"));
                 userDAO.toggleActive(uid, false);
-                setFlash(req.getSession(), "success", "Da khoa tai khoan.");
+                setFlash(req.getSession(), "success", "Đã khóa tài khoản.");
 
             } else if ("unlock".equals(action)) {
                 int uid = Integer.parseInt(req.getParameter("userId"));
                 userDAO.toggleActive(uid, true);
-                setFlash(req.getSession(), "success", "Da mo khoa tai khoan.");
+                setFlash(req.getSession(), "success", "Đã mở khóa tài khoản.");
 
             } else if ("resetPassword".equals(action)) {
                 int uid = Integer.parseInt(req.getParameter("userId"));
                 userDAO.forceResetPassword(uid);
                 setFlash(req.getSession(), "success",
-                        "Da yeu cau nguoi dung doi mat khau lan dang nhap toi.");
+                        "Đã yêu cầu người dùng đổi mật khẩu lần đăng nhập tới.");
 
             } else if ("delete".equals(action)) {
                 int uid = Integer.parseInt(req.getParameter("userId"));
                 userDAO.deleteUser(uid);
-                setFlash(req.getSession(), "success", "Da xoa tai khoan.");
+                setFlash(req.getSession(), "success", "Đã xóa tài khoản.");
 
             } else {
-                setFlash(req.getSession(), "error", "Hanh dong khong hop le.");
+                setFlash(req.getSession(), "error", "Hành động không hợp lệ.");
             }
 
         } catch (SQLException e) {
-            setFlash(req.getSession(), "error", "Loi he thong: " + e.getMessage());
+            setFlash(req.getSession(), "error", "Lỗi hệ thống: " + e.getMessage());
         } catch (NumberFormatException e) {
-            setFlash(req.getSession(), "error", "Tham so khong hop le.");
+            setFlash(req.getSession(), "error", "Tham số không hợp lệ.");
         }
 
         resp.sendRedirect(ctx + "/admin/users");
