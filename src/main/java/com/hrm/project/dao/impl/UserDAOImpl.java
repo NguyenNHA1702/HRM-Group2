@@ -14,12 +14,6 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class UserDAOImpl implements UserDAO {
 
@@ -40,20 +34,37 @@ public class UserDAOImpl implements UserDAO {
         }
     }
 
-    private int createMinimalEmployee(String fullName, String email) throws SQLException {
+    /**
+     * Tao ban ghi employee voi day du thong tin tu form tao tai khoan.
+     * work_email luon la email dang nhap; personal_email la email ca nhan (neu co).
+     */
+    private int createMinimalEmployee(String fullName, String email,
+                                      String phone, String dateOfBirth, String gender,
+                                      String personalEmail,
+                                      Integer departmentId, Integer positionId) throws SQLException {
+
         String empCode = "EMP" + (System.currentTimeMillis() % 10_000_000_000L);
 
         String sql = "INSERT INTO employees"
-                + " (employee_code, full_name, personal_email, work_email, hire_date, status)"
-                + " VALUES (?, ?, ?, ?, CURDATE(), 'ACTIVE')";
+                + " (employee_code, full_name, work_email, personal_email,"
+                + "  phone, date_of_birth, gender, department_id, position_id,"
+                + "  hire_date, status)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'ACTIVE')";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, empCode);
             ps.setString(2, fullName);
-            ps.setString(3, email);
-            ps.setString(4, email);
+            ps.setString(3, email);                                          // work_email = login email
+            ps.setString(4, (personalEmail != null && !personalEmail.isEmpty()) // personal_email
+                    ? personalEmail : email);
+            setStringOrNull(ps, 5, phone);
+            setStringOrNull(ps, 6, dateOfBirth);
+            setStringOrNull(ps, 7, gender);
+            setIntOrNull(ps,    8, departmentId);
+            setIntOrNull(ps,    9, positionId);
+
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -64,38 +75,43 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public void createUser(String fullName, String email,
-                           int roleId, String rawPassword) throws SQLException {
+    public void createUser(String fullName, String email, int roleId, String rawPassword,
+                           String phone, String dateOfBirth, String gender, String personalEmail,
+                           Integer departmentId, Integer positionId, boolean isActive)
+            throws SQLException {
 
+        // Tim hoac tao ban ghi employee
         int employeeId = findEmployeeIdByEmail(email);
         if (employeeId == -1) {
-            employeeId = createMinimalEmployee(fullName, email);
+            employeeId = createMinimalEmployee(
+                    fullName, email, phone, dateOfBirth, gender,
+                    personalEmail, departmentId, positionId);
         }
 
+        // Kiem tra email dang nhap da ton tai chua
         String checkSql = "SELECT COUNT(*) FROM user_accounts WHERE username = ?";
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(checkSql)) {
-
             ps.setString(1, email);
-
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next() && rs.getInt(1) > 0) {
-                    throw new SQLException("Tai khoan voi email nay da ton tai.");
+                    throw new SQLException("Tài khoản với email này đã tồn tại.");
                 }
             }
         }
 
+        // Tao user_account
         String sql = "INSERT INTO user_accounts"
                 + " (employee_id, username, password_hash, role_id, is_active, force_reset_pwd)"
-                + " VALUES (?, ?, ?, ?, 1, 0)";
+                + " VALUES (?, ?, ?, ?, ?, 0)";
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, employeeId);
             ps.setString(2, email);
             ps.setString(3, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
             ps.setInt(4, roleId);
+            ps.setBoolean(5, isActive);
             ps.executeUpdate();
         }
     }
@@ -110,7 +126,7 @@ public class UserDAOImpl implements UserDAO {
                         " ua.employee_id," +
                         " ua.username," +
                         " ua.is_active," +
-                        " (SELECT MAX(created_at) FROM user_sessions us WHERE us.user_account_id = ua.id) AS last_login_at," + // Lay session moi nhat
+                        " (SELECT MAX(created_at) FROM user_sessions us WHERE us.user_account_id = ua.id) AS last_login_at," +
                         " ua.force_reset_pwd," +
                         " e.full_name," +
                         " e.employee_code," +
@@ -177,14 +193,12 @@ public class UserDAOImpl implements UserDAO {
              ResultSet rs = ps.executeQuery()) {
 
             UserStatDTO dto = new UserStatDTO();
-
             if (rs.next()) {
                 dto.setTotalUsers(rs.getInt("total"));
                 dto.setActiveUsers(rs.getInt("active"));
                 dto.setInactiveUsers(rs.getInt("inactive"));
                 dto.setAdminUsers(rs.getInt("admins"));
             }
-
             return dto;
         }
     }
@@ -201,14 +215,12 @@ public class UserDAOImpl implements UserDAO {
              ResultSet rs = ps.executeQuery()) {
 
             List<Object[]> list = new ArrayList<>();
-
             while (rs.next()) {
                 list.add(new Object[]{
                         rs.getInt("id"),
                         rs.getString("display")
                 });
             }
-
             return list;
         }
     }
@@ -216,10 +228,8 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public void toggleActive(int userId, boolean active) throws SQLException {
         String sql = "UPDATE user_accounts SET is_active = ? WHERE id = ?";
-
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setBoolean(1, active);
             ps.setInt(2, userId);
             ps.executeUpdate();
@@ -229,10 +239,8 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public void forceResetPassword(int userId) throws SQLException {
         String sql = "UPDATE user_accounts SET force_reset_pwd = 1 WHERE id = ?";
-
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, userId);
             ps.executeUpdate();
         }
@@ -241,10 +249,8 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public void deleteUser(int userId) throws SQLException {
         String sql = "DELETE FROM user_accounts WHERE id = ?";
-
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, userId);
             ps.executeUpdate();
         }
@@ -258,7 +264,6 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT * FROM vw_my_profile WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -286,16 +291,13 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public boolean updateProfile(UserAccount user) {
-        // Cập nhật thông tin vào bảng employees
         String sql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setString(1, user.getFullName());
             ps.setString(2, user.getPhone());
             ps.setString(3, user.getPersonalEmail());
             ps.setInt(4, user.getEmployeeId());
-
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -444,20 +446,12 @@ public class UserDAOImpl implements UserDAO {
             return true;
         } catch (SQLException e) {
             if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
             }
             e.printStackTrace();
         } finally {
             if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                try { conn.close(); } catch (SQLException e) { e.printStackTrace(); }
             }
         }
         return false;
@@ -503,17 +497,13 @@ public class UserDAOImpl implements UserDAO {
         return null;
     }
 
-
-
     public String getPasswordHashByEmployeeId(int employeeId) {
         String sql = "SELECT password_hash FROM user_accounts WHERE employee_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("password_hash");
-                }
+                if (rs.next()) return rs.getString("password_hash");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -540,7 +530,6 @@ public class UserDAOImpl implements UserDAO {
 
     private UserAccountDTO mapRow(ResultSet rs) throws SQLException {
         UserAccountDTO dto = new UserAccountDTO();
-
         dto.setId(rs.getInt("id"));
         dto.setEmployeeId(rs.getInt("employee_id"));
         dto.setUsername(rs.getString("username"));
@@ -555,9 +544,24 @@ public class UserDAOImpl implements UserDAO {
         if (ts != null) {
             dto.setLastLoginAt(ts.toLocalDateTime());
         }
-
-
         return dto;
     }
 
+    /** Tien ich: set String hoac NULL */
+    private void setStringOrNull(PreparedStatement ps, int idx, String val) throws SQLException {
+        if (val != null && !val.trim().isEmpty()) {
+            ps.setString(idx, val.trim());
+        } else {
+            ps.setNull(idx, Types.VARCHAR);
+        }
+    }
+
+    /** Tien ich: set Integer hoac NULL */
+    private void setIntOrNull(PreparedStatement ps, int idx, Integer val) throws SQLException {
+        if (val != null) {
+            ps.setInt(idx, val);
+        } else {
+            ps.setNull(idx, Types.INTEGER);
+        }
+    }
 }

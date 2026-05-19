@@ -43,7 +43,9 @@ public class AdminUserList extends HttpServlet {
             req.setAttribute("filterRoleGroup", roleGroup != null ? roleGroup : "");
             req.setAttribute("filterStatus",    status    != null ? status    : "");
 
-            req.setAttribute("roleGroups", userDAO.getRoleGroups());
+            req.setAttribute("roleGroups",  userDAO.getRoleGroups());
+            req.setAttribute("departments", userDAO.getAllDepartments());
+            req.setAttribute("positions",   userDAO.getAllPositions());
 
             req.getRequestDispatcher("/WEB-INF/views/admin/user-list.jsp")
                     .forward(req, resp);
