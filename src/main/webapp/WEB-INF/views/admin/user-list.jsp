@@ -59,8 +59,6 @@
                     Xin chào, ${sessionScope.fullName}
                 </p>
             </div>
-
-
         </div>
 
         <%-- Stats Cards --%>
@@ -258,9 +256,9 @@
                                     <c:choose>
 
                                        <c:when test="${u.lastLoginAt != null}">
-                                                                                   <%-- Su dung cac thuoc tinh cua LocalDateTime va format so co 0 o dau --%>
-                                                                                   <fmt:formatNumber value="${u.lastLoginAt.dayOfMonth}" pattern="00"/>/<fmt:formatNumber value="${u.lastLoginAt.monthValue}" pattern="00"/>/${u.lastLoginAt.year} <fmt:formatNumber value="${u.lastLoginAt.hour}" pattern="00"/>:<fmt:formatNumber value="${u.lastLoginAt.minute}" pattern="00"/>
-                                                                               </c:when>
+                                           <fmt:formatNumber value="${u.lastLoginAt.dayOfMonth}" pattern="00"/>/<fmt:formatNumber value="${u.lastLoginAt.monthValue}" pattern="00"/>/${u.lastLoginAt.year}
+                                           <fmt:formatNumber value="${u.lastLoginAt.hour}" pattern="00"/>:<fmt:formatNumber value="${u.lastLoginAt.minute}" pattern="00"/>
+                                       </c:when>
 
                                         <c:otherwise>-</c:otherwise>
 
@@ -342,10 +340,10 @@
 
         </div>
 
-        <%-- Create User Modal --%>
+        <%-- =============== Create User Modal =============== --%>
         <div class="modal-overlay" id="createUserModal">
 
-            <div class="modal">
+            <div class="modal modal-wide">
 
                 <div class="modal-title">
                     <i class="fa-solid fa-user-plus"></i>
@@ -357,73 +355,129 @@
 
                     <input type="hidden" name="action" value="create">
 
-                    <div class="form-row">
+                    <%-- Section: Thong tin ca nhan --%>
+                    <div class="modal-section-label">
+                        <i class="fa-solid fa-id-card"></i> Thông tin cá nhân
+                    </div>
 
-                        <label for="fullName">
-                            Họ và tên
-                            <span style="color:red">*</span>
-                        </label>
+                    <div class="form-grid-2">
 
-                        <input type="text"
-                               id="fullName"
-                               name="fullName"
-                               placeholder="Nguyễn Văn A"
-                               required>
+                        <div class="form-row">
+                            <label for="fullName">
+                                Họ và tên <span style="color:red">*</span>
+                            </label>
+                            <input type="text"
+                                   id="fullName"
+                                   name="fullName"
+                                   placeholder="Nguyễn Văn A"
+                                   required>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="phone">Số điện thoại</label>
+                            <input type="text"
+                                   id="phone"
+                                   name="phone"
+                                   placeholder="0901234567">
+                        </div>
+
+                        <div class="form-row">
+                            <label for="dateOfBirth">Ngày sinh</label>
+                            <input type="date"
+                                   id="dateOfBirth"
+                                   name="dateOfBirth">
+                        </div>
+
+                        <div class="form-row">
+                            <label for="gender">Giới tính</label>
+                            <select id="gender" name="gender">
+                                <option value="">-- Chọn giới tính --</option>
+                                <option value="Male">Nam</option>
+                                <option value="Female">Nữ</option>
+                                <option value="Other">Khác</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="email">
+                                Email đăng nhập <span style="color:red">*</span>
+                            </label>
+                            <input type="email"
+                                   id="email"
+                                   name="email"
+                                   placeholder="Nhập địa chỉ email đăng nhập"
+                                   required>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="personalEmail">Email cá nhân</label>
+                            <input type="email"
+                                   id="personalEmail"
+                                   name="personalEmail"
+                                   placeholder="Email liên lạc cá nhân">
+                        </div>
 
                     </div>
 
-                    <div class="form-row">
+                    <%-- Section: Cong viec & Phan quyen --%>
+                    <div class="modal-section-label" style="margin-top:6px;">
+                        <i class="fa-solid fa-briefcase"></i> Công việc &amp; Phân quyền
+                    </div>
 
-                        <label for="email">
-                            Email đăng nhập
-                            <span style="color:red">*</span>
-                        </label>
+                    <div class="form-grid-2">
 
-                        <input type="email"
-                               id="email"
-                               name="email"
-                               placeholder="Nhập bất kỳ địa chỉ email nào"
-                               required>
+                        <div class="form-row">
+                            <label for="departmentId">Phòng ban</label>
+                            <select id="departmentId" name="departmentId">
+                                <option value="">-- Chọn phòng ban --</option>
+                                <c:forEach var="dept" items="${departments}">
+                                    <option value="${dept.id}">${dept.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
 
+                        <div class="form-row">
+                            <label for="positionId">Chức vụ / Vị trí</label>
+                            <select id="positionId" name="positionId">
+                                <option value="">-- Chọn chức vụ --</option>
+                                <c:forEach var="pos" items="${positions}">
+                                    <option value="${pos.id}">${pos.name}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
 
+                        <div class="form-row">
+                            <label for="roleId">
+                                Quyền hệ thống (Role) <span style="color:red">*</span>
+                            </label>
+                            <select id="roleId" name="roleId" required>
+                                <option value="">-- Chọn Role --</option>
+                                <c:forEach var="rg" items="${roleGroups}">
+                                    <option value="${rg[0]}">${rg[1]}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="isActive">Trạng thái hoạt động</label>
+                            <select id="isActive" name="isActive">
+                                <option value="1">Đang hoạt động (ACTIVE)</option>
+                                <option value="0">Đã khóa (INACTIVE)</option>
+                            </select>
+                        </div>
 
                     </div>
 
-                    <div class="form-row">
-
-                        <label for="roleId">
-                            Role
-                            <span style="color:red">*</span>
-                        </label>
-
-                        <select id="roleId"
-                                name="roleId"
-                                required>
-
-                            <option value="">-- Chọn Role --</option>
-
-                            <c:forEach var="rg" items="${roleGroups}">
-                                <option value="${rg[0]}">
-                                    ${rg[1]}
-                                </option>
-                            </c:forEach>
-
-                        </select>
-
-                    </div>
-
-                    <div class="form-row">
-
+                    <%-- Mat khau --%>
+                    <div class="form-row" style="margin-top:4px;">
                         <label for="password">
-                            Mật khẩu tạm thời
-                            <span style="color:red">*</span>
+                            Mật khẩu tạm thời <span style="color:red">*</span>
                         </label>
-
                         <input type="password"
                                id="password"
                                name="password"
                                required>
-
+                        <span class="form-hint">Người dùng nên đổi mật khẩu sau lần đăng nhập đầu tiên.</span>
                     </div>
 
                     <div class="modal-actions">
@@ -431,17 +485,12 @@
                         <button type="button"
                                 class="btn-cancel"
                                 onclick="closeModal('createUserModal')">
-
                             Hủy
-
                         </button>
 
-                        <button type="submit"
-                                class="btn-primary">
-
+                        <button type="submit" class="btn-primary">
                             <i class="fa-solid fa-check"></i>
                             Tạo tài khoản
-
                         </button>
 
                     </div>
@@ -451,6 +500,7 @@
             </div>
 
         </div>
+        <%-- =============== End Create User Modal =============== --%>
 
         <%-- Delete Form --%>
         <form id="deleteForm"
@@ -459,11 +509,7 @@
               style="display:none">
 
             <input type="hidden" name="action" value="delete">
-
-            <input type="hidden"
-                   name="userId"
-                   id="deleteUserId"
-                   value="">
+            <input type="hidden" name="userId" id="deleteUserId" value="">
 
         </form>
 

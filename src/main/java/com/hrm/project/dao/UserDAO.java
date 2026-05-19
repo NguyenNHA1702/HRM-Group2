@@ -17,7 +17,26 @@ public interface UserDAO {
 
     // Teammate's methods (main)
     int findEmployeeIdByEmail(String email) throws SQLException;
-    void createUser(String fullName, String email, int roleId, String rawPassword) throws SQLException;
+
+    /**
+     * Tao tai khoan nguoi dung day du thong tin.
+     *
+     * @param fullName      Ho ten (bat buoc)
+     * @param email         Email dang nhap / work_email (bat buoc)
+     * @param roleId        ID role (bat buoc)
+     * @param rawPassword   Mat khau tam thoi chua ma hoa (bat buoc)
+     * @param phone         So dien thoai (tuy chon)
+     * @param dateOfBirth   Ngay sinh dang yyyy-MM-dd (tuy chon)
+     * @param gender        Gioi tinh: Nam / Nu / Khac (tuy chon)
+     * @param personalEmail Email ca nhan (tuy chon; neu null se dung email dang nhap)
+     * @param departmentId  ID phong ban (tuy chon)
+     * @param positionId    ID chuc vu (tuy chon)
+     * @param isActive      Trang thai hoat dong khi tao
+     */
+    void createUser(String fullName, String email, int roleId, String rawPassword,
+                    String phone, String dateOfBirth, String gender, String personalEmail,
+                    Integer departmentId, Integer positionId, boolean isActive) throws SQLException;
+
     List<UserAccountDTO> getUsers(String keyword, String roleGroup, String status) throws SQLException;
     UserStatDTO getStats() throws SQLException;
     List<Object[]> getRoleGroups() throws SQLException;
@@ -35,4 +54,6 @@ public interface UserDAO {
     UserAccount getUserByEmail(String email);
     boolean updatePassword(int employeeId, String hashedPassword);
     boolean isUserRoleActive(int employeeId);
+
+
 }
