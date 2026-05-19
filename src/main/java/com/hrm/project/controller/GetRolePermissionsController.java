@@ -10,6 +10,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
@@ -29,6 +30,14 @@ public class GetRolePermissionsController extends HttpServlet {
         // Thiết lập kiểu dữ liệu trả về là JSON và hỗ trợ font UTF-8
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        // Kiểm tra quyền Admin trước khi trả dữ liệu phân quyền nhạy cảm
+        HttpSession session = request.getSession(false);
+        if (session == null || !"ADMIN".equals(session.getAttribute("roleGroup"))) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("{\"error\": \"Chỉ Admin mới có quyền truy cập thông tin phân quyền.\"}" );
+            return;
+        }
 
         String roleIdStr = request.getParameter("roleId");
 

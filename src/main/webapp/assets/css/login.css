@@ -1,3 +1,17 @@
+/* Import Google Fonts — DM Sans (body) + Syne (headings/buttons) */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+
+/* Reset browser default — bắt buộc để login-page full-screen không bị margin trắng */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
 /* Toàn bộ cấu hình CSS cho trang Đăng nhập */
 .login-page {
     --brand: #4F46E5;

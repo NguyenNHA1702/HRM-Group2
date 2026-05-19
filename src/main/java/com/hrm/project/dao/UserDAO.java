@@ -53,4 +53,7 @@ public interface UserDAO {
     boolean updateUserActiveStatus(int employeeId, boolean isActive);
     UserAccount getUserByEmail(String email);
     boolean updatePassword(int employeeId, String hashedPassword);
+    boolean isUserRoleActive(int employeeId);
+
+
 }

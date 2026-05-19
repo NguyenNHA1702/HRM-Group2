@@ -72,6 +72,7 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("roleGroup",   result.getRoleGroupCode()); // ADMIN | HR | MANAGER | EMPLOYEE
             session.setAttribute("avatarUrl",   result.getAvatarUrl());
             session.setAttribute("sessionToken", result.getSessionToken());
+            session.setAttribute("roleId",      result.getRoleId());
 
             resp.sendRedirect(req.getContextPath() + "/dashboard");
         } catch (Exception e) {

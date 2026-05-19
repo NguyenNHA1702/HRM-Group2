@@ -13,6 +13,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,8 +34,17 @@ public class SaveRolePermissionsController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Thiết lập kiểu trả về là JSON và hỗ trợ tiếng Việt
+        request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        // Kiểm tra quyền Admin trước khi cho phép lưu ma trận phân quyền
+        HttpSession session = request.getSession(false);
+        if (session == null || !"ADMIN".equals(session.getAttribute("roleGroup"))) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("{\"error\": \"Chỉ Admin mới có quyền cấu hình phân quyền.\"}" );
+            return;
+        }
 
         try {
             // 1. Đọc toàn bộ dữ liệu chuỗi JSON thô (Payload) do Fetch API truyền lên

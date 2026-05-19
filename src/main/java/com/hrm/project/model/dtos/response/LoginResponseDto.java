@@ -7,6 +7,7 @@ public class LoginResponseDto implements Serializable{
 
     private int employeeId;
     private int accountId;
+    private int roleId;
 
     private String fullName;
     private String workEmail;
@@ -19,10 +20,11 @@ public class LoginResponseDto implements Serializable{
     public LoginResponseDto() {
     }
 
-    public LoginResponseDto(String fullName, int employeeId, int accountId, String workEmail, String roleName, String roleGroupCode, String avatarUrl, String sessionToken) {
+    public LoginResponseDto(String fullName, int employeeId, int accountId, int roleId, String workEmail, String roleName, String roleGroupCode, String avatarUrl, String sessionToken) {
         this.fullName = fullName;
         this.employeeId = employeeId;
         this.accountId = accountId;
+        this.roleId = roleId;
         this.workEmail = workEmail;
         this.roleName = roleName;
         this.roleGroupCode = roleGroupCode;
@@ -92,6 +94,14 @@ public class LoginResponseDto implements Serializable{
 
     public void setSessionToken(String sessionToken) {
         this.sessionToken = sessionToken;
+    }
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
     }
 
     @Override

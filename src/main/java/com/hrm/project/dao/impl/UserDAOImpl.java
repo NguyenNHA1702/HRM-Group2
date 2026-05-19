@@ -524,6 +524,23 @@ public class UserDAOImpl implements UserDAO {
         }
     }
 
+    @Override
+    public boolean isUserRoleActive(int employeeId) {
+        String sql = "SELECT r.is_active FROM user_accounts ua JOIN roles r ON ua.role_id = r.id WHERE ua.employee_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("is_active") == 1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // -------------------------------------------------------------------------
     // Helper
     // -------------------------------------------------------------------------

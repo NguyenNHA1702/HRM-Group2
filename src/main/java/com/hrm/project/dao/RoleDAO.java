@@ -10,4 +10,10 @@ public interface RoleDAO {
      * * @return Danh sách các đối tượng RoleWithCountDTO công khai
      */
     List<RoleWithCountDTO> getAllRolesWithCount();
+
+    boolean updateRole(int id, String name, String description);
+
+    boolean toggleRoleStatus(int id, boolean isActive);
+
+    boolean isRoleNameExists(String name, int excludeId);
 }
