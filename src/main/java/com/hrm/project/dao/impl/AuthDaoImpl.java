@@ -10,10 +10,11 @@ public class AuthDaoImpl implements AuthDao {
 
     @Override
     public LoginResponseDto findByEmailAndPassword(String email, String passwordRaw) {
-        String sql = "SELECT e.employee_id, ua.id AS account_id, e.full_name, e.work_email, e.role_name, e.role_group_code, e.avatar_url, ua.password_hash " +
+        String sql = "SELECT e.employee_id, ua.id AS account_id, ua.role_id, e.full_name, e.work_email, e.role_name, e.role_group_code, e.avatar_url, ua.password_hash " +
                 "FROM vw_my_profile e " +
                 "JOIN user_accounts ua ON e.employee_id = ua.employee_id " +
-                "WHERE e.work_email = ? AND ua.is_active = 1";
+                "JOIN roles r ON ua.role_id = r.id " +
+                "WHERE e.work_email = ? AND ua.is_active = 1 AND r.is_active = 1";
 
 
         try (Connection conn = DBConnection.getConnection();
@@ -34,6 +35,7 @@ public class AuthDaoImpl implements AuthDao {
                         LoginResponseDto dto = new LoginResponseDto();
                         dto.setEmployeeId(rs.getInt("employee_id"));
                         dto.setAccountId(rs.getInt("account_id"));
+                        dto.setRoleId(rs.getInt("role_id"));
                         dto.setFullName(rs.getString("full_name"));
                         dto.setWorkEmail(rs.getString("work_email"));
                         dto.setRoleName(rs.getString("role_name"));
@@ -56,6 +58,7 @@ public class AuthDaoImpl implements AuthDao {
                         LoginResponseDto dto = new LoginResponseDto();
                         dto.setEmployeeId(rs.getInt("employee_id"));
                         dto.setAccountId(rs.getInt("account_id"));
+                        dto.setRoleId(rs.getInt("role_id"));
                         dto.setFullName(rs.getString("full_name"));
                         dto.setWorkEmail(rs.getString("work_email"));
                         dto.setRoleName(rs.getString("role_name"));

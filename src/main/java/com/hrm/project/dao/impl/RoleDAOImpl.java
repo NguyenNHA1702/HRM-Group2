@@ -15,12 +15,11 @@ public class RoleDAOImpl implements RoleDAO {
     public List<RoleWithCountDTO> getAllRolesWithCount() {
         List<RoleWithCountDTO> list = new ArrayList<>();
 
-        // Câu lệnh SQL thực hiện nhóm và đếm số lượng tài khoản liên kết với từng vai trò
-        String sql = "SELECT r.id, r.name, r.description, COUNT(ua.id) AS user_count " +
+        // Câu lệnh SQL thực hiện nhóm và đếm số lượng tài khoản liên kết với từng vai trò (bao gồm cả active và inactive)
+        String sql = "SELECT r.id, r.name, r.description, r.is_active, COUNT(ua.id) AS user_count " +
                 "FROM roles r " +
                 "LEFT JOIN user_accounts ua ON r.id = ua.role_id " +
-                "WHERE r.is_active = 1 " +
-                "GROUP BY r.id, r.name, r.description";
+                "GROUP BY r.id, r.name, r.description, r.is_active";
 
         // Sử dụng cơ chế Try-with-resources để tự động đóng kết nối sau khi thực thi
         try (Connection conn = DBConnection.getConnection();
@@ -33,6 +32,7 @@ public class RoleDAOImpl implements RoleDAO {
                 dto.setName(rs.getString("name"));
                 dto.setDescription(rs.getString("description"));
                 dto.setUserCount(rs.getInt("user_count"));
+                dto.setActive(rs.getBoolean("is_active"));
 
                 list.add(dto);
             }
@@ -40,5 +40,52 @@ public class RoleDAOImpl implements RoleDAO {
             e.printStackTrace(); // Ghi nhận lỗi stack trace khi thao tác với DB gặp sự cố
         }
         return list;
+    }
+
+    @Override
+    public boolean updateRole(int id, String name, String description) {
+        String sql = "UPDATE roles SET name = ?, description = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, description);
+            ps.setInt(3, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean toggleRoleStatus(int id, boolean isActive) {
+        String sql = "UPDATE roles SET is_active = ?, updated_at = NOW() WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, isActive ? 1 : 0);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isRoleNameExists(String name, int excludeId) {
+        String sql = "SELECT COUNT(*) FROM roles WHERE name = ? AND id != ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setInt(2, excludeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

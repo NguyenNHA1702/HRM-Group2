@@ -5,17 +5,19 @@ public class RoleWithCountDTO {
     private String name;
     private String description;
     private int userCount;
+    private boolean isActive;
 
     // Default Constructor
     public RoleWithCountDTO() {
     }
 
     // Full Constructor
-    public RoleWithCountDTO(int id, String name, String description, int userCount) {
+    public RoleWithCountDTO(int id, String name, String description, int userCount, boolean isActive) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.userCount = userCount;
+        this.isActive = isActive;
     }
 
     // Getters and Setters
@@ -49,5 +51,21 @@ public class RoleWithCountDTO {
 
     public void setUserCount(int userCount) {
         this.userCount = userCount;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    /**
+     * Alias getter cho JSP EL: ${role.isActive} tìm getIsActive() trước khi tìm isActive()
+     * Không có getter này, tất cả role đều hiển thị sai thành false trong JavaScript.
+     */
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 }

@@ -17,18 +17,20 @@ public class RolePermissionDAOImpl implements RolePermissionDAO {
         List<ModulePermissionDTO> list = new ArrayList<>();
 
         String sql = "SELECT m.id AS module_id, m.name AS module_name, " +
-                "       COALESCE(rp.can_view, 0) AS can_view, " +
-                "       COALESCE(rp.can_create, 0) AS can_create, " +
-                "       COALESCE(rp.can_edit, 0) AS can_edit, " +
-                "       COALESCE(rp.can_delete, 0) AS can_delete " +
+                "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_view, 0) ELSE 0 END) AS can_view, " +
+                "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_create, 0) ELSE 0 END) AS can_create, " +
+                "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_edit, 0) ELSE 0 END) AS can_edit, " +
+                "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_delete, 0) ELSE 0 END) AS can_delete " +
                 "FROM modules m " +
                 "LEFT JOIN role_permissions rp ON m.id = rp.module_id AND rp.role_id = ? " +
+                "LEFT JOIN roles r ON r.id = ? " +
                 "ORDER BY m.id ASC";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, roleId);
+            ps.setInt(2, roleId);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
