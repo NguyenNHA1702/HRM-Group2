@@ -35,7 +35,7 @@ public class SecurityFilter implements Filter {
 
         // 1. Loại bỏ hoàn toàn các trang mặc định, tài nguyên tĩnh (css, js, ảnh) khỏi bộ lọc chặn
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
-                path.startsWith("/login") || path.startsWith("/logout") || path.startsWith("/assets/*")) {
+                path.startsWith("/login") || path.startsWith("/logout") || path.startsWith("/assets")) {
 
             chain.doFilter(request, response);
             return;
