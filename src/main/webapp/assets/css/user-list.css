@@ -257,6 +257,7 @@ tbody tr:hover { background: #f8fafc; }
     cursor: pointer;
 }
 .action-btn:hover { background: #f1f5f9; transform: scale(1.1); }
+.action-btn.view   { color: #10b981; }
 .action-btn.edit   { color: #3b82f6; }
 .action-btn.lock, .action-btn.unlock { color: #f59e0b; }
 .action-btn.reset  { color: #8b5cf6; }

@@ -24,7 +24,7 @@ public class AdminUpdateUserController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParam = request.getParameter("id");
         if (idParam == null || idParam.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/index.jsp?error=InvalidUserId");
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=InvalidUserId");
             return;
         }
 
@@ -43,10 +43,10 @@ public class AdminUpdateUserController extends HttpServlet {
 
                 request.getRequestDispatcher("/WEB-INF/views/admin/admin_update_user.jsp").forward(request, response);
             } else {
-                response.sendRedirect(request.getContextPath() + "/index.jsp?error=UserNotFound");
+                response.sendRedirect(request.getContextPath() + "/admin/users?error=UserNotFound");
             }
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/index.jsp?error=InvalidUserId");
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=InvalidUserId");
         }
     }
 
@@ -56,14 +56,37 @@ public class AdminUpdateUserController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String fullName = request.getParameter("fullName");
+            
             String phone = request.getParameter("phone");
+            if (phone != null && phone.trim().isEmpty()) {
+                phone = null;
+            }
+            
             String personalEmail = request.getParameter("personalEmail");
+            if (personalEmail != null && personalEmail.trim().isEmpty()) {
+                personalEmail = null;
+            }
+            
             String dateOfBirth = request.getParameter("dateOfBirth");
+            if (dateOfBirth != null && dateOfBirth.trim().isEmpty()) {
+                dateOfBirth = null;
+            }
+            
             String gender = request.getParameter("gender");
-            int departmentId = Integer.parseInt(request.getParameter("departmentId"));
-            int positionId = Integer.parseInt(request.getParameter("positionId"));
+            if (gender != null && gender.trim().isEmpty()) {
+                gender = null;
+            }
+            
+            String departmentIdStr = request.getParameter("departmentId");
+            int departmentId = (departmentIdStr != null && !departmentIdStr.trim().isEmpty()) ? Integer.parseInt(departmentIdStr) : 0;
+            
+            String positionIdStr = request.getParameter("positionId");
+            int positionId = (positionIdStr != null && !positionIdStr.trim().isEmpty()) ? Integer.parseInt(positionIdStr) : 0;
+            
             String status = request.getParameter("status");
-            int roleId = Integer.parseInt(request.getParameter("roleId"));
+            
+            String roleIdStr = request.getParameter("roleId");
+            int roleId = (roleIdStr != null && !roleIdStr.trim().isEmpty()) ? Integer.parseInt(roleIdStr) : 0;
 
             UserAccount user = new UserAccount();
             user.setEmployeeId(id);
@@ -85,7 +108,7 @@ public class AdminUpdateUserController extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/index.jsp?error=SystemError");
+            response.sendRedirect(request.getContextPath() + "/admin/users?error=SystemError");
         }
     }
 }

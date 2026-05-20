@@ -12,6 +12,7 @@ import java.util.List;
 
 public interface UserDAO {
     UserAccount getUserById(int id);
+    UserAccount getUserDetailById(int id);
     boolean updateProfile(UserAccount user);
     String getPasswordHashByEmployeeId(int employeeId);
 

@@ -30,6 +30,7 @@
     <div class="page-content">
 
         <script>
+            window.contextPath = '${pageContext.request.contextPath}';
             window.actionUrl =
                 '${pageContext.request.contextPath}/admin/users/action';
         </script>
@@ -270,6 +271,14 @@
 
                                     <div class="actions">
 
+                                        <button class="action-btn view"
+                                                title="Xem chi tiết"
+                                                onclick="viewUser(${u.employeeId})">
+
+                                            <i class="fa-solid fa-eye"></i>
+
+                                        </button>
+
                                         <a href="${pageContext.request.contextPath}/admin/user/update?id=${u.employeeId}"
                                            class="action-btn edit"
                                            title="Chỉnh sửa">
@@ -501,6 +510,98 @@
 
         </div>
         <%-- =============== End Create User Modal =============== --%>
+
+        <%-- =============== View User Modal =============== --%>
+        <div class="modal-overlay" id="viewUserModal">
+
+            <div class="modal modal-wide">
+
+                <div class="modal-title">
+                    <i class="fa-solid fa-id-card"></i>
+                    Chi tiết thông tin tài khoản
+                </div>
+
+                <div class="profile-card-layout" style="display: flex; gap: 24px; margin-bottom: 20px;">
+                    
+                    <%-- Left side: Avatar & Code --%>
+                    <div style="flex: 0 0 160px; text-align: center; border-right: 1px solid #f1f5f9; padding-right: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border);">
+                            <img id="view_avatar" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <div id="view_avatar_placeholder" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                                <i class="fas fa-user" style="font-size: 3rem; color: #94a3b8;"></i>
+                            </div>
+                        </div>
+                        <div id="view_employeeCode" style="font-weight: 700; color: var(--indigo-text); font-size: 14px; margin-bottom: 6px;"></div>
+                        <div><span id="view_status"></span></div>
+                    </div>
+
+                    <%-- Right side: Profile Details --%>
+                    <div style="flex: 1;">
+                        
+                        <div class="modal-section-label">
+                            <i class="fa-solid fa-user-tag"></i> Thông tin cá nhân
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-bottom: 20px;">
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Họ và tên</label>
+                                <div id="view_fullName" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Số điện thoại</label>
+                                <div id="view_phone" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Ngày sinh</label>
+                                <div id="view_dateOfBirth" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Giới tính</label>
+                                <div id="view_gender" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                        </div>
+
+                        <div class="modal-section-label">
+                            <i class="fa-solid fa-briefcase"></i> Công việc &amp; Vai trò
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px;">
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Phòng ban</label>
+                                <div id="view_department" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Chức vụ / Vị trí</label>
+                                <div id="view_position" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Email công việc</label>
+                                <div id="view_workEmail" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Email cá nhân</label>
+                                <div id="view_personalEmail" style="font-weight: 600; font-size: 14px; color: var(--text);"></div>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 2px;">Quyền hệ thống (Role)</label>
+                                <div id="view_role" style="font-weight: 600; font-size: 14px; color: var(--indigo-text);"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-actions" style="margin-top: 16px;">
+                    <button type="button"
+                            class="btn-cancel"
+                            onclick="closeModal('viewUserModal')">
+                        Đóng
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+        <%-- =============== End View User Modal =============== --%>
 
         <%-- Delete Form --%>
         <form id="deleteForm"

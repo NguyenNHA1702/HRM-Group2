@@ -406,6 +406,44 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
+    public UserAccount getUserDetailById(int id) {
+        String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
+                "e.date_of_birth, e.gender, e.status, d.name AS department_name, p.name AS position_name, r.name AS role_name, ua.is_active " +
+                "FROM employees e " +
+                "LEFT JOIN user_accounts ua ON e.id = ua.employee_id " +
+                "LEFT JOIN roles r ON ua.role_id = r.id " +
+                "LEFT JOIN departments d ON e.department_id = d.id " +
+                "LEFT JOIN positions p ON e.position_id = p.id " +
+                "WHERE e.id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    UserAccount user = new UserAccount();
+                    user.setEmployeeId(rs.getInt("employee_id"));
+                    user.setEmployeeCode(rs.getString("employee_code"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setPhone(rs.getString("phone"));
+                    user.setWorkEmail(rs.getString("work_email"));
+                    user.setPersonalEmail(rs.getString("personal_email"));
+                    user.setDateOfBirth(rs.getString("date_of_birth"));
+                    user.setGender(rs.getString("gender"));
+                    user.setStatus(rs.getString("status"));
+                    user.setDepartmentName(rs.getString("department_name"));
+                    user.setPositionName(rs.getString("position_name"));
+                    user.setRoleName(rs.getString("role_name"));
+                    user.setActive(rs.getBoolean("is_active"));
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
     public boolean updateUserByAdmin(UserAccount user) {
         String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, status = ? WHERE id = ?";
         String updateUserAccountSql = "UPDATE user_accounts SET role_id = ? WHERE employee_id = ?";

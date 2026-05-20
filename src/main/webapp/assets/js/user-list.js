@@ -120,6 +120,57 @@ function confirmDelete(id, name) {
     }
 }
 
+function viewUser(id) {
+    const contextPath = window.contextPath || '';
+    fetch(contextPath + '/admin/api/user/detail?id=' + id)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Không thể tải thông tin chi tiết tài khoản.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Fill details in Modal
+            document.getElementById('view_fullName').innerText = data.fullName || 'N/A';
+            document.getElementById('view_employeeCode').innerText = data.employeeCode || 'N/A';
+            document.getElementById('view_workEmail').innerText = data.workEmail || 'N/A';
+            document.getElementById('view_personalEmail').innerText = data.personalEmail || 'N/A';
+            document.getElementById('view_phone').innerText = data.phone || 'N/A';
+            document.getElementById('view_dateOfBirth').innerText = data.dateOfBirth || 'N/A';
+            document.getElementById('view_gender').innerText = data.gender || 'N/A';
+            document.getElementById('view_department').innerText = data.departmentName || 'N/A';
+            document.getElementById('view_position').innerText = data.positionName || 'N/A';
+            document.getElementById('view_role').innerText = data.roleName || 'N/A';
+
+            // Status label mapping
+            const statusEl = document.getElementById('view_status');
+            if (data.isActive) {
+                statusEl.innerText = 'Đang hoạt động (ACTIVE)';
+                statusEl.className = 'status-active';
+            } else {
+                statusEl.innerText = 'Đã khóa (INACTIVE)';
+                statusEl.className = 'status-inactive';
+            }
+
+            // Avatar display logic
+            const avatarImg = document.getElementById('view_avatar');
+            const avatarPlaceholder = document.getElementById('view_avatar_placeholder');
+            if (data.avatarUrl) {
+                avatarImg.src = data.avatarUrl;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                avatarPlaceholder.style.display = 'flex';
+            }
+
+            openModal('viewUserModal');
+        })
+        .catch(err => {
+            alert(err.message);
+        });
+}
+
 /* Flash auto hide */
 setTimeout(() => {
     document.querySelectorAll('.flash').forEach(el => {
