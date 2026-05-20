@@ -15,13 +15,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "AdminUpdateUserController", urlPatterns = {"/admin/user/update"})
+@WebServlet(name = "AdminUpdateUserController", urlPatterns = { "/admin/user/update" })
 public class AdminUpdateUserController extends HttpServlet {
 
     private UserDAO userDAO = new UserDAOImpl();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String idParam = request.getParameter("id");
         if (idParam == null || idParam.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/admin/users?error=InvalidUserId");
@@ -51,7 +52,8 @@ public class AdminUpdateUserController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         try {
             int id = Integer.parseInt(request.getParameter("id"));
