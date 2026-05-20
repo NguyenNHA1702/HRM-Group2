@@ -258,8 +258,8 @@
         </form>
 
         <div class="back-to-login">
-            <a href="${pageContext.request.contextPath}/index.jsp">
-                <i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ
+            <a href="${pageContext.request.contextPath}/login">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại đăng nhập
             </a>
         </div>
     </div>

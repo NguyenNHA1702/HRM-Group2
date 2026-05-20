@@ -64,7 +64,9 @@ public class ForgotPasswordController extends HttpServlet {
             boolean emailSent = EmailUtility.sendEmail(email, subject, emailContent);
             
             if (emailSent) {
-                request.setAttribute("success", "Mật khẩu mới đã được gửi tới email của bạn thành công! Vui lòng kiểm tra hộp thư (hoặc màn hình console của Server để lấy mật khẩu nhanh).");
+                String successMsg = "Mật khẩu mới đã được gửi tới email của bạn thành công! Vui lòng kiểm tra hộp thư.";
+                response.sendRedirect(request.getContextPath() + "/login?success=" + java.net.URLEncoder.encode(successMsg, "UTF-8"));
+                return;
             } else {
                 request.setAttribute("error", "Không thể gửi email. Vui lòng thử lại sau.");
             }

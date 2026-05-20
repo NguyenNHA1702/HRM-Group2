@@ -35,6 +35,16 @@
             </div>
         </c:if>
 
+        <%-- success msg nếu có --%>
+        <c:if test="${not empty param.success}">
+            <div class="alert alert-success">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                ${param.success}
+            </div>
+        </c:if>
+
         <form action="${pageContext.request.contextPath}/login" method="post" autocomplete="off">
             <div class="form-group">
                 <label for="email">Email</label>
