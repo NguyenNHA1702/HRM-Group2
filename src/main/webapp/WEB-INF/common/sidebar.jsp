@@ -26,6 +26,7 @@
                 </a>
             </li>
 
+            <%-- PHÂN HỆ: EMPLOYEE --%>
             <c:if test="${sessionScope.roleGroup eq 'EMPLOYEE'}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/cham-cong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/cham-cong">
@@ -47,6 +48,7 @@
                 </li>
             </c:if>
 
+            <%-- PHÂN HỆ: MANAGER --%>
             <c:if test="${sessionScope.roleGroup eq 'MANAGER'}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/nhan-vien') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/nhan-vien">
@@ -68,6 +70,7 @@
                 </li>
             </c:if>
 
+            <%-- PHÂN HỆ: HR --%>
             <c:if test="${sessionScope.roleGroup eq 'HR'}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/nhan-vien') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/nhan-vien">
@@ -75,8 +78,8 @@
                         Nhân viên
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/phong-ban') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/phong-ban">
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/departments') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/departments">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                         Phòng ban
                     </a>
@@ -101,6 +104,7 @@
                 </li>
             </c:if>
 
+            <%-- PHÂN HỆ: ADMIN --%>
             <c:if test="${sessionScope.roleGroup eq 'ADMIN'}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/nhan-vien') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/nhan-vien">
@@ -108,8 +112,8 @@
                         Nhân viên
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/phong-ban') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/phong-ban">
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/departments') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/departments">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                         Phòng ban
                     </a>
