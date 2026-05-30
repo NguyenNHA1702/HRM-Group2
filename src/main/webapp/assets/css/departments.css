@@ -1,0 +1,47 @@
+/* Khoảng cách của bảng dữ liệu phòng ban */
+.table-responsive {
+    margin-top: 20px;
+}
+
+/* Tinh chỉnh thanh tìm kiếm phẳng và mượt  */
+.search-box-container .input-group-text {
+    background-color: #fff;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    padding-left: 14px;
+    border-color: #ced4da;
+}
+
+.search-box-container .form-control-search {
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    padding-left: 0;
+}
+
+.form-control-search:focus {
+    border-color: #ced4da;
+    box-shadow: none;
+}
+
+/* Định dạng các ô Dropdown select trong bộ lọc */
+.filter-select {
+    border-radius: 8px !important;
+    height: calc(1.5em + .75rem + 10px) !important;
+    color: #4a5568;
+}
+
+/* Định dạng màu sắc các badge trạng thái (Dùng cho các tính năng sau nếu cần) */
+.badge-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-deactive {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Tinh chỉnh nhẹ hiệu ứng hover hàng của bảng phòng ban */
+.dept-row:hover {
+    background-color: #f8fafc;
+}

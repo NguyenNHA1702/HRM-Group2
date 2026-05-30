@@ -313,11 +313,17 @@ public class UserDAOImpl implements UserDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                list.add(new Department(
-                        rs.getInt("id"),
-                        rs.getString("code"),
-                        rs.getString("name")
-                ));
+                Department d = new Department();
+                d.setId(rs.getInt("id"));
+                d.setCode(rs.getString("code"));
+                d.setName(rs.getString("name"));
+                d.setManagerId(rs.getObject("manager_id") != null ? rs.getInt("manager_id") : null);
+                d.setParentId(rs.getObject("parent_id") != null ? rs.getInt("parent_id") : null);
+                d.setDescription(rs.getString("description"));
+                d.setIsActive(rs.getInt("is_active"));
+                d.setParentName(rs.getString("parent_name")); // Nhận tên phòng ban cha từ câu lệnh JOIN
+
+                list.add(d);
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -56,14 +56,14 @@ public class ChangePasswordController extends HttpServlet {
                 return;
             }
 
-            // Đồng bộ cơ chế chuẩn hóa đầu khố của chuỗi mã hóa giống y xì AuthDao của nhóm
+            // Đồng bộ cơ chế chuẩn hóa đầu khố của chuỗi mã hóa giống  AuthDao
             if (dbHash.startsWith("$2y$")) {
                 dbHash = dbHash.replaceFirst("\\$2y\\$", "\\$2a\\$");
             }
 
             boolean isPasswordMatch = false;
 
-            // Hỗ trợ bypass luôn pass test "123456" của nhóm
+            // Hỗ trợ bypass  pass test "123456"
             if ("123456".equals(currentPassword)) {
                 isPasswordMatch = true;
             } else {
