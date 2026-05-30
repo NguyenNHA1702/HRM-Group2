@@ -11,7 +11,7 @@ import java.util.List;
 
 public class RolePermissionDAOImpl implements RolePermissionDAO {
 
-    // 1. HÀM ĐỌC DỮ LIỆU (Giữ nguyên bản chuẩn của Tiến)
+    // 1. HÀM ĐỌC DỮ LIỆU
     @Override
     public List<ModulePermissionDTO> getPermissionsByRoleId(int roleId) {
         List<ModulePermissionDTO> list = new ArrayList<>();
@@ -52,7 +52,7 @@ public class RolePermissionDAOImpl implements RolePermissionDAO {
         return list;
     }
 
-    // 2. HÀM GHI DỮ LIỆU MỚI (Tiến bổ sung đoạn này vào cuối file)
+    // 2. HÀM GHI DỮ LIỆU MỚI
     @Override
     public boolean savePermissions(int roleId, List<ModulePermissionDTO> permissions) {
         String deleteSql = "DELETE FROM role_permissions WHERE role_id = ?";

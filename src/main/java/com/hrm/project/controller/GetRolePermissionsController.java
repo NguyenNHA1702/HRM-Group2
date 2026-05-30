@@ -31,7 +31,7 @@ public class GetRolePermissionsController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Kiểm tra quyền Admin trước khi trả dữ liệu phân quyền nhạy cảm
+        // Kiểm tra quyền Admin trước khi trả dữ liệu phân quyền
         HttpSession session = request.getSession(false);
         if (session == null || !"ADMIN".equals(session.getAttribute("roleGroup"))) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
