@@ -2,6 +2,7 @@
 package com.hrm.project.dao.impl;
 
 import com.hrm.project.dao.UserDAO;
+import com.hrm.project.dao.impl.DBConnection;
 import com.hrm.project.model.Department;
 import com.hrm.project.model.Position;
 import com.hrm.project.model.Role;
@@ -595,6 +596,31 @@ public class UserDAOImpl implements UserDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public List<UserAccount> getAllEmployees() throws SQLException {
+        String sql = "SELECT e.id, e.employee_code, e.full_name, e.department_id, e.position_id " +
+                "FROM employees e " +
+                "WHERE e.status = 'ACTIVE' " +
+                "ORDER BY e.full_name ASC";
+
+        List<UserAccount> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                UserAccount user = new UserAccount();
+                user.setEmployeeId(rs.getInt("id"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setFullName(rs.getString("full_name"));
+                user.setDepartmentId(rs.getInt("department_id"));
+                user.setPositionId(rs.getInt("position_id"));
+                list.add(user);
+            }
+        }
+        return list;
     }
 
     // -------------------------------------------------------------------------

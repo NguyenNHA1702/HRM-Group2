@@ -29,6 +29,28 @@
         <url-pattern>/admin/users/action</url-pattern>
     </servlet-mapping>
 
+    <!-- =====INSURANCE SERVLET CONFIGURATION ===== -->
+    <servlet>
+        <servlet-name>AdminInsuranceConfig</servlet-name>
+        <servlet-class>com.hrm.project.controller.AdminInsuranceConfig</servlet-class>
+        <init-param>
+            <param-name>charset</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+    </servlet>
+
+    <!-- URL Mapping: GET /admin/insurance -->
+    <servlet-mapping>
+        <servlet-name>AdminInsuranceConfig</servlet-name>
+        <url-pattern>/admin/insurance</url-pattern>
+    </servlet-mapping>
+
+    <!-- URL Mapping: POST /admin/insurance/action -->
+    <servlet-mapping>
+        <servlet-name>AdminInsuranceConfig</servlet-name>
+        <url-pattern>/admin/insurance/action</url-pattern>
+    </servlet-mapping>
+
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
