@@ -167,6 +167,27 @@
                         Loại phụ cấp
                     </a>
                 </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/work-shifts') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/work-shifts">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Ca làm việc
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/holidays') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/holidays">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Ngày nghỉ lễ
+                    </a>
+                </li>
+                <%-- Bảo hiểm - từ HienDev --%>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/insurance') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/insurance">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        Bảo hiểm
+                    </a>
+                </li>
+                <%-- Phân quyền - từ main --%>
+
                 <%-- ===== NEW: INSURANCE MENU ===== --%>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/insurance') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/insurance">
@@ -175,6 +196,7 @@
                     </a>
                 </li>
                 <%-- ===== END: INSURANCE MENU ===== --%>
+
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/permissions') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/permissions">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
