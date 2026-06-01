@@ -21,6 +21,8 @@ public class UserAccount {
     private int positionId;
     private int roleId;
     private boolean isActive;
+    private int salaryScaleId;
+    private int allowanceTypeId;
 
     public UserAccount() {}
 
@@ -78,4 +80,10 @@ public class UserAccount {
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean isActive) { this.isActive = isActive; }
+
+    public int getSalaryScaleId() { return salaryScaleId; }
+    public void setSalaryScaleId(int salaryScaleId) { this.salaryScaleId = salaryScaleId; }
+
+    public int getAllowanceTypeId() { return allowanceTypeId; }
+    public void setAllowanceTypeId(int allowanceTypeId) { this.allowanceTypeId = allowanceTypeId; }
 }

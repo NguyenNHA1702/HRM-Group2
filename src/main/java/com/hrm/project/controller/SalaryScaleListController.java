@@ -1,8 +1,9 @@
-package com.hrm.project.controller;
-
 import com.hrm.project.dao.SalaryScaleDAO;
 import com.hrm.project.dao.impl.SalaryScaleDAOImpl;
+import com.hrm.project.dao.AllowanceTypeDAO;
+import com.hrm.project.dao.impl.AllowanceTypeDAOImpl;
 import com.hrm.project.model.SalaryScale;
+import com.hrm.project.model.AllowanceType;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,6 +18,7 @@ import java.util.List;
 public class SalaryScaleListController extends HttpServlet {
 
     private final SalaryScaleDAO dao = new SalaryScaleDAOImpl();
+    private final AllowanceTypeDAO allowanceTypeDAO = new AllowanceTypeDAOImpl();
 
     /** GET /admin/salary-scales → hiển thị danh sách */
     @Override
@@ -24,7 +26,9 @@ public class SalaryScaleListController extends HttpServlet {
             throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         List<SalaryScale> list = dao.getAllSalaryScales();
+        List<AllowanceType> allowanceTypes = allowanceTypeDAO.getAllAllowanceTypes();
         req.setAttribute("salaryScales", list);
+        req.setAttribute("allowanceTypes", allowanceTypes);
         req.getRequestDispatcher("/WEB-INF/views/admin/salary-scale-list.jsp").forward(req, resp);
     }
 

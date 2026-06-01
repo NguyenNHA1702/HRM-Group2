@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c"   uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -265,6 +266,34 @@
                         <label>Chức vụ / Vị trí</label>
                         <select name="positionId" id="positionId" data-selected="${user.positionId}">
                             <option value="">-- Chọn chức vụ --</option>
+                        </select>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Bậc lương / Thang lương (Salary Scale)</label>
+                        <select name="salaryScaleId">
+                            <option value="">-- Chưa áp dụng / Không có --</option>
+                            <c:forEach items="${salaryScales}" var="scale">
+                                <c:if test="${scale.active || user.salaryScaleId == scale.id}">
+                                    <option value="${scale.id}" ${user.salaryScaleId == scale.id ? 'selected' : ''}>
+                                        Bậc ${scale.grade} (CB: <fmt:formatNumber value="${scale.basicSalary}" pattern="#,##0"/> VNĐ)
+                                    </option>
+                                </c:if>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Loại phụ cấp (Allowance Type)</label>
+                        <select name="allowanceTypeId">
+                            <option value="">-- Chưa áp dụng / Không có --</option>
+                            <c:forEach items="${allowanceTypes}" var="allowance">
+                                <c:if test="${allowance.active || user.allowanceTypeId == allowance.id}">
+                                    <option value="${allowance.id}" ${user.allowanceTypeId == allowance.id ? 'selected' : ''}>
+                                        ${allowance.name} (${allowance.code}) - <fmt:formatNumber value="${allowance.amount}" pattern="#,##0"/> VNĐ
+                                    </option>
+                                </c:if>
+                            </c:forEach>
                         </select>
                     </div>
                 </div>

@@ -7,6 +7,11 @@ import com.hrm.project.model.Position;
 import com.hrm.project.model.Role;
 import com.hrm.project.model.UserAccount;
 
+import com.hrm.project.dao.SalaryScaleDAO;
+import com.hrm.project.dao.impl.SalaryScaleDAOImpl;
+import com.hrm.project.dao.AllowanceTypeDAO;
+import com.hrm.project.dao.impl.AllowanceTypeDAOImpl;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -19,6 +24,8 @@ import java.util.List;
 public class AdminUpdateUserController extends HttpServlet {
 
     private UserDAO userDAO = new UserDAOImpl();
+    private SalaryScaleDAO salaryScaleDAO = new SalaryScaleDAOImpl();
+    private AllowanceTypeDAO allowanceTypeDAO = new AllowanceTypeDAOImpl();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -36,11 +43,15 @@ public class AdminUpdateUserController extends HttpServlet {
                 List<Department> departments = userDAO.getAllDepartments();
                 List<Position> positions = userDAO.getAllPositions();
                 List<Role> roles = userDAO.getAllRoles();
+                List<com.hrm.project.model.SalaryScale> salaryScales = salaryScaleDAO.getAllSalaryScales();
+                List<com.hrm.project.model.AllowanceType> allowanceTypes = allowanceTypeDAO.getAllAllowanceTypes();
 
                 request.setAttribute("user", user);
                 request.setAttribute("departments", departments);
                 request.setAttribute("positions", positions);
                 request.setAttribute("roles", roles);
+                request.setAttribute("salaryScales", salaryScales);
+                request.setAttribute("allowanceTypes", allowanceTypes);
 
                 request.getRequestDispatcher("/WEB-INF/views/admin/admin_update_user.jsp").forward(request, response);
             } else {
@@ -84,6 +95,12 @@ public class AdminUpdateUserController extends HttpServlet {
             
             String positionIdStr = request.getParameter("positionId");
             int positionId = (positionIdStr != null && !positionIdStr.trim().isEmpty()) ? Integer.parseInt(positionIdStr) : 0;
+
+            String salaryScaleIdStr = request.getParameter("salaryScaleId");
+            int salaryScaleId = (salaryScaleIdStr != null && !salaryScaleIdStr.trim().isEmpty()) ? Integer.parseInt(salaryScaleIdStr) : 0;
+
+            String allowanceTypeIdStr = request.getParameter("allowanceTypeId");
+            int allowanceTypeId = (allowanceTypeIdStr != null && !allowanceTypeIdStr.trim().isEmpty()) ? Integer.parseInt(allowanceTypeIdStr) : 0;
             
             String status = request.getParameter("status");
             
@@ -99,6 +116,8 @@ public class AdminUpdateUserController extends HttpServlet {
             user.setGender(gender);
             user.setDepartmentId(departmentId);
             user.setPositionId(positionId);
+            user.setSalaryScaleId(salaryScaleId);
+            user.setAllowanceTypeId(allowanceTypeId);
             user.setStatus(status);
             user.setRoleId(roleId);
 

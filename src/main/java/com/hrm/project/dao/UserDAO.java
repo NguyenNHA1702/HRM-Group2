@@ -56,5 +56,7 @@ public interface UserDAO {
     boolean updatePassword(int employeeId, String hashedPassword);
     boolean isUserRoleActive(int employeeId);
 
+    // Get all employees for dropdowns/selects
+    List<UserAccount> getAllEmployees() throws SQLException;
 
 }

@@ -2,6 +2,7 @@
 package com.hrm.project.dao.impl;
 
 import com.hrm.project.dao.UserDAO;
+import com.hrm.project.dao.impl.DBConnection;
 import com.hrm.project.model.Department;
 import com.hrm.project.model.Position;
 import com.hrm.project.model.Role;
@@ -379,7 +380,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public UserAccount getUserForAdminUpdate(int id) {
         String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
-                "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, ua.role_id, ua.is_active " +
+                "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, e.salary_scale_id, e.allowance_type_id, ua.role_id, ua.is_active " +
                 "FROM employees e " +
                 "LEFT JOIN user_accounts ua ON e.id = ua.employee_id " +
                 "WHERE e.id = ?";
@@ -400,6 +401,8 @@ public class UserDAOImpl implements UserDAO {
                     user.setStatus(rs.getString("status"));
                     user.setDepartmentId(rs.getInt("department_id"));
                     user.setPositionId(rs.getInt("position_id"));
+                    user.setSalaryScaleId(rs.getInt("salary_scale_id"));
+                    user.setAllowanceTypeId(rs.getInt("allowance_type_id"));
                     user.setRoleId(rs.getInt("role_id"));
                     user.setActive(rs.getBoolean("is_active"));
                     return user;
@@ -451,7 +454,7 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public boolean updateUserByAdmin(UserAccount user) {
-        String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, status = ? WHERE id = ?";
+        String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, salary_scale_id = ?, allowance_type_id = ?, status = ? WHERE id = ?";
         String updateUserAccountSql = "UPDATE user_accounts SET role_id = ? WHERE employee_id = ?";
 
         Connection conn = null;
@@ -475,8 +478,18 @@ public class UserDAOImpl implements UserDAO {
                 } else {
                     psEmp.setNull(7, java.sql.Types.INTEGER);
                 }
-                psEmp.setString(8, user.getStatus());
-                psEmp.setInt(9, user.getEmployeeId());
+                if (user.getSalaryScaleId() > 0) {
+                    psEmp.setInt(8, user.getSalaryScaleId());
+                } else {
+                    psEmp.setNull(8, java.sql.Types.INTEGER);
+                }
+                if (user.getAllowanceTypeId() > 0) {
+                    psEmp.setInt(9, user.getAllowanceTypeId());
+                } else {
+                    psEmp.setNull(9, java.sql.Types.INTEGER);
+                }
+                psEmp.setString(10, user.getStatus());
+                psEmp.setInt(11, user.getEmployeeId());
                 psEmp.executeUpdate();
             }
 
@@ -583,6 +596,31 @@ public class UserDAOImpl implements UserDAO {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public List<UserAccount> getAllEmployees() throws SQLException {
+        String sql = "SELECT e.id, e.employee_code, e.full_name, e.department_id, e.position_id " +
+                "FROM employees e " +
+                "WHERE e.status = 'ACTIVE' " +
+                "ORDER BY e.full_name ASC";
+
+        List<UserAccount> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                UserAccount user = new UserAccount();
+                user.setEmployeeId(rs.getInt("id"));
+                user.setEmployeeCode(rs.getString("employee_code"));
+                user.setFullName(rs.getString("full_name"));
+                user.setDepartmentId(rs.getInt("department_id"));
+                user.setPositionId(rs.getInt("position_id"));
+                list.add(user);
+            }
+        }
+        return list;
     }
 
     // -------------------------------------------------------------------------

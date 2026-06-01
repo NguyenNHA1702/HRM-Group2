@@ -212,7 +212,16 @@
             </div>
             <div class="form-group">
                 <label>Phụ cấp (VNĐ) <span style="color:red">*</span></label>
-                <input type="number" name="allowance" min="0" step="100000" placeholder="Ví dụ: 2000000" required/>
+                <select name="allowance" required style="width: 100%; height: 46px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;">
+                    <option value="0">-- Chọn phụ cấp / Không có phụ cấp (0 VNĐ) --</option>
+                    <c:forEach items="${allowanceTypes}" var="allowance">
+                        <c:if test="${allowance.active}">
+                            <option value="${allowance.amount}">
+                                ${allowance.name} (${allowance.code}) - <fmt:formatNumber value="${allowance.amount}" pattern="#,##0"/> VNĐ
+                            </option>
+                        </c:if>
+                    </c:forEach>
+                </select>
             </div>
             <div class="form-group">
                 <label>Mô tả</label>
@@ -246,7 +255,14 @@
             </div>
             <div class="form-group">
                 <label>Phụ cấp (VNĐ) <span style="color:red">*</span></label>
-                <input type="number" name="allowance" id="edit_allowance" min="0" step="100000" required/>
+                <select name="allowance" id="edit_allowance" required style="width: 100%; height: 46px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;">
+                    <option value="0">-- Chọn phụ cấp / Không có phụ cấp (0 VNĐ) --</option>
+                    <c:forEach items="${allowanceTypes}" var="allowance">
+                        <option value="${allowance.amount}">
+                            ${allowance.name} (${allowance.code}) - <fmt:formatNumber value="${allowance.amount}" pattern="#,##0"/> VNĐ
+                        </option>
+                    </c:forEach>
+                </select>
             </div>
             <div class="form-group">
                 <label>Mô tả</label>
@@ -274,7 +290,21 @@ function openEdit(id, grade, basicSalary, allowance, description) {
     document.getElementById('edit_id').value          = id;
     document.getElementById('edit_grade').value       = grade;
     document.getElementById('edit_basicSalary').value = basicSalary;
-    document.getElementById('edit_allowance').value   = allowance;
+    
+    // Tìm option có giá trị float khớp với allowance
+    var select = document.getElementById('edit_allowance');
+    var found = false;
+    for (var i = 0; i < select.options.length; i++) {
+        if (parseFloat(select.options[i].value) === parseFloat(allowance)) {
+            select.selectedIndex = i;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        select.value = "0"; // Mặc định về 0 nếu không tìm thấy
+    }
+
     document.getElementById('edit_description').value = description;
     openModal('editModal');
 }
