@@ -15,7 +15,7 @@ public class DepartmentDAOImpl implements DepartmentDAO {
         String sql = "SELECT d1.*, d2.name AS parent_name, COUNT(e.id) AS total_emp " +
                 "FROM departments d1 " +
                 "LEFT JOIN departments d2 ON d1.parent_id = d2.id " +
-                "LEFT JOIN employees e ON e.department_id = d1.id " + // JOIN sang bảng nhân viên của nhóm Tiến
+                "LEFT JOIN employees e ON e.department_id = d1.id " + // JOIN sang bảng nhân viên
                 "GROUP BY d1.id " +
                 "ORDER BY d1.id DESC";
 

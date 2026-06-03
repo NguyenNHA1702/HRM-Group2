@@ -8,30 +8,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/departments.css">
-    <style>
-        /* Tinh chỉnh nhỏ để thanh tìm kiếm phẳng và mượt hơn */
-        .search-box-container .input-group-text {
-            background-color: #fff;
-            border-right: none;
-            border-radius: 8px 0 0 8px;
-            padding-left: 14px;
-            border-color: #ced4da;
-        }
-        .search-box-container .form-control-search {
-            border-left: none;
-            border-radius: 0 8px 8px 0;
-            padding-left: 0;
-        }
-        .form-control-search:focus {
-            border-color: #ced4da;
-            box-shadow: none;
-        }
-        .filter-select {
-            border-radius: 8px !important;
-            height: calc(1.5em + .75rem + 10px) !important;
-            color: #4a5568;
-        }
-    </style>
+
 </head>
 <body style="background-color: #f8f9fa;">
 <div class="d-flex">
