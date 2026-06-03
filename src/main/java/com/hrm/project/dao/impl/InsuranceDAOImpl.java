@@ -308,7 +308,7 @@ public class InsuranceDAOImpl implements InsuranceDAO {
     }
 
     /**
-     * Lấy thống kê bảo hiểm
+     * Lấy thống kê loại bảo hiểm (từ bảng insurance_rate)
      */
     @Override
     public InsuranceStatDTO getStats() throws SQLException {
@@ -316,7 +316,7 @@ public class InsuranceDAOImpl implements InsuranceDAO {
                 "COUNT(*) as total, " +
                 "SUM(CASE WHEN is_active = true THEN 1 ELSE 0 END) as active, " +
                 "SUM(CASE WHEN is_active = false THEN 1 ELSE 0 END) as inactive " +
-                "FROM insurance_config";
+                "FROM insurance_rate";
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
