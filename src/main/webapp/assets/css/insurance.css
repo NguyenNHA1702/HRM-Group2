@@ -1,0 +1,42 @@
+.insurance-rate-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.insurance-rate-input {
+    display: flex;
+    flex-direction: column;
+}
+.insurance-rate-input label {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+.insurance-rate-input input {
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 14px;
+}
+.insurance-summary {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+    border-left: 3px solid var(--indigo);
+}
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+.summary-row:last-child {
+    margin-bottom: 0;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    font-weight: 600;
+    color: var(--indigo-text);
+}
