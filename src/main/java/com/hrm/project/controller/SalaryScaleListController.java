@@ -1,3 +1,5 @@
+package com.hrm.project.controller;
+
 import com.hrm.project.dao.SalaryScaleDAO;
 import com.hrm.project.dao.impl.SalaryScaleDAOImpl;
 import com.hrm.project.dao.AllowanceTypeDAO;
@@ -20,7 +22,6 @@ public class SalaryScaleListController extends HttpServlet {
     private final SalaryScaleDAO dao = new SalaryScaleDAOImpl();
     private final AllowanceTypeDAO allowanceTypeDAO = new AllowanceTypeDAOImpl();
 
-    /** GET /admin/salary-scales → hiển thị danh sách */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -32,7 +33,6 @@ public class SalaryScaleListController extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/salary-scale-list.jsp").forward(req, resp);
     }
 
-    /** POST /admin/salary-scales → xử lý add / update / toggleActive */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -43,7 +43,6 @@ public class SalaryScaleListController extends HttpServlet {
 
         switch (action == null ? "" : action) {
 
-            // ─── THÊM MỚI ────────────────────────────────────────────────
             case "add": {
                 String grade       = req.getParameter("grade");
                 String basicStr    = req.getParameter("basicSalary");
@@ -71,7 +70,6 @@ public class SalaryScaleListController extends HttpServlet {
                 break;
             }
 
-            // ─── CẬP NHẬT ────────────────────────────────────────────────
             case "update": {
                 String idStr       = req.getParameter("id");
                 String grade       = req.getParameter("grade");
@@ -102,7 +100,6 @@ public class SalaryScaleListController extends HttpServlet {
                 break;
             }
 
-            // ─── VÔ HIỆU HÓA / KÍCH HOẠT LẠI ────────────────────────────
             case "deactivate":
             case "activate": {
                 String idStr = req.getParameter("id");

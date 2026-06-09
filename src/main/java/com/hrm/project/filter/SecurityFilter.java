@@ -64,9 +64,14 @@ public class SecurityFilter implements Filter {
 
         String roleGroup = (String) session.getAttribute("roleGroup");
 
-        // 3. BẢO VỆ VÙNG QUẢN TRỊ ADMIN CỦA TIẾN:
-        if (path.startsWith("/admin") || path.equals("/phan-quyen") ||
-                path.equals("/quan-ly-users") || path.equals("/cau-hinh")) {
+        
+        
+        boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
+                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types"));
+
+        if (!isHrAllowedAdminPath &&
+                (path.startsWith("/admin") || path.equals("/phan-quyen") ||
+                path.equals("/quan-ly-users") || path.equals("/cau-hinh"))) {
 
             if (!"ADMIN".equals(roleGroup)) {
                 System.out.println("[BẢO VỆ FILTER] -> TỪ CHỐI: User " + roleGroup + " đòi vào vùng Admin!");

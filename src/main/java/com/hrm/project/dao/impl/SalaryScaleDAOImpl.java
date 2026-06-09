@@ -11,7 +11,6 @@ import java.util.List;
 
 public class SalaryScaleDAOImpl implements SalaryScaleDAO {
 
-    // Helper: đọc 1 dòng ResultSet → SalaryScale object
     private SalaryScale mapRow(ResultSet rs) throws SQLException {
         return new SalaryScale(
             rs.getInt("id"),

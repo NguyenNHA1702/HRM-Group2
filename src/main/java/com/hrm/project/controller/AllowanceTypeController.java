@@ -18,7 +18,7 @@ public class AllowanceTypeController extends HttpServlet {
 
     private final AllowanceTypeDAO dao = new AllowanceTypeDAOImpl();
 
-    /** GET → hiển thị danh sách */
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -28,7 +28,7 @@ public class AllowanceTypeController extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/views/admin/allowance-type-list.jsp").forward(req, resp);
     }
 
-    /** POST → xử lý add / update / deactivate / activate */
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
