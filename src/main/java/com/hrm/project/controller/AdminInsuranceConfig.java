@@ -155,25 +155,135 @@ public class AdminInsuranceConfig extends HttpServlet {
 
     private void handleCreateRate(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException {
-        // [Giữ nguyên logic cũ]
+        try {
+            String name         = req.getParameter("name");
+            String code         = req.getParameter("code");
+            String employeeRateStr = req.getParameter("employeeRate");
+            String employerRateStr = req.getParameter("employerRate");
+            String note         = req.getParameter("note");
+            boolean isActive    = "1".equals(req.getParameter("isActive"));
+
+            if (name == null || name.trim().isEmpty() || code == null || code.trim().isEmpty()) {
+                req.getSession().setAttribute("flash_error", "Tên loại bảo hiểm và mã không được để trống!");
+                resp.sendRedirect(req.getContextPath() + "/admin/insurance");
+                return;
+            }
+
+            double employeeRate = 0.0;
+            double employerRate = 0.0;
+            try {
+                employeeRate = Double.parseDouble(employeeRateStr != null ? employeeRateStr : "0");
+                employerRate = Double.parseDouble(employerRateStr != null ? employerRateStr : "0");
+            } catch (NumberFormatException e) {
+                req.getSession().setAttribute("flash_error", "Tỷ lệ phải là số hợp lệ!");
+                resp.sendRedirect(req.getContextPath() + "/admin/insurance");
+                return;
+            }
+
+            InsuranceDAO.InsuranceRateDTO rate = new InsuranceDAO.InsuranceRateDTO(
+                    0,
+                    name.trim(),
+                    code.trim().toUpperCase(),
+                    employeeRate,
+                    employerRate,
+                    note != null ? note.trim() : "",
+                    isActive
+            );
+
+            if (insuranceDAO.createRate(rate)) {
+                req.getSession().setAttribute("flash_success", "Thêm loại bảo hiểm \"" + name.trim() + "\" thành công!");
+            } else {
+                req.getSession().setAttribute("flash_error", "Thêm loại bảo hiểm thất bại!");
+            }
+        } catch (Exception e) {
+            logger.severe("Error in handleCreateRate: " + e.getMessage());
+            req.getSession().setAttribute("flash_error", "Lỗi: " + e.getMessage());
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/insurance");
     }
 
     private void handleUpdateRate(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException {
-        // [Giữ nguyên logic cũ]
+        try {
+            String idParam = req.getParameter("id");
+            String employeeRateStr = req.getParameter("employeeRate");
+            String employerRateStr = req.getParameter("employerRate");
+
+            if (idParam == null || idParam.isEmpty()) {
+                req.getSession().setAttribute("flash_error", "ID loại bảo hiểm không hợp lệ!");
+                resp.sendRedirect(req.getContextPath() + "/admin/insurance");
+                return;
+            }
+
+            int id = Integer.parseInt(idParam);
+            double employeeRate = Double.parseDouble(employeeRateStr != null ? employeeRateStr : "0");
+            double employerRate = Double.parseDouble(employerRateStr != null ? employerRateStr : "0");
+
+            if (insuranceDAO.updateRate(id, employeeRate, employerRate)) {
+                req.getSession().setAttribute("flash_success", "Cập nhật tỷ lệ bảo hiểm thành công!");
+            } else {
+                req.getSession().setAttribute("flash_error", "Cập nhật tỷ lệ bảo hiểm thất bại!");
+            }
+        } catch (NumberFormatException e) {
+            req.getSession().setAttribute("flash_error", "Dữ liệu tỷ lệ không hợp lệ!");
+        } catch (Exception e) {
+            logger.severe("Error in handleUpdateRate: " + e.getMessage());
+            req.getSession().setAttribute("flash_error", "Lỗi: " + e.getMessage());
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/insurance");
     }
 
     private void handleDeleteRate(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException {
-        // [Giữ nguyên logic cũ]
+        try {
+            String idParam = req.getParameter("id");
+            if (idParam == null || idParam.isEmpty()) {
+                req.getSession().setAttribute("flash_error", "ID loại bảo hiểm không hợp lệ!");
+                resp.sendRedirect(req.getContextPath() + "/admin/insurance");
+                return;
+            }
+
+            int id = Integer.parseInt(idParam);
+
+            if (insuranceDAO.deleteRate(id)) {
+                req.getSession().setAttribute("flash_success", "Xóa loại bảo hiểm thành công!");
+            } else {
+                req.getSession().setAttribute("flash_error", "Xóa loại bảo hiểm thất bại!");
+            }
+        } catch (NumberFormatException e) {
+            req.getSession().setAttribute("flash_error", "ID không hợp lệ!");
+        } catch (Exception e) {
+            logger.severe("Error in handleDeleteRate: " + e.getMessage());
+            req.getSession().setAttribute("flash_error", "Lỗi: " + e.getMessage());
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/insurance");
     }
 
     private void handleToggleRate(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException, SQLException {
-        // [Giữ nguyên logic cũ]
+        try {
+            String idParam = req.getParameter("id");
+            if (idParam == null || idParam.isEmpty()) {
+                req.getSession().setAttribute("flash_error", "ID loại bảo hiểm không hợp lệ!");
+                resp.sendRedirect(req.getContextPath() + "/admin/insurance");
+                return;
+            }
+
+            int id = Integer.parseInt(idParam);
+            boolean isActive = "1".equals(req.getParameter("isActive"));
+
+            if (insuranceDAO.toggleRateActive(id, isActive)) {
+                req.getSession().setAttribute("flash_success",
+                        "Đã cập nhật trạng thái: " + (isActive ? "Đang áp dụng" : "Đã dừng"));
+            } else {
+                req.getSession().setAttribute("flash_error", "Cập nhật trạng thái thất bại!");
+            }
+        } catch (NumberFormatException e) {
+            req.getSession().setAttribute("flash_error", "Dữ liệu không hợp lệ!");
+        } catch (Exception e) {
+            logger.severe("Error in handleToggleRate: " + e.getMessage());
+            req.getSession().setAttribute("flash_error", "Lỗi: " + e.getMessage());
+        }
         resp.sendRedirect(req.getContextPath() + "/admin/insurance");
     }
 
@@ -193,14 +303,12 @@ public class AdminInsuranceConfig extends HttpServlet {
             String sortOrderStr    = req.getParameter("groupSortOrder");
             boolean isActive       = "1".equals(req.getParameter("groupIsActive"));
 
-            // Validate tên không được trống
             if (name == null || name.trim().isEmpty()) {
                 req.getSession().setAttribute("flash_error", "Tên nhóm đối tượng không được để trống!");
                 resp.sendRedirect(req.getContextPath() + "/admin/insurance");
                 return;
             }
 
-            // Parse sort order
             int sortOrder = 0;
             if (sortOrderStr != null && !sortOrderStr.isEmpty()) {
                 try {
@@ -212,9 +320,8 @@ public class AdminInsuranceConfig extends HttpServlet {
                 }
             }
 
-            // Tạo DTO
             InsuranceDAO.InsuranceApplicableGroupDTO group = new InsuranceDAO.InsuranceApplicableGroupDTO(
-                    0,  // ID = 0 vì là tạo mới
+                    0,
                     name.trim(),
                     description != null ? description.trim() : "",
                     conditionDetail != null ? conditionDetail.trim() : "",
@@ -255,14 +362,12 @@ public class AdminInsuranceConfig extends HttpServlet {
             String sortOrderStr    = req.getParameter("groupSortOrder");
             boolean isActive       = "1".equals(req.getParameter("groupIsActive"));
 
-            // Validate tên không được trống
             if (name == null || name.trim().isEmpty()) {
                 req.getSession().setAttribute("flash_error", "Tên nhóm đối tượng không được để trống!");
                 resp.sendRedirect(req.getContextPath() + "/admin/insurance");
                 return;
             }
 
-            // Parse sort order
             int sortOrder = 0;
             if (sortOrderStr != null && !sortOrderStr.isEmpty()) {
                 try {
@@ -274,7 +379,6 @@ public class AdminInsuranceConfig extends HttpServlet {
                 }
             }
 
-            // Tạo DTO
             InsuranceDAO.InsuranceApplicableGroupDTO group = new InsuranceDAO.InsuranceApplicableGroupDTO(
                     id,
                     name.trim(),
