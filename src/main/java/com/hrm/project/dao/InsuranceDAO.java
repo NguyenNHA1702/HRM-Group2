@@ -82,6 +82,29 @@ public interface InsuranceDAO {
     /** Thay đổi trạng thái hoạt động của loại bảo hiểm */
     boolean toggleRateActive(int id, boolean isActive) throws SQLException;
 
+    // ───────────────────────────────────────────────────────────────
+    // Insurance Applicable Group (insurance_applicable_group table)
+    // ───────────────────────────────────────────────────────────────
+
+    /** Lấy tất cả nhóm đối tượng áp dụng */
+    List<InsuranceApplicableGroupDTO> getAllApplicableGroups() throws SQLException;
+
+    /** Thêm mới nhóm đối tượng */
+    boolean createApplicableGroup(InsuranceApplicableGroupDTO group) throws SQLException;
+
+    /** Cập nhật nhóm đối tượng */
+    boolean updateApplicableGroup(InsuranceApplicableGroupDTO group) throws SQLException;
+
+    /** Xóa nhóm đối tượng */
+    boolean deleteApplicableGroup(int id) throws SQLException;
+
+    /** Thay đổi trạng thái hoạt động của nhóm đối tượng */
+    boolean toggleApplicableGroupActive(int id, boolean isActive) throws SQLException;
+
+    // ───────────────────────────────────────────────────────────────
+    // Inner DTOs
+    // ───────────────────────────────────────────────────────────────
+
     /**
      * DTO cho một loại bảo hiểm (BHXH, BHYT, BHTN …)
      */
@@ -131,16 +154,40 @@ public interface InsuranceDAO {
             this.inactiveInsurances = inactive;
         }
 
-        public int getTotalInsurances() {
-            return totalInsurances;
+        public int getTotalInsurances()    { return totalInsurances; }
+        public int getActiveInsurances()   { return activeInsurances; }
+        public int getInactiveInsurances() { return inactiveInsurances; }
+    }
+
+    /**
+     * DTO cho nhóm đối tượng áp dụng bảo hiểm.
+     * Map với bảng: insurance_applicable_group
+     */
+    class InsuranceApplicableGroupDTO {
+        public int    id;
+        public String name;             // Tên nhóm đối tượng
+        public String description;      // Mô tả chi tiết
+        public String conditionDetail;  // Điều kiện ngắn gọn hiển thị trên bảng
+        public int    sortOrder;
+        public boolean active;
+
+        public InsuranceApplicableGroupDTO() {}
+
+        public InsuranceApplicableGroupDTO(int id, String name, String description,
+                                           String conditionDetail, int sortOrder, boolean active) {
+            this.id              = id;
+            this.name            = name;
+            this.description     = description;
+            this.conditionDetail = conditionDetail;
+            this.sortOrder       = sortOrder;
+            this.active          = active;
         }
 
-        public int getActiveInsurances() {
-            return activeInsurances;
-        }
-
-        public int getInactiveInsurances() {
-            return inactiveInsurances;
-        }
+        public int     getId()              { return id; }
+        public String  getName()            { return name; }
+        public String  getDescription()     { return description; }
+        public String  getConditionDetail() { return conditionDetail; }
+        public int     getSortOrder()       { return sortOrder; }
+        public boolean isActive()           { return active; }
     }
 }
