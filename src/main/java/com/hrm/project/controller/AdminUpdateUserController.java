@@ -99,8 +99,15 @@ public class AdminUpdateUserController extends HttpServlet {
             String salaryScaleIdStr = request.getParameter("salaryScaleId");
             int salaryScaleId = (salaryScaleIdStr != null && !salaryScaleIdStr.trim().isEmpty()) ? Integer.parseInt(salaryScaleIdStr) : 0;
 
-            String allowanceTypeIdStr = request.getParameter("allowanceTypeId");
-            int allowanceTypeId = (allowanceTypeIdStr != null && !allowanceTypeIdStr.trim().isEmpty()) ? Integer.parseInt(allowanceTypeIdStr) : 0;
+            String[] allowanceTypeIdsStr = request.getParameterValues("allowanceTypeIds");
+            java.util.List<Integer> allowanceTypeIds = new java.util.ArrayList<>();
+            if (allowanceTypeIdsStr != null) {
+                for (String idStr : allowanceTypeIdsStr) {
+                    if (idStr != null && !idStr.trim().isEmpty()) {
+                        allowanceTypeIds.add(Integer.parseInt(idStr));
+                    }
+                }
+            }
             
             String status = request.getParameter("status");
             
@@ -117,7 +124,7 @@ public class AdminUpdateUserController extends HttpServlet {
             user.setDepartmentId(departmentId);
             user.setPositionId(positionId);
             user.setSalaryScaleId(salaryScaleId);
-            user.setAllowanceTypeId(allowanceTypeId);
+            user.setAllowanceTypeIds(allowanceTypeIds);
             user.setStatus(status);
             user.setRoleId(roleId);
 

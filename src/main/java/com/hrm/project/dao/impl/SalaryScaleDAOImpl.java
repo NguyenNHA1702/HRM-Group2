@@ -16,7 +16,6 @@ public class SalaryScaleDAOImpl implements SalaryScaleDAO {
             rs.getInt("id"),
             rs.getString("grade"),
             rs.getDouble("basic_salary"),
-            rs.getDouble("allowance"),
             rs.getString("description"),
             rs.getBoolean("is_active")
         );
@@ -25,7 +24,7 @@ public class SalaryScaleDAOImpl implements SalaryScaleDAO {
     @Override
     public List<SalaryScale> getAllSalaryScales() {
         List<SalaryScale> list = new ArrayList<>();
-        String sql = "SELECT id, grade, basic_salary, allowance, description, is_active " +
+        String sql = "SELECT id, grade, basic_salary, description, is_active " +
                      "FROM salary_scales ORDER BY is_active DESC, basic_salary ASC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -41,14 +40,13 @@ public class SalaryScaleDAOImpl implements SalaryScaleDAO {
 
     @Override
     public boolean addSalaryScale(SalaryScale scale) {
-        String sql = "INSERT INTO salary_scales (grade, basic_salary, allowance, description, is_active) " +
-                     "VALUES (?, ?, ?, ?, 1)";
+        String sql = "INSERT INTO salary_scales (grade, basic_salary, description, is_active) " +
+                     "VALUES (?, ?, ?, 1)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, scale.getGrade().trim());
             ps.setDouble(2, scale.getBasicSalary());
-            ps.setDouble(3, scale.getAllowance());
-            ps.setString(4, scale.getDescription() != null ? scale.getDescription().trim() : "");
+            ps.setString(3, scale.getDescription() != null ? scale.getDescription().trim() : "");
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -58,15 +56,14 @@ public class SalaryScaleDAOImpl implements SalaryScaleDAO {
 
     @Override
     public boolean updateSalaryScale(SalaryScale scale) {
-        String sql = "UPDATE salary_scales SET grade=?, basic_salary=?, allowance=?, description=?, updated_at=NOW() " +
+        String sql = "UPDATE salary_scales SET grade=?, basic_salary=?, description=?, updated_at=NOW() " +
                      "WHERE id=?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, scale.getGrade().trim());
             ps.setDouble(2, scale.getBasicSalary());
-            ps.setDouble(3, scale.getAllowance());
-            ps.setString(4, scale.getDescription() != null ? scale.getDescription().trim() : "");
-            ps.setInt(5, scale.getId());
+            ps.setString(3, scale.getDescription() != null ? scale.getDescription().trim() : "");
+            ps.setInt(4, scale.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

@@ -380,7 +380,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public UserAccount getUserForAdminUpdate(int id) {
         String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
-                "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, e.salary_scale_id, e.allowance_type_id, ua.role_id, ua.is_active " +
+                "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, e.salary_scale_id, ua.role_id, ua.is_active " +
                 "FROM employees e " +
                 "LEFT JOIN user_accounts ua ON e.id = ua.employee_id " +
                 "WHERE e.id = ?";
@@ -402,9 +402,21 @@ public class UserDAOImpl implements UserDAO {
                     user.setDepartmentId(rs.getInt("department_id"));
                     user.setPositionId(rs.getInt("position_id"));
                     user.setSalaryScaleId(rs.getInt("salary_scale_id"));
-                    user.setAllowanceTypeId(rs.getInt("allowance_type_id"));
                     user.setRoleId(rs.getInt("role_id"));
                     user.setActive(rs.getBoolean("is_active"));
+                    
+                    // Fetch allowances
+                    java.util.List<Integer> allowances = new java.util.ArrayList<>();
+                    String allowanceSql = "SELECT allowance_type_id FROM employee_allowances WHERE employee_id = ?";
+                    try (PreparedStatement psA = conn.prepareStatement(allowanceSql)) {
+                        psA.setInt(1, id);
+                        try (ResultSet rsA = psA.executeQuery()) {
+                            while (rsA.next()) {
+                                allowances.add(rsA.getInt("allowance_type_id"));
+                            }
+                        }
+                    }
+                    user.setAllowanceTypeIds(allowances);
                     return user;
                 }
             }
@@ -454,7 +466,7 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public boolean updateUserByAdmin(UserAccount user) {
-        String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, salary_scale_id = ?, allowance_type_id = ?, status = ? WHERE id = ?";
+        String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, salary_scale_id = ?, status = ? WHERE id = ?";
         String updateUserAccountSql = "UPDATE user_accounts SET role_id = ? WHERE employee_id = ?";
 
         Connection conn = null;
@@ -483,14 +495,25 @@ public class UserDAOImpl implements UserDAO {
                 } else {
                     psEmp.setNull(8, java.sql.Types.INTEGER);
                 }
-                if (user.getAllowanceTypeId() > 0) {
-                    psEmp.setInt(9, user.getAllowanceTypeId());
-                } else {
-                    psEmp.setNull(9, java.sql.Types.INTEGER);
-                }
-                psEmp.setString(10, user.getStatus());
-                psEmp.setInt(11, user.getEmployeeId());
+                psEmp.setString(9, user.getStatus());
+                psEmp.setInt(10, user.getEmployeeId());
                 psEmp.executeUpdate();
+            }
+
+            // Update allowances
+            try (PreparedStatement psDel = conn.prepareStatement("DELETE FROM employee_allowances WHERE employee_id = ?")) {
+                psDel.setInt(1, user.getEmployeeId());
+                psDel.executeUpdate();
+            }
+            if (user.getAllowanceTypeIds() != null && !user.getAllowanceTypeIds().isEmpty()) {
+                try (PreparedStatement psIns = conn.prepareStatement("INSERT INTO employee_allowances (employee_id, allowance_type_id) VALUES (?, ?)")) {
+                    for (Integer allowanceId : user.getAllowanceTypeIds()) {
+                        psIns.setInt(1, user.getEmployeeId());
+                        psIns.setInt(2, allowanceId);
+                        psIns.addBatch();
+                    }
+                    psIns.executeBatch();
+                }
             }
 
             try (PreparedStatement psAcc = conn.prepareStatement(updateUserAccountSql)) {

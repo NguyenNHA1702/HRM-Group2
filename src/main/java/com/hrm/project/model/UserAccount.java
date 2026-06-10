@@ -22,7 +22,7 @@ public class UserAccount {
     private int roleId;
     private boolean isActive;
     private int salaryScaleId;
-    private int allowanceTypeId;
+    private java.util.List<Integer> allowanceTypeIds = new java.util.ArrayList<>();
 
     public UserAccount() {}
 
@@ -84,6 +84,6 @@ public class UserAccount {
     public int getSalaryScaleId() { return salaryScaleId; }
     public void setSalaryScaleId(int salaryScaleId) { this.salaryScaleId = salaryScaleId; }
 
-    public int getAllowanceTypeId() { return allowanceTypeId; }
-    public void setAllowanceTypeId(int allowanceTypeId) { this.allowanceTypeId = allowanceTypeId; }
+    public java.util.List<Integer> getAllowanceTypeIds() { return allowanceTypeIds; }
+    public void setAllowanceTypeIds(java.util.List<Integer> allowanceTypeIds) { this.allowanceTypeIds = allowanceTypeIds; }
 }
