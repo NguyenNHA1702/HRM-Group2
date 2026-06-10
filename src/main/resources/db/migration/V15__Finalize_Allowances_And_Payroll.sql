@@ -31,6 +31,10 @@ ALTER TABLE salary_scales DROP COLUMN allowance;
 -- Part 2: Create payrolls, payroll_details, attendance_summary, and employee_salary_history tables
 -- =========================================================================
 
+-- Drop old tables if they were created by the root DB script to prevent column mismatches
+DROP TABLE IF EXISTS payroll_details;
+DROP TABLE IF EXISTS payroll_periods;
+
 -- 1. Create payrolls table (master record for the month)
 CREATE TABLE IF NOT EXISTS payrolls (
     id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
