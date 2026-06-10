@@ -1,5 +1,35 @@
--- V18__Finalize_Payroll_And_Salary_Scales.sql
--- Create payrolls, payroll_details, attendance_summary, and employee_salary_history tables from scratch
+-- V15__Finalize_Allowances_And_Payroll.sql
+-- Consolidated migration for employee allowances refactoring, salary scale updates, and payroll tables creation
+
+-- =========================================================================
+-- Part 1: Refactor Employee Allowances to support multiple allowances per employee
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS employee_allowances (
+    employee_id INT UNSIGNED NOT NULL,
+    allowance_type_id INT UNSIGNED NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (employee_id, allowance_type_id),
+    CONSTRAINT fk_ea_employee FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ea_allowance FOREIGN KEY (allowance_type_id) REFERENCES allowance_types(id) ON DELETE CASCADE
+) COMMENT='Bảng mapping n-n giữa nhân viên và các loại phụ cấp';
+
+-- Migrate existing data
+INSERT INTO employee_allowances (employee_id, allowance_type_id)
+SELECT id, allowance_type_id
+FROM employees
+WHERE allowance_type_id IS NOT NULL
+ON DUPLICATE KEY UPDATE employee_id = employee_id;
+
+-- Drop foreign key and column from employees
+ALTER TABLE employees DROP FOREIGN KEY fk_emp_allowance_type;
+ALTER TABLE employees DROP COLUMN allowance_type_id;
+
+-- Remove allowance column from salary_scales
+ALTER TABLE salary_scales DROP COLUMN allowance;
+
+-- =========================================================================
+-- Part 2: Create payrolls, payroll_details, attendance_summary, and employee_salary_history tables
+-- =========================================================================
 
 -- 1. Create payrolls table (master record for the month)
 CREATE TABLE IF NOT EXISTS payrolls (
