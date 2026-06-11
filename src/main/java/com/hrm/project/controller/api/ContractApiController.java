@@ -1,9 +1,15 @@
 package com.hrm.project.controller.api;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.hrm.project.dao.SalaryScaleDAO;
+import com.hrm.project.dao.UserDAO;
+import com.hrm.project.dao.impl.SalaryScaleDAOImpl;
+import com.hrm.project.dao.impl.UserDAOImpl;
 import com.hrm.project.enums.ContractStatus;
 import com.hrm.project.model.Contract;
+import com.hrm.project.model.SalaryScale;
 import com.hrm.project.service.ContractService;
 import com.hrm.project.service.impl.ContractServiceImpl;
 
@@ -36,10 +42,103 @@ import java.util.UUID;
 public class ContractApiController extends HttpServlet {
 
     private final ContractService contractService = new ContractServiceImpl();
+    private final UserDAO userDAO = new UserDAOImpl();
+    private final SalaryScaleDAO salaryScaleDAO = new SalaryScaleDAOImpl();
     private final Gson gson = new Gson();
 
     private static final String UPLOAD_DIR = "uploads/contracts";
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(".pdf", ".jpg", ".jpeg", ".png");
+
+    // ── GET: action=suggest_employees ────────────────────────────────────
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        // Kiểm tra quyền: chỉ ADMIN và HR
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("employeeId") == null) {
+            sendJson(response, HttpServletResponse.SC_UNAUTHORIZED,
+                    "error", "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.");
+            return;
+        }
+
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        if (roleGroup == null || (!"ADMIN".equals(roleGroup) && !"HR".equals(roleGroup))) {
+            sendJson(response, HttpServletResponse.SC_FORBIDDEN,
+                    "error", "Bạn không có quyền thực hiện thao tác này.");
+            return;
+        }
+
+        String action = request.getParameter("action");
+
+        switch (action == null ? "" : action) {
+            case "suggest_employees":
+                handleSuggestEmployees(request, response);
+                break;
+            case "get_salary_scales":
+                handleGetSalaryScales(request, response);
+                break;
+            default:
+                sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                        "error", "Hành động không hợp lệ: " + action);
+        }
+    }
+
+    // ── action=suggest_employees ─────────────────────────────────────────
+    private void handleSuggestEmployees(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        String term = request.getParameter("term");
+        if (term == null || term.trim().isEmpty()) {
+            response.getWriter().write("[]");
+            return;
+        }
+
+        try {
+            java.util.List<Object[]> rows = userDAO.suggestEmployees(term.trim());
+            JsonArray jsonArray = new JsonArray();
+            for (Object[] row : rows) {
+                JsonObject obj = new JsonObject();
+                obj.addProperty("id", (int) row[0]);
+                obj.addProperty("code", (String) row[1]);
+                obj.addProperty("name", (String) row[2]);
+                jsonArray.add(obj);
+            }
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(gson.toJson(jsonArray));
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error", "Lỗi khi tìm kiếm nhân viên: " + e.getMessage());
+        }
+    }
+
+    // ── action=get_salary_scales ──────────────────────────────────────────
+    private void handleGetSalaryScales(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        try {
+            java.util.List<SalaryScale> scales = salaryScaleDAO.getActiveSalaryScales();
+            JsonArray jsonArray = new JsonArray();
+            for (SalaryScale s : scales) {
+                JsonObject obj = new JsonObject();
+                obj.addProperty("id", s.getId());
+                obj.addProperty("grade", s.getGrade());
+                obj.addProperty("basicSalary", s.getBasicSalary());
+                jsonArray.add(obj);
+            }
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(gson.toJson(jsonArray));
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error", "Lỗi khi lấy danh sách bậc lương: " + e.getMessage());
+        }
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -96,19 +195,37 @@ public class ContractApiController extends HttpServlet {
     private void handleCreate(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
-        String employeeIdStr  = request.getParameter("employeeId");
-        String contractNumber = request.getParameter("contractNumber");
-        String contractTypeStr = request.getParameter("contractType");
-        String startDateStr   = request.getParameter("startDate");
-        String endDateStr     = request.getParameter("endDate");
-        String baseSalaryStr  = request.getParameter("baseSalary");
-        String description    = request.getParameter("description");
+        String employeeIdStr    = request.getParameter("employeeId");
+        String contractNumber   = request.getParameter("contractNumber");
+        String contractTypeStr  = request.getParameter("contractType");
+        String startDateStr     = request.getParameter("startDate");
+        String endDateStr       = request.getParameter("endDate");
+        String salaryScaleIdStr = request.getParameter("salaryScaleId");
+        String description      = request.getParameter("description");
 
         // Validate bắt buộc
         if (isBlank(employeeIdStr) || isBlank(contractNumber) ||
-                isBlank(contractTypeStr) || isBlank(startDateStr) || isBlank(baseSalaryStr)) {
+                isBlank(contractTypeStr) || isBlank(startDateStr) || isBlank(salaryScaleIdStr)) {
             sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
                     "error", "Vui lòng điền đầy đủ các trường bắt buộc.");
+            return;
+        }
+
+        // Validate employee_id thực sự tồn tại
+        try {
+            int empId = Integer.parseInt(employeeIdStr);
+            if (!userDAO.employeeExists(empId)) {
+                sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                        "error", "Nhân viên không tồn tại trong hệ thống (ID: " + empId + ").");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
+                    "error", "Mã nhân viên không hợp lệ.");
+            return;
+        } catch (Exception e) {
+            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error", "Lỗi khi xác thực nhân viên: " + e.getMessage());
             return;
         }
 
@@ -132,6 +249,8 @@ public class ContractApiController extends HttpServlet {
         // Save file to server
         String savedFileUrl = saveUploadedFile(filePart, fileExtension);
 
+        int salaryScaleId = Integer.parseInt(salaryScaleIdStr);
+
         Contract contract = new Contract();
         contract.setEmployeeId(Integer.parseInt(employeeIdStr));
         contract.setContractNumber(contractNumber.trim());
@@ -142,13 +261,13 @@ public class ContractApiController extends HttpServlet {
             contract.setEndDate(Date.valueOf(endDateStr));
         }
 
-        contract.setBaseSalary(parseDouble(baseSalaryStr));
+        // baseSalary will be resolved from salaryScaleId in the Service layer
         contract.setStatus(ContractStatus.ACTIVE.getValue()); // Mặc định Active
         contract.setDescription(description);
         contract.setFileUrl(savedFileUrl);
 
         try {
-            boolean success = contractService.createContract(contract);
+            boolean success = contractService.createContract(contract, salaryScaleId);
             if (success) {
                 sendJson(response, HttpServletResponse.SC_OK,
                         "success", "Tạo hợp đồng thành công!");
@@ -194,23 +313,24 @@ public class ContractApiController extends HttpServlet {
     private void handleRenew(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        String oldContractIdStr = request.getParameter("oldContractId");
-        String employeeIdStr    = request.getParameter("employeeId");
-        String contractNumber   = request.getParameter("contractNumber");
-        String contractTypeStr  = request.getParameter("contractType");
-        String startDateStr     = request.getParameter("startDate");
-        String endDateStr       = request.getParameter("endDate");
-        String baseSalaryStr    = request.getParameter("baseSalary");
-        String description      = request.getParameter("description");
+        String oldContractIdStr  = request.getParameter("oldContractId");
+        String employeeIdStr     = request.getParameter("employeeId");
+        String contractNumber    = request.getParameter("contractNumber");
+        String contractTypeStr   = request.getParameter("contractType");
+        String startDateStr      = request.getParameter("startDate");
+        String endDateStr        = request.getParameter("endDate");
+        String salaryScaleIdStr  = request.getParameter("salaryScaleId");
+        String description       = request.getParameter("description");
 
         if (isBlank(oldContractIdStr) || isBlank(employeeIdStr) || isBlank(contractNumber) ||
-                isBlank(contractTypeStr) || isBlank(startDateStr) || isBlank(baseSalaryStr)) {
+                isBlank(contractTypeStr) || isBlank(startDateStr) || isBlank(salaryScaleIdStr)) {
             sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
                     "error", "Vui lòng điền đầy đủ thông tin gia hạn hợp đồng.");
             return;
         }
 
         int oldContractId = Integer.parseInt(oldContractIdStr);
+        int salaryScaleId = Integer.parseInt(salaryScaleIdStr);
 
         Contract newContract = new Contract();
         newContract.setEmployeeId(Integer.parseInt(employeeIdStr));
@@ -222,12 +342,12 @@ public class ContractApiController extends HttpServlet {
             newContract.setEndDate(Date.valueOf(endDateStr));
         }
 
-        newContract.setBaseSalary(parseDouble(baseSalaryStr));
+        // baseSalary will be resolved from salaryScaleId in the Service layer
         newContract.setStatus(ContractStatus.ACTIVE.getValue());
         newContract.setDescription(description);
 
         try {
-            boolean success = contractService.renewContract(oldContractId, newContract);
+            boolean success = contractService.renewContract(oldContractId, newContract, salaryScaleId);
 
             if (success) {
                 sendJson(response, HttpServletResponse.SC_OK,

@@ -217,8 +217,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label class="text-dark font-weight-500" style="font-size: 14px;">Mã nhân viên (Employee ID) <span class="text-danger">*</span></label>
-                            <input type="number" id="formEmployeeId" class="form-control" style="padding: 10px;" required>
+                            <label class="text-dark font-weight-500" style="font-size: 14px;" for="employeeCodeInput">Mã NV / Tên nhân viên <span class="text-danger">*</span></label>
+                            <input type="text" id="employeeCodeInput" class="form-control" list="employeeOptions"
+                                   placeholder="Gõ mã NV hoặc tên để tìm..." autocomplete="off"
+                                   style="padding: 10px;" required>
+                            <datalist id="employeeOptions"></datalist>
+                            <input type="hidden" id="employeeId" name="employeeId">
+                            <small id="employeeHint" class="text-muted" style="font-size: 12px; display: none;"></small>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -242,8 +247,10 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label class="text-dark font-weight-500" style="font-size: 14px;">Lương cứng (VNĐ) <span class="text-danger">*</span></label>
-                            <input type="number" id="formBaseSalary" class="form-control" style="padding: 10px;" min="0" step="100000" required>
+                            <label class="text-dark font-weight-500" style="font-size: 14px;" for="salaryScaleSelect">Bậc lương cơ bản <span class="text-danger">*</span></label>
+                            <select id="salaryScaleSelect" name="salaryScaleId" class="form-control" style="padding: 8px 12px;" required>
+                                <option value="">-- Chọn bậc lương & mức lương --</option>
+                            </select>
                         </div>
                     </div>
                 </div>
