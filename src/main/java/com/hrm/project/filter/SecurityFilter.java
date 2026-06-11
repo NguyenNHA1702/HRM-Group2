@@ -38,7 +38,7 @@ public class SecurityFilter implements Filter {
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
                 path.startsWith("/login") || path.startsWith("/logout") ||
                 path.startsWith("/forgot-password") || path.startsWith("/assets") ||
-                path.equals("/check-db")) {
+                path.startsWith("/uploads") || path.equals("/check-db")) {
 
             chain.doFilter(request, response);
             return;
