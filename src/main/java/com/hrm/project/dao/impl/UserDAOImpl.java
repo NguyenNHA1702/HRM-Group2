@@ -309,7 +309,7 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<Department> getAllDepartments() {
         List<Department> list = new ArrayList<>();
-        String sql = "SELECT id, code, name FROM departments WHERE is_active = 1";
+        String sql = "SELECT d.*, parent.name as parent_name FROM departments d LEFT JOIN departments parent ON d.parent_id = parent.id WHERE d.is_active = 1";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -466,13 +466,26 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public boolean updateUserByAdmin(UserAccount user) {
+        String getOldSalarySql = "SELECT salary_scale_id FROM employees WHERE id = ?";
         String updateEmployeeSql = "UPDATE employees SET full_name = ?, phone = ?, personal_email = ?, date_of_birth = ?, gender = ?, department_id = ?, position_id = ?, salary_scale_id = ?, status = ? WHERE id = ?";
         String updateUserAccountSql = "UPDATE user_accounts SET role_id = ? WHERE employee_id = ?";
+        String insertSalaryHistorySql = "INSERT INTO employee_salary_history (employee_id, salary_scale_id, effective_date) VALUES (?, ?, CURRENT_DATE)";
 
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
+            ensureSalaryHistoryTableExists(conn);
+
+            int oldSalaryScaleId = 0;
+            try (PreparedStatement psOld = conn.prepareStatement(getOldSalarySql)) {
+                psOld.setInt(1, user.getEmployeeId());
+                try (ResultSet rs = psOld.executeQuery()) {
+                    if (rs.next()) {
+                        oldSalaryScaleId = rs.getInt("salary_scale_id");
+                    }
+                }
+            }
 
             try (PreparedStatement psEmp = conn.prepareStatement(updateEmployeeSql)) {
                 psEmp.setString(1, user.getFullName());
@@ -498,6 +511,18 @@ public class UserDAOImpl implements UserDAO {
                 psEmp.setString(9, user.getStatus());
                 psEmp.setInt(10, user.getEmployeeId());
                 psEmp.executeUpdate();
+            }
+
+            // RULE: Mỗi nhân viên tại một thời điểm chỉ áp dụng duy nhất 1 thang bảng lương (1 Salary Scale hiệu lực). 
+            // Mức lương mới sẽ ghi đè mức lương cũ trong bảng employees, và lịch sử thay đổi sẽ được lưu vết vào employee_salary_history.
+            if (user.getSalaryScaleId() > 0 && user.getSalaryScaleId() != oldSalaryScaleId) {
+                try (PreparedStatement psHist = conn.prepareStatement(insertSalaryHistorySql)) {
+                    psHist.setInt(1, user.getEmployeeId());
+                    psHist.setInt(2, user.getSalaryScaleId());
+                    psHist.executeUpdate();
+                } catch (SQLException e) {
+                    System.err.println("Warning: employee_salary_history insert failed (could be due to unapplied Flyway migrations): " + e.getMessage());
+                }
             }
 
             // Update allowances
@@ -642,6 +667,70 @@ public class UserDAOImpl implements UserDAO {
                 user.setPositionId(rs.getInt("position_id"));
                 list.add(user);
             }
+        }
+        return list;
+    }
+
+    private void ensureSalaryHistoryTableExists(Connection conn) {
+        String checkSql = "SHOW TABLES LIKE 'employee_salary_history'";
+        boolean exists = false;
+        try (PreparedStatement ps = conn.prepareStatement(checkSql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                exists = true;
+            }
+        } catch (SQLException e) {
+            // Ignore
+        }
+        
+        if (!exists) {
+            String createSql = "CREATE TABLE IF NOT EXISTS employee_salary_history (" +
+                               "    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY," +
+                               "    employee_id INT UNSIGNED NOT NULL," +
+                               "    salary_scale_id INT UNSIGNED NOT NULL," +
+                               "    effective_date DATE NOT NULL," +
+                               "    created_at DATETIME DEFAULT CURRENT_TIMESTAMP," +
+                               "    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE," +
+                               "    FOREIGN KEY (salary_scale_id) REFERENCES salary_scales(id) ON DELETE CASCADE" +
+                               ") COMMENT='Lịch sử áp dụng/thay đổi mức lương của nhân viên'";
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute(createSql);
+                System.out.println("Programmatically created employee_salary_history table.");
+            } catch (SQLException e) {
+                System.err.println("Failed to programmatically create employee_salary_history table: " + e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public List<com.hrm.project.model.SalaryHistory> getSalaryHistoryByEmployeeId(int employeeId) {
+        String sql = "SELECT h.id, h.employee_id, h.salary_scale_id, h.effective_date, h.created_at, " +
+                     "s.grade, s.basic_salary " +
+                     "FROM employee_salary_history h " +
+                     "JOIN salary_scales s ON h.salary_scale_id = s.id " +
+                     "WHERE h.employee_id = ? " +
+                     "ORDER BY h.effective_date DESC, h.created_at DESC";
+        List<com.hrm.project.model.SalaryHistory> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            ensureSalaryHistoryTableExists(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, employeeId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        com.hrm.project.model.SalaryHistory history = new com.hrm.project.model.SalaryHistory();
+                        history.setId(rs.getInt("id"));
+                        history.setEmployeeId(rs.getInt("employee_id"));
+                        history.setSalaryScaleId(rs.getInt("salary_scale_id"));
+                        history.setEffectiveDate(rs.getDate("effective_date"));
+                        history.setCreatedAt(rs.getTimestamp("created_at"));
+                        history.setGrade(rs.getString("grade"));
+                        history.setBasicSalary(rs.getDouble("basic_salary"));
+                        list.add(history);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Warning: Could not fetch salary history: " + e.getMessage());
         }
         return list;
     }

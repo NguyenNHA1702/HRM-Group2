@@ -59,4 +59,5 @@ public interface UserDAO {
     // Get all employees for dropdowns/selects
     List<UserAccount> getAllEmployees() throws SQLException;
 
+    List<com.hrm.project.model.SalaryHistory> getSalaryHistoryByEmployeeId(int employeeId);
 }

@@ -88,6 +88,7 @@
         <div class="admin-container">
             <form action="${pageContext.request.contextPath}/admin/user/update" method="post">
                 <input type="hidden" name="id" value="${user.employeeId}">
+                <input type="hidden" name="activeTab" id="activeTabInput" value="personal">
 
                 <!-- Tab Navigation -->
                 <div class="tabs">
@@ -102,10 +103,19 @@
                     </button>
                 </div>
 
+                <c:if test="${not empty param.success}">
+                    <div style="padding: 24px 40px 0 40px;">
+                        <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> Cập nhật thành công!</div>
+                    </div>
+                </c:if>
+                <c:if test="${not empty param.error}">
+                    <div style="padding: 24px 40px 0 40px;">
+                        <div class="alert alert-error"><i class="fa-solid fa-circle-xmark"></i> Cập nhật thất bại. Vui lòng kiểm tra lại.</div>
+                    </div>
+                </c:if>
+
                 <!-- Tab 1: Thông tin cá nhân -->
                 <div id="tab-personal" class="tab-content active">
-                    <c:if test="${not empty param.success}"><div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> Cập nhật thành công!</div></c:if>
-                    <c:if test="${not empty param.error}"><div class="alert alert-error"><i class="fa-solid fa-circle-xmark"></i> Cập nhật thất bại. Vui lòng kiểm tra lại.</div></c:if>
 
                     <div class="grid-2">
                         <div class="form-group">
@@ -208,6 +218,48 @@
                             </c:forEach>
                         </div>
                     </div>
+
+                    <!-- Lịch sử thay đổi mức lương -->
+                    <div class="form-group" style="margin-top: 32px;">
+                        <label style="font-size: 1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 16px;">
+                            <i class="fa-solid fa-clock-rotate-left" style="color: #4f46e5;"></i> Lịch sử thay đổi mức lương (Salary Assignment History)
+                        </label>
+                        <c:choose>
+                            <c:when test="${not empty salaryHistory}">
+                                <div style="overflow-x: auto; background: white; border: 1px solid #e2e8f0; border-radius: 10px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                                        <thead>
+                                            <tr style="border-bottom: 2px solid #e2e8f0; background: #f8fafc; color: #475569;">
+                                                <th style="padding: 12px 16px; font-weight: 600;">Bậc Lương</th>
+                                                <th style="padding: 12px 16px; font-weight: 600;">Lương Cơ Bản</th>
+                                                <th style="padding: 12px 16px; font-weight: 600;">Ngày Hiệu Lực</th>
+                                                <th style="padding: 12px 16px; font-weight: 600;">Ngày Ghi Nhận</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach items="${salaryHistory}" var="history">
+                                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                                    <td style="padding: 12px 16px; font-weight: 600; color: #1e293b;">Bậc ${history.grade}</td>
+                                                    <td style="padding: 12px 16px; color: #4f46e5; font-weight: 700;">
+                                                        <fmt:formatNumber value="${history.basicSalary}" pattern="#,##0"/> VNĐ
+                                                    </td>
+                                                    <td style="padding: 12px 16px; color: #475569;">
+                                                        <fmt:formatDate value="${history.effectiveDate}" pattern="dd/MM/yyyy"/>
+                                                    </td>
+                                                    <td style="padding: 12px 16px; color: #64748b; font-size: 0.85rem;">
+                                                        <fmt:formatDate value="${history.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div style="color: #64748b; font-style: italic; padding: 8px 0;">Chưa có lịch sử thay đổi mức lương.</div>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
                 </div>
 
                 <!-- Tab 3: Phân quyền & Trạng thái -->
@@ -253,6 +305,10 @@
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         evt.currentTarget.classList.add('active');
+
+        // Update hidden input
+        const tabName = tabId.replace('tab-', '');
+        document.getElementById('activeTabInput').value = tabName;
     }
 
     // ── Allowance Card Toggle Logic ──
@@ -298,7 +354,20 @@
     }
 
     document.getElementById('departmentId').addEventListener('change', filterPositions);
-    window.addEventListener('DOMContentLoaded', filterPositions);
+    window.addEventListener('DOMContentLoaded', () => {
+        filterPositions();
+
+        // Handle URL active tab parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        if (activeTab) {
+            const targetTabId = 'tab-' + activeTab;
+            const tabBtn = document.querySelector(`button[onclick*="${targetTabId}"]`);
+            if (tabBtn) {
+                switchTab({ currentTarget: tabBtn }, targetTabId);
+            }
+        }
+    });
 </script>
 
 </body>

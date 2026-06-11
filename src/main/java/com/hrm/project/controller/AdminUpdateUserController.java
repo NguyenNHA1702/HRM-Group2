@@ -46,12 +46,15 @@ public class AdminUpdateUserController extends HttpServlet {
                 List<com.hrm.project.model.SalaryScale> salaryScales = salaryScaleDAO.getAllSalaryScales();
                 List<com.hrm.project.model.AllowanceType> allowanceTypes = allowanceTypeDAO.getAllAllowanceTypes();
 
+                List<com.hrm.project.model.SalaryHistory> salaryHistory = userDAO.getSalaryHistoryByEmployeeId(userId);
+
                 request.setAttribute("user", user);
                 request.setAttribute("departments", departments);
                 request.setAttribute("positions", positions);
                 request.setAttribute("roles", roles);
                 request.setAttribute("salaryScales", salaryScales);
                 request.setAttribute("allowanceTypes", allowanceTypes);
+                request.setAttribute("salaryHistory", salaryHistory);
 
                 request.getRequestDispatcher("/WEB-INF/views/admin/admin_update_user.jsp").forward(request, response);
             } else {
@@ -128,11 +131,16 @@ public class AdminUpdateUserController extends HttpServlet {
             user.setStatus(status);
             user.setRoleId(roleId);
 
+            String activeTab = request.getParameter("activeTab");
+            if (activeTab == null || activeTab.trim().isEmpty()) {
+                activeTab = "personal";
+            }
+
             boolean success = userDAO.updateUserByAdmin(user);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&success=1");
+                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&success=1&tab=" + java.net.URLEncoder.encode(activeTab, "UTF-8"));
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&error=1");
+                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&error=1&tab=" + java.net.URLEncoder.encode(activeTab, "UTF-8"));
             }
         } catch (Exception e) {
             e.printStackTrace();
