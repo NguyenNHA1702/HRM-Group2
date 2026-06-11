@@ -671,6 +671,41 @@ public class UserDAOImpl implements UserDAO {
         return list;
     }
 
+    @Override
+    public List<Object[]> suggestEmployees(String term) throws SQLException {
+        String sql = "SELECT id, employee_code, full_name FROM employees " +
+                     "WHERE employee_code LIKE ? OR full_name LIKE ? LIMIT 10";
+        List<Object[]> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + term + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                            rs.getInt("id"),
+                            rs.getString("employee_code"),
+                            rs.getString("full_name")
+                    });
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public boolean employeeExists(int employeeId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM employees WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
     private void ensureSalaryHistoryTableExists(Connection conn) {
         String checkSql = "SHOW TABLES LIKE 'employee_salary_history'";
         boolean exists = false;

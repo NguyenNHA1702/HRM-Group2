@@ -39,6 +39,40 @@ public class SalaryScaleDAOImpl implements SalaryScaleDAO {
     }
 
     @Override
+    public List<SalaryScale> getActiveSalaryScales() {
+        List<SalaryScale> list = new ArrayList<>();
+        String sql = "SELECT id, grade, basic_salary, description, is_active " +
+                     "FROM salary_scales WHERE is_active = 1 ORDER BY basic_salary ASC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public double getBasicSalaryById(int salaryScaleId) {
+        String sql = "SELECT basic_salary FROM salary_scales WHERE id = ? AND is_active = 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, salaryScaleId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("basic_salary");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    @Override
     public boolean addSalaryScale(SalaryScale scale) {
         String sql = "INSERT INTO salary_scales (grade, basic_salary, description, is_active) " +
                      "VALUES (?, ?, ?, 1)";

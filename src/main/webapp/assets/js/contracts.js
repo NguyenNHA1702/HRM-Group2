@@ -16,6 +16,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (typeSelect) typeSelect.addEventListener("change", applyEndDateRule);
     if (startInput) startInput.addEventListener("change", applyEndDateRule);
+
+    // ── Employee Autocomplete: dynamic datalist suggestions ──────────────
+    const empInput = document.getElementById("employeeCodeInput");
+    if (empInput) {
+        empInput.addEventListener("input", onEmployeeInput);
+    }
+
+    // ── Pre-load salary scales on page init ───────────────────────────────
+    loadSalaryScales();
 });
 
 // ── Init: collect all data rows ──────────────────────────────────────────
@@ -120,6 +129,124 @@ function changePage(pageNumber) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// EMPLOYEE AUTOCOMPLETE: Dynamic datalist suggestions via fetch()
+// ═══════════════════════════════════════════════════════════════════════════
+
+let suggestTimer = null;           // debounce timer
+let employeeSuggestions = [];      // cached response for current suggestions
+
+function onEmployeeInput() {
+    const term = this.value.trim();
+    const hiddenId  = document.getElementById("employeeId");
+    const hint      = document.getElementById("employeeHint");
+
+    // Reset resolved ID whenever user modifies the text
+    hiddenId.value = "";
+    hint.style.display = "none";
+
+    // Try to match against current suggestions (user selected from datalist)
+    resolveSelectedEmployee(term);
+
+    // Only fetch if 2+ characters and no ID resolved yet
+    if (term.length < 2 || hiddenId.value) return;
+
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(() => {
+        fetch(CTX + "/hr/api/contracts?action=suggest_employees&term=" + encodeURIComponent(term))
+            .then(res => res.json())
+            .then(data => {
+                employeeSuggestions = Array.isArray(data) ? data : [];
+                populateDatalist(employeeSuggestions);
+            })
+            .catch(err => {
+                console.error("Employee suggest error:", err);
+                employeeSuggestions = [];
+                populateDatalist([]);
+            });
+    }, 300); // 300ms debounce
+}
+
+function populateDatalist(items) {
+    const datalist = document.getElementById("employeeOptions");
+    datalist.innerHTML = "";
+    items.forEach(emp => {
+        const option = document.createElement("option");
+        option.value = emp.code + " - " + emp.name;
+        option.setAttribute("data-id", emp.id);
+        datalist.appendChild(option);
+    });
+}
+
+/**
+ * When a user selects an option from the datalist, the input value becomes
+ * the option's value attribute (e.g. "EMP001 - Nguyen Van A").
+ * We match it against our cached suggestions to extract the real employee ID.
+ */
+function resolveSelectedEmployee(inputVal) {
+    const hiddenId = document.getElementById("employeeId");
+    const hint     = document.getElementById("employeeHint");
+
+    for (const emp of employeeSuggestions) {
+        const label = emp.code + " - " + emp.name;
+        if (inputVal === label) {
+            hiddenId.value = emp.id;
+            hint.innerText = "✔ Đã chọn: " + emp.name + " (ID: " + emp.id + ")";
+            hint.style.display = "block";
+            hint.style.color = "#137333";
+            return;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SALARY SCALE: Dynamic dropdown hydration via fetch()
+// ═══════════════════════════════════════════════════════════════════════════
+
+let salaryScalesCache = [];  // cached salary scales for reuse
+
+/**
+ * Fetch active salary scales from the backend and populate the dropdown.
+ * Caches the result so subsequent modal opens don't re-fetch unnecessarily.
+ * Pass forceReload=true to bypass the cache.
+ */
+function loadSalaryScales(forceReload) {
+    const select = document.getElementById("salaryScaleSelect");
+    if (!select) return;
+
+    // Use cache if available and not forced
+    if (!forceReload && salaryScalesCache.length > 0) {
+        populateSalaryScaleSelect(salaryScalesCache);
+        return;
+    }
+
+    fetch(CTX + "/hr/api/contracts?action=get_salary_scales")
+        .then(res => res.json())
+        .then(data => {
+            salaryScalesCache = Array.isArray(data) ? data : [];
+            populateSalaryScaleSelect(salaryScalesCache);
+        })
+        .catch(err => {
+            console.error("Salary scale load error:", err);
+            salaryScalesCache = [];
+            populateSalaryScaleSelect([]);
+        });
+}
+
+function populateSalaryScaleSelect(scales) {
+    const select = document.getElementById("salaryScaleSelect");
+    // Preserve placeholder
+    select.innerHTML = '<option value="">-- Chọn bậc lương \u0026 mức lương --</option>';
+
+    scales.forEach(s => {
+        const option = document.createElement("option");
+        option.value = s.id;
+        const formattedSalary = Number(s.basicSalary).toLocaleString('vi-VN');
+        option.textContent = s.grade + " - " + formattedSalary + " VND";
+        select.appendChild(option);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MODAL: Tạo hợp đồng mới
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -128,21 +255,27 @@ function openCreateModal() {
     document.getElementById("modalAction").value = "create";
     document.getElementById("oldContractId").value = "";
 
-    // Clear all fields
-    document.getElementById("formEmployeeId").value = "";
-    document.getElementById("formEmployeeId").readOnly = false;
+    // Clear employee autocomplete fields
+    document.getElementById("employeeCodeInput").value = "";
+    document.getElementById("employeeCodeInput").readOnly = false;
+    document.getElementById("employeeId").value = "";
+    document.getElementById("employeeHint").style.display = "none";
+    document.getElementById("employeeOptions").innerHTML = "";
+    employeeSuggestions = [];
+
     document.getElementById("formContractNumber").value = "";
     document.getElementById("formContractType").value = "1";
     document.getElementById("formStartDate").value = todayISO();
     document.getElementById("formEndDate").value = "";
     document.getElementById("formEndDate").readOnly = false;
-    document.getElementById("formBaseSalary").value = "";
+    document.getElementById("salaryScaleSelect").value = "";
     document.getElementById("formDescription").value = "";
     document.getElementById("formContractFile").value = "";
 
     document.getElementById("btnSubmitContract").innerText = "Lưu hợp đồng";
     document.getElementById("btnSubmitContract").style.backgroundColor = "#6366f1";
 
+    loadSalaryScales();  // ensure dropdown is hydrated
     applyEndDateRule();
     $('#contractModal').modal('show');
 }
@@ -172,20 +305,30 @@ function openRenewModal(btn) {
     document.getElementById("modalAction").value = "renew";
     document.getElementById("oldContractId").value = btn.getAttribute("data-id");
 
-    document.getElementById("formEmployeeId").value = btn.getAttribute("data-employeeid");
-    document.getElementById("formEmployeeId").readOnly = true;
+    // Pre-fill and lock employee field for renewal
+    const empName = btn.getAttribute("data-empname") || "";
+    const empId   = btn.getAttribute("data-employeeid");
+    document.getElementById("employeeCodeInput").value = empName;
+    document.getElementById("employeeCodeInput").readOnly = true;
+    document.getElementById("employeeId").value = empId;
+    const hint = document.getElementById("employeeHint");
+    hint.innerText = "✔ Nhân viên: " + empName + " (ID: " + empId + ")";
+    hint.style.display = "block";
+    hint.style.color = "#137333";
+
     document.getElementById("formContractNumber").value = "";
     document.getElementById("formContractType").value = btn.getAttribute("data-type") || "2";
     document.getElementById("formStartDate").value = todayISO();
     document.getElementById("formEndDate").value = "";
     document.getElementById("formEndDate").readOnly = false;
-    document.getElementById("formBaseSalary").value = parseFloat(btn.getAttribute("data-salary") || "0");
+    document.getElementById("salaryScaleSelect").value = "";
     document.getElementById("formDescription").value = "";
     document.getElementById("formContractFile").value = "";
 
     document.getElementById("btnSubmitContract").innerText = "Xác nhận gia hạn";
     document.getElementById("btnSubmitContract").style.backgroundColor = "#059669";
 
+    loadSalaryScales();  // ensure dropdown is hydrated
     applyEndDateRule();
     $('#contractModal').modal('show');
 }
@@ -212,16 +355,24 @@ const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 
 function submitContract() {
     const action         = document.getElementById("modalAction").value;
-    const employeeId     = document.getElementById("formEmployeeId").value;
+    const employeeId     = document.getElementById("employeeId").value;
     const contractNumber = document.getElementById("formContractNumber").value.trim();
     const contractType   = document.getElementById("formContractType").value;
     const startDate      = document.getElementById("formStartDate").value;
     const endDate        = document.getElementById("formEndDate").value;
-    const baseSalary     = document.getElementById("formBaseSalary").value;
+    const salaryScaleId  = document.getElementById("salaryScaleSelect").value;
     const description    = document.getElementById("formDescription").value;
     const fileInput      = document.getElementById("formContractFile");
 
-    if (!employeeId || !contractNumber || !contractType || !startDate || !baseSalary) {
+    if (!employeeId) {
+        showAlert("error", "Vui lòng chọn nhân viên từ danh sách gợi ý.");
+        return;
+    }
+    if (!salaryScaleId) {
+        showAlert("error", "Vui lòng chọn bậc lương cho hợp đồng.");
+        return;
+    }
+    if (!contractNumber || !contractType || !startDate) {
         showAlert("error", "Vui lòng điền đầy đủ các trường bắt buộc.");
         return;
     }
@@ -254,7 +405,7 @@ function submitContract() {
     formData.append("contractType", contractType);
     formData.append("startDate", startDate);
     formData.append("endDate", endDate);
-    formData.append("baseSalary", baseSalary);
+    formData.append("salaryScaleId", salaryScaleId);
     formData.append("description", description);
 
     if (fileInput.files && fileInput.files.length > 0) {

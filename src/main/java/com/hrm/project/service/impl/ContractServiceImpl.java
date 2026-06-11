@@ -1,7 +1,9 @@
 package com.hrm.project.service.impl;
 
 import com.hrm.project.dao.ContractDAO;
+import com.hrm.project.dao.SalaryScaleDAO;
 import com.hrm.project.dao.impl.ContractDAOImpl;
+import com.hrm.project.dao.impl.SalaryScaleDAOImpl;
 import com.hrm.project.model.Contract;
 import com.hrm.project.model.dtos.response.ContractDTO;
 import com.hrm.project.service.ContractService;
@@ -14,6 +16,7 @@ import java.util.List;
 public class ContractServiceImpl implements ContractService {
 
     private final ContractDAO contractDAO = new ContractDAOImpl();
+    private final SalaryScaleDAO salaryScaleDAO = new SalaryScaleDAOImpl();
 
     @Override
     public List<ContractDTO> getAllContracts() {
@@ -21,7 +24,15 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public boolean createContract(Contract contract) {
+    public boolean createContract(Contract contract, int salaryScaleId) {
+
+        // Resolve salary from salary_scale_id
+        double baseSalary = salaryScaleDAO.getBasicSalaryById(salaryScaleId);
+        if (baseSalary < 0) {
+            throw new RuntimeException(
+                    "Thất bại: Bậc lương không tồn tại hoặc đã bị vô hiệu hóa (ID: " + salaryScaleId + ").");
+        }
+        contract.setBaseSalary(baseSalary);
 
         // Business rule 1: mỗi nhân viên chỉ được có tối đa 1 hợp đồng Active
         String activeContractNumber = contractDAO.getActiveContractNumber(contract.getEmployeeId());
@@ -53,7 +64,15 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public boolean renewContract(int oldContractId, Contract newContract) {
+    public boolean renewContract(int oldContractId, Contract newContract, int salaryScaleId) {
+
+        // Resolve salary from salary_scale_id
+        double baseSalary = salaryScaleDAO.getBasicSalaryById(salaryScaleId);
+        if (baseSalary < 0) {
+            throw new RuntimeException(
+                    "Thất bại: Bậc lương không tồn tại hoặc đã bị vô hiệu hóa (ID: " + salaryScaleId + ").");
+        }
+        newContract.setBaseSalary(baseSalary);
 
         // Business rule: không cho phép gia hạn hợp đồng Không xác định thời hạn
         int oldContractType = contractDAO.getContractTypeById(oldContractId);

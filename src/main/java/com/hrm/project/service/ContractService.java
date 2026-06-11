@@ -10,11 +10,11 @@ public interface ContractService {
 
     List<ContractDTO> getAllContracts();
 
-    boolean createContract(Contract contract);
+    boolean createContract(Contract contract, int salaryScaleId);
 
     boolean terminateContract(int contractId, Date terminateDate, String reason);
 
     boolean updateStatus(int contractId, int newStatus);
 
-    boolean renewContract(int oldContractId, Contract newContract);
+    boolean renewContract(int oldContractId, Contract newContract, int salaryScaleId);
 }
