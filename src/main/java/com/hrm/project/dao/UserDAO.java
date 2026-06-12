@@ -59,4 +59,16 @@ public interface UserDAO {
     // Get all employees for dropdowns/selects
     List<UserAccount> getAllEmployees() throws SQLException;
 
+    /**
+     * Suggest employees matching a search term (by employee_code or full_name).
+     * Returns at most 10 results for autocomplete.
+     */
+    List<Object[]> suggestEmployees(String term) throws SQLException;
+
+    /**
+     * Check whether an employee with the given ID exists.
+     */
+    boolean employeeExists(int employeeId) throws SQLException;
+
+    List<com.hrm.project.model.SalaryHistory> getSalaryHistoryByEmployeeId(int employeeId);
 }

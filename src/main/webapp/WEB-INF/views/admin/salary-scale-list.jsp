@@ -132,7 +132,6 @@
                             <th>#</th>
                             <th>Mã bậc lương</th>
                             <th>Lương cơ bản</th>
-                            <th>Phụ cấp</th>
                             <th>Mô tả</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
@@ -151,16 +150,13 @@
                                         <td style="font-weight:600">
                                             <fmt:formatNumber value="${s.basicSalary}" type="number" maxFractionDigits="0"/> VNĐ
                                         </td>
-                                        <td style="color:var(--green);font-weight:600">
-                                            + <fmt:formatNumber value="${s.allowance}" type="number" maxFractionDigits="0"/> VNĐ
-                                        </td>
                                         <td style="color:var(--muted)">${s.description}</td>
                                         <td><span class="badge ${s.statusBadgeClass}">${s.statusLabel}</span></td>
                                         <td>
                                             <div class="actions">
                                                 <%-- Sửa --%>
                                                 <button class="action-btn edit" title="Chỉnh sửa"
-                                                    onclick="openEdit(${s.id},'${s.grade}',${s.basicSalary},${s.allowance},'${s.description}')">
+                                                    onclick="openEdit(${s.id},'${s.grade}',${s.basicSalary},'${s.description}')">
                                                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                 </button>
                                                 <%-- Vô hiệu hóa / kích hoạt --%>
@@ -211,19 +207,6 @@
                 <input type="number" name="basicSalary" min="0" step="100000" placeholder="Ví dụ: 20000000" required/>
             </div>
             <div class="form-group">
-                <label>Phụ cấp (VNĐ) <span style="color:red">*</span></label>
-                <select name="allowance" required style="width: 100%; height: 46px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;">
-                    <option value="0">-- Chọn phụ cấp / Không có phụ cấp (0 VNĐ) --</option>
-                    <c:forEach items="${allowanceTypes}" var="allowance">
-                        <c:if test="${allowance.active}">
-                            <option value="${allowance.amount}">
-                                ${allowance.name} (${allowance.code}) - <fmt:formatNumber value="${allowance.amount}" pattern="#,##0"/> VNĐ
-                            </option>
-                        </c:if>
-                    </c:forEach>
-                </select>
-            </div>
-            <div class="form-group">
                 <label>Mô tả</label>
                 <textarea name="description" placeholder="Mô tả ngắn về bậc lương này..."></textarea>
             </div>
@@ -254,17 +237,6 @@
                 <input type="number" name="basicSalary" id="edit_basicSalary" min="0" step="100000" required/>
             </div>
             <div class="form-group">
-                <label>Phụ cấp (VNĐ) <span style="color:red">*</span></label>
-                <select name="allowance" id="edit_allowance" required style="width: 100%; height: 46px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;">
-                    <option value="0">-- Chọn phụ cấp / Không có phụ cấp (0 VNĐ) --</option>
-                    <c:forEach items="${allowanceTypes}" var="allowance">
-                        <option value="${allowance.amount}">
-                            ${allowance.name} (${allowance.code}) - <fmt:formatNumber value="${allowance.amount}" pattern="#,##0"/> VNĐ
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
-            <div class="form-group">
                 <label>Mô tả</label>
                 <textarea name="description" id="edit_description"></textarea>
             </div>
@@ -286,25 +258,10 @@
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-function openEdit(id, grade, basicSalary, allowance, description) {
+function openEdit(id, grade, basicSalary, description) {
     document.getElementById('edit_id').value          = id;
     document.getElementById('edit_grade').value       = grade;
     document.getElementById('edit_basicSalary').value = basicSalary;
-    
-    // Tìm option có giá trị float khớp với allowance
-    var select = document.getElementById('edit_allowance');
-    var found = false;
-    for (var i = 0; i < select.options.length; i++) {
-        if (parseFloat(select.options[i].value) === parseFloat(allowance)) {
-            select.selectedIndex = i;
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        select.value = "0"; // Mặc định về 0 nếu không tìm thấy
-    }
-
     document.getElementById('edit_description').value = description;
     openModal('editModal');
 }

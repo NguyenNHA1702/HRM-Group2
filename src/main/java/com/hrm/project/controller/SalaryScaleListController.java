@@ -46,10 +46,9 @@ public class SalaryScaleListController extends HttpServlet {
             case "add": {
                 String grade       = req.getParameter("grade");
                 String basicStr    = req.getParameter("basicSalary");
-                String allowStr    = req.getParameter("allowance");
                 String description = req.getParameter("description");
 
-                if (isBlank(grade) || isBlank(basicStr) || isBlank(allowStr)) {
+                if (isBlank(grade) || isBlank(basicStr)) {
                     flash(session, "error", "Vui lòng điền đầy đủ các trường bắt buộc.");
                     break;
                 }
@@ -60,7 +59,6 @@ public class SalaryScaleListController extends HttpServlet {
                 SalaryScale s = new SalaryScale();
                 s.setGrade(grade);
                 s.setBasicSalary(parseDouble(basicStr));
-                s.setAllowance(parseDouble(allowStr));
                 s.setDescription(description);
                 if (dao.addSalaryScale(s)) {
                     flash(session, "success", "Thêm bậc lương \"" + grade + "\" thành công!");
@@ -74,10 +72,9 @@ public class SalaryScaleListController extends HttpServlet {
                 String idStr       = req.getParameter("id");
                 String grade       = req.getParameter("grade");
                 String basicStr    = req.getParameter("basicSalary");
-                String allowStr    = req.getParameter("allowance");
                 String description = req.getParameter("description");
 
-                if (isBlank(idStr) || isBlank(grade) || isBlank(basicStr) || isBlank(allowStr)) {
+                if (isBlank(idStr) || isBlank(grade) || isBlank(basicStr)) {
                     flash(session, "error", "Dữ liệu cập nhật không hợp lệ.");
                     break;
                 }
@@ -90,7 +87,6 @@ public class SalaryScaleListController extends HttpServlet {
                 s.setId(id);
                 s.setGrade(grade);
                 s.setBasicSalary(parseDouble(basicStr));
-                s.setAllowance(parseDouble(allowStr));
                 s.setDescription(description);
                 if (dao.updateSalaryScale(s)) {
                     flash(session, "success", "Cập nhật bậc lương \"" + grade + "\" thành công!");

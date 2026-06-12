@@ -84,6 +84,12 @@
                         Phòng ban
                     </a>
                 </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/contracts') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/contracts">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; fill: none;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Hợp đồng
+                    </a>
+                </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/cham-cong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/cham-cong">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -96,10 +102,10 @@
                         Nghỉ phép
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/luong') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/luong">
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/payrolls">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Lương
+                        Bảng lương
                     </a>
                 </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
@@ -136,6 +142,12 @@
                         Phòng ban
                     </a>
                 </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/contracts') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/contracts">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; fill: none;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Hợp đồng
+                    </a>
+                </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/cham-cong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/cham-cong">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -161,10 +173,10 @@
                         Loại nghỉ phép
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/luong') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/luong">
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/payrolls">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Lương
+                        Bảng lương
                     </a>
                 </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/users') ? 'active' : ''}">
