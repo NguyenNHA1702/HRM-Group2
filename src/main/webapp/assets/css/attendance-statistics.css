@@ -1,0 +1,250 @@
+.statistics-page-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.statistics-back {
+    text-decoration: none;
+}
+
+.system-stats-strip {
+    grid-template-columns: repeat(5, minmax(170px, 1fr));
+}
+
+.stat-total {
+    color: var(--clr-muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+.statistics-table-card {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.statistics-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--clr-border);
+}
+
+.statistics-table-header h2 {
+    margin: 0;
+    color: var(--clr-text);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.statistics-table-header p {
+    margin: 3px 0 0;
+    color: var(--clr-muted);
+    font-size: 0.75rem;
+}
+
+.statistics-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(320px, 100%);
+    padding: 8px 12px;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    background: var(--clr-bg);
+    color: var(--clr-muted);
+}
+
+.statistics-search:focus-within {
+    border-color: var(--clr-accent);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.statistics-search input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--clr-text);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+}
+
+.statistics-table-wrap {
+    max-height: 560px;
+    overflow: auto;
+}
+
+.statistics-table {
+    min-width: 1050px;
+}
+
+.statistics-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.statistics-table th {
+    padding: 11px 14px;
+    background: #f8fafc;
+}
+
+.statistics-table td {
+    padding: 12px 14px;
+}
+
+.statistics-table .number-column {
+    text-align: center;
+}
+
+.employee-code {
+    display: inline-flex;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: var(--clr-accent-lt);
+    color: var(--clr-accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.employee-name {
+    color: var(--clr-text);
+    font-weight: 600;
+}
+
+.work-days {
+    color: var(--clr-present);
+    font-weight: 700;
+}
+
+.status-late,
+.status-early {
+    color: var(--clr-late);
+    font-weight: 600;
+}
+
+.status-absent {
+    color: var(--clr-absent);
+    font-weight: 600;
+}
+
+.status-leave {
+    color: var(--clr-leave);
+    font-weight: 600;
+}
+
+.overtime-value {
+    color: var(--clr-accent);
+    font-weight: 700;
+}
+
+.statistics-empty {
+    padding: 28px;
+    text-align: center;
+    color: var(--clr-muted);
+    font-size: 0.82rem;
+}
+
+@media (max-width: 1200px) {
+    .system-stats-strip {
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .system-stats-strip {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
+
+    .statistics-table-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .statistics-search {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .system-stats-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Project UI alignment */
+.statistics-page-header {
+    align-items: center;
+}
+
+.stat-total {
+    font-size: 12px;
+}
+
+.statistics-table-card {
+    border-radius: 12px;
+}
+
+.statistics-table-header {
+    padding: 16px 22px;
+}
+
+.statistics-table-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.statistics-table-header p {
+    font-size: 13px;
+}
+
+.statistics-search {
+    width: min(360px, 100%);
+    border-radius: 8px;
+    background: var(--clr-surface);
+}
+
+.statistics-search input {
+    font-size: 13px;
+}
+
+.statistics-search svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.statistics-table th {
+    padding: 10px 18px;
+}
+
+.statistics-table td {
+    padding: 12px 18px;
+}
+
+.statistics-table .number-column,
+.statistics-table .work-days,
+.statistics-table .status-late,
+.statistics-table .status-early,
+.statistics-table .status-absent,
+.statistics-table .status-leave,
+.statistics-table .overtime-value {
+    color: var(--clr-text);
+    font-weight: 500;
+}
+
+.statistics-empty {
+    font-size: 13px;
+}
