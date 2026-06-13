@@ -38,7 +38,9 @@ public interface UserDAO {
                     String phone, String dateOfBirth, String gender, String personalEmail,
                     Integer departmentId, Integer positionId, boolean isActive) throws SQLException;
 
-    List<UserAccountDTO> getUsers(String keyword, String roleGroup, String status) throws SQLException;
+    List<UserAccountDTO> getUsers(String keyword, String roleGroup, String status,
+                                  int page, int pageSize) throws SQLException;
+    int getUsersCount(String keyword, String roleGroup, String status) throws SQLException;
     UserStatDTO getStats() throws SQLException;
     List<Object[]> getRoleGroups() throws SQLException;
     void toggleActive(int userId, boolean active) throws SQLException;
