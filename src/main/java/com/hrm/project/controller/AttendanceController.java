@@ -43,6 +43,11 @@ public class AttendanceController extends HttpServlet {
         if (session == null) {
             return;
         }
+        if (!canAccessAttendance((String) session.getAttribute("roleGroup"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Ban khong co quyen truy cap chuc nang cham cong.");
+            return;
+        }
 
         int month = parseIntOrDefault(request.getParameter("month"), LocalDate.now().getMonthValue());
         int year = parseIntOrDefault(request.getParameter("year"), LocalDate.now().getYear());
@@ -70,6 +75,11 @@ public class AttendanceController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         HttpSession session = requireSession(request, response);
         if (session == null) {
+            return;
+        }
+        if (!canAccessAttendance((String) session.getAttribute("roleGroup"))) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Ban khong co quyen truy cap chuc nang cham cong.");
             return;
         }
 
@@ -220,6 +230,10 @@ public class AttendanceController extends HttpServlet {
 
     private boolean canImportAttendance(String role) {
         return "HR".equalsIgnoreCase(role);
+    }
+
+    private boolean canAccessAttendance(String role) {
+        return role != null && !"ADMIN".equalsIgnoreCase(role);
     }
 
     private boolean canViewSystemStatistics(String role) {
