@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -38,6 +39,14 @@ public class AdminInsuranceConfig extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("text/html; charset=UTF-8");
+
+        String roleGroup = getRoleGroup(req);
+        if (!canViewInsurance(roleGroup)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Bạn không có quyền xem thông tin bảo hiểm.");
+            return;
+        }
+        req.setAttribute("canManageInsurance", canManageInsurance(roleGroup));
 
         String keyword = req.getParameter("keyword");
         String status  = req.getParameter("status");
@@ -94,6 +103,12 @@ public class AdminInsuranceConfig extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("text/html; charset=UTF-8");
 
+        if (!canManageInsurance(getRoleGroup(req))) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Bạn chỉ có quyền xem thông tin bảo hiểm.");
+            return;
+        }
+
         String action = req.getParameter("action");
 
         try {
@@ -119,6 +134,24 @@ public class AdminInsuranceConfig extends HttpServlet {
             req.getSession().setAttribute("flash_error", "Lỗi: " + e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/admin/insurance");
         }
+    }
+
+    private String getRoleGroup(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        return session == null ? null : (String) session.getAttribute("roleGroup");
+    }
+
+    private boolean canViewInsurance(String roleGroup) {
+        return "ADMIN".equals(roleGroup)
+                || "HR".equals(roleGroup)
+                || "MANAGER".equals(roleGroup)
+                || "EMPLOYEE".equals(roleGroup);
+    }
+
+    private boolean canManageInsurance(String roleGroup) {
+        return "ADMIN".equals(roleGroup)
+                || "HR".equals(roleGroup)
+                || "MANAGER".equals(roleGroup);
     }
 
     // ═══════════════════════════════════════════════════════════════

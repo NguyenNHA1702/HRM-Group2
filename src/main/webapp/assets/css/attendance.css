@@ -372,7 +372,7 @@ input[type="file"][hidden] {
     letter-spacing: 0.06em;
     padding: 6px 0;
 }
-.cal-weekday.weekend { color: var(--clr-absent); }
+.cal-weekday.weekend { color: var(--clr-muted); }
 
 /* Day cells */
 .calendar-day {
@@ -380,7 +380,7 @@ input[type="file"][hidden] {
     border-radius: var(--radius-md);
     padding: 8px;
     min-height: 96px;
-    background: var(--clr-bg);
+    background: var(--clr-surface);
     cursor: pointer;
     transition: box-shadow 0.15s, transform 0.1s, border-color 0.15s;
     position: relative;
@@ -392,18 +392,18 @@ input[type="file"][hidden] {
 .calendar-day:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
-    border-color: var(--clr-accent);
+    border-color: var(--clr-border);
     z-index: 2;
 }
 
 .calendar-day.today {
-    border-color: var(--clr-accent);
-    background: var(--clr-accent-lt);
+    border-color: var(--clr-border);
+    background: var(--clr-surface);
 }
-.calendar-day.today .day-num { color: var(--clr-accent); }
+.calendar-day.today .day-num { color: var(--clr-text); }
 
 .calendar-day.weekend-day {
-    background: var(--clr-weekend);
+    background: var(--clr-surface);
     cursor: default;
 }
 .calendar-day.weekend-day:hover {
@@ -423,11 +423,14 @@ input[type="file"][hidden] {
     opacity: 0.55;
 }
 
-/* Status color strips */
-.calendar-day.status-present { border-left: 3px solid var(--clr-present); background: var(--clr-present-bg); }
-.calendar-day.status-late    { border-left: 3px solid var(--clr-late);    background: var(--clr-late-bg); }
-.calendar-day.status-absent  { border-left: 3px solid var(--clr-absent);  background: var(--clr-absent-bg); }
-.calendar-day.status-leave   { border-left: 3px solid var(--clr-leave);   background: var(--clr-leave-bg); }
+/* Keep calendar cells neutral; status colors belong to badges only. */
+.calendar-day.status-present,
+.calendar-day.status-late,
+.calendar-day.status-absent,
+.calendar-day.status-leave {
+    border: 1px solid var(--clr-border);
+    background: var(--clr-surface);
+}
 
 /* Day number */
 .day-num {
@@ -466,7 +469,7 @@ input[type="file"][hidden] {
 /* Late minutes pill */
 .late-min {
     font-size: 0.65rem;
-    color: var(--clr-late);
+    color: var(--clr-muted);
     font-weight: 500;
 }
 
@@ -661,10 +664,6 @@ input[type="file"][hidden] {
     .stats-strip { grid-template-columns: repeat(2, 1fr); }
     .calendar-day { min-height: 64px; padding: 5px; }
     .day-time { display: none; }
-    .calendar-day.status-present,
-    .calendar-day.status-late,
-    .calendar-day.status-absent,
-    .calendar-day.status-leave { border-left-width: 3px; }
     .day-badge { font-size: 0.6rem; padding: 1px 4px; }
     .calendar-legend { gap: 10px; }
     .form-row { grid-template-columns: 1fr; }
@@ -673,21 +672,6 @@ input[type="file"][hidden] {
 @media (max-width: 480px) {
     .calendar-day { min-height: 44px; }
     .day-badge { display: none; }
-    /* Show just a dot indicator */
-    .calendar-day.status-present::after,
-    .calendar-day.status-late::after,
-    .calendar-day.status-absent::after,
-    .calendar-day.status-leave::after {
-        content: '';
-        position: absolute;
-        bottom: 4px; right: 4px;
-        width: 6px; height: 6px;
-        border-radius: 50%;
-    }
-    .calendar-day.status-present::after { background: var(--clr-present); }
-    .calendar-day.status-late::after    { background: var(--clr-late); }
-    .calendar-day.status-absent::after  { background: var(--clr-absent); }
-    .calendar-day.status-leave::after   { background: var(--clr-leave); }
 }
 
 /* ── Reduced motion ── */
