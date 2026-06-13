@@ -69,6 +69,8 @@ public interface InsuranceDAO {
 
     /** Lấy tất cả loại bảo hiểm + tỷ lệ */
     List<InsuranceRateDTO> getAllRates() throws SQLException;
+    List<InsuranceRateDTO> getRates(int page, int pageSize) throws SQLException;
+    int getRatesCount() throws SQLException;
 
     /** Thêm mới loại bảo hiểm */
     boolean createRate(InsuranceRateDTO rate) throws SQLException;
@@ -88,6 +90,8 @@ public interface InsuranceDAO {
 
     /** Lấy tất cả nhóm đối tượng áp dụng */
     List<InsuranceApplicableGroupDTO> getAllApplicableGroups() throws SQLException;
+    List<InsuranceApplicableGroupDTO> getApplicableGroups(int page, int pageSize) throws SQLException;
+    int getApplicableGroupsCount() throws SQLException;
 
     /** Thêm mới nhóm đối tượng */
     boolean createApplicableGroup(InsuranceApplicableGroupDTO group) throws SQLException;

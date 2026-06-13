@@ -100,6 +100,14 @@
         .insurance-rate-input label { font-size:12px; color:var(--muted); margin-bottom:4px; font-weight:600; }
         .insurance-rate-input input { padding:8px 10px; border:1px solid var(--border); border-radius:9px; font-size:14px; }
         .rate-total-preview { padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:9px; font-size:14px; font-weight:700; color:var(--text); }
+
+        /* â”€â”€ Pagination â”€â”€ */
+        .pagination-container { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-top:1px solid var(--border); background:#fff; border-bottom-left-radius:12px; border-bottom-right-radius:12px; font-size:13.5px; color:var(--muted); }
+        .pagination { display:flex; gap:6px; list-style:none; padding:0; margin:0; }
+        .page-item a { display:flex; align-items:center; justify-content:center; min-width:32px; height:32px; padding:0 8px; border:1px solid var(--border); border-radius:6px; color:var(--text); text-decoration:none; transition:all .15s; font-weight:500; }
+        .page-item.active a { background:var(--brand); color:#fff; border-color:var(--brand); }
+        .page-item.disabled a { opacity:.5; cursor:not-allowed; background:#f8fafc; pointer-events:none; }
+        .page-item:not(.active):not(.disabled) a:hover { background:#f1f5f9; border-color:#cbd5e1; }
     </style>
 </head>
 
@@ -216,7 +224,7 @@
                             <c:when test="${not empty insuranceRates}">
                                 <c:forEach var="rate" items="${insuranceRates}" varStatus="loop">
                                     <tr id="rate-row-${rate.id}">
-                                        <td>${loop.count}</td>
+                                        <td>${(ratePage - 1) * pageSize + loop.count}</td>
                                         <td style="font-weight:600; color:var(--text)">${rate.name}</td>
                                         <td><span class="badge badge-code">${rate.code}</span></td>
                                         <td style="text-align:center;">
@@ -293,6 +301,52 @@
                         </tbody>
                     </table>
                 </div>
+
+                <div class="pagination-container">
+                    <div>
+                        Hiển thị từ
+                        <c:choose>
+                            <c:when test="${totalRates == 0}">0</c:when>
+                            <c:otherwise>${(ratePage - 1) * pageSize + 1}</c:otherwise>
+                        </c:choose>
+                        đến
+                        <c:choose>
+                            <c:when test="${ratePage * pageSize > totalRates}">${totalRates}</c:when>
+                            <c:otherwise>${ratePage * pageSize}</c:otherwise>
+                        </c:choose>
+                        trên tổng số <strong>${totalRates}</strong> bản ghi
+                    </div>
+
+                    <c:if test="${totalRatePages > 1}">
+                        <ul class="pagination">
+                            <li class="page-item ${ratePage == 1 ? 'disabled' : ''}">
+                                <c:url var="previousRatePageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage - 1}"/>
+                                    <c:param name="groupPage" value="${groupPage}"/>
+                                </c:url>
+                                <a href="${previousRatePageUrl}#rateTable" title="Trang trước">&laquo;</a>
+                            </li>
+
+                            <c:forEach var="i" begin="1" end="${totalRatePages}">
+                                <c:url var="ratePageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${i}"/>
+                                    <c:param name="groupPage" value="${groupPage}"/>
+                                </c:url>
+                                <li class="page-item ${ratePage == i ? 'active' : ''}">
+                                    <a href="${ratePageUrl}#rateTable">${i}</a>
+                                </li>
+                            </c:forEach>
+
+                            <li class="page-item ${ratePage == totalRatePages ? 'disabled' : ''}">
+                                <c:url var="nextRatePageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage + 1}"/>
+                                    <c:param name="groupPage" value="${groupPage}"/>
+                                </c:url>
+                                <a href="${nextRatePageUrl}#rateTable" title="Trang sau">&raquo;</a>
+                            </li>
+                        </ul>
+                    </c:if>
+                </div>
             </div>
 
             <div class="info-note warn">
@@ -342,7 +396,7 @@
                             <c:when test="${not empty applicableGroups}">
                                 <c:forEach var="grp" items="${applicableGroups}" varStatus="loop">
                                     <tr id="group-row-${grp.id}">
-                                        <td>${loop.count}</td>
+                                        <td>${(groupPage - 1) * pageSize + loop.count}</td>
                                         <td style="font-weight:600; color:var(--text); max-width:220px;">${grp.name}</td>
                                         <td style="max-width:200px;">
                                             <c:choose>
@@ -406,6 +460,52 @@
                         </c:choose>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="pagination-container">
+                    <div>
+                        Hiển thị từ
+                        <c:choose>
+                            <c:when test="${totalGroups == 0}">0</c:when>
+                            <c:otherwise>${(groupPage - 1) * pageSize + 1}</c:otherwise>
+                        </c:choose>
+                        đến
+                        <c:choose>
+                            <c:when test="${groupPage * pageSize > totalGroups}">${totalGroups}</c:when>
+                            <c:otherwise>${groupPage * pageSize}</c:otherwise>
+                        </c:choose>
+                        trên tổng số <strong>${totalGroups}</strong> bản ghi
+                    </div>
+
+                    <c:if test="${totalGroupPages > 1}">
+                        <ul class="pagination">
+                            <li class="page-item ${groupPage == 1 ? 'disabled' : ''}">
+                                <c:url var="previousGroupPageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage}"/>
+                                    <c:param name="groupPage" value="${groupPage - 1}"/>
+                                </c:url>
+                                <a href="${previousGroupPageUrl}#groupTable" title="Trang trước">&laquo;</a>
+                            </li>
+
+                            <c:forEach var="i" begin="1" end="${totalGroupPages}">
+                                <c:url var="groupPageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage}"/>
+                                    <c:param name="groupPage" value="${i}"/>
+                                </c:url>
+                                <li class="page-item ${groupPage == i ? 'active' : ''}">
+                                    <a href="${groupPageUrl}#groupTable">${i}</a>
+                                </li>
+                            </c:forEach>
+
+                            <li class="page-item ${groupPage == totalGroupPages ? 'disabled' : ''}">
+                                <c:url var="nextGroupPageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage}"/>
+                                    <c:param name="groupPage" value="${groupPage + 1}"/>
+                                </c:url>
+                                <a href="${nextGroupPageUrl}#groupTable" title="Trang sau">&raquo;</a>
+                            </li>
+                        </ul>
+                    </c:if>
                 </div>
             </div>
 

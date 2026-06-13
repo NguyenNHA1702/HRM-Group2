@@ -31,13 +31,26 @@ public class AdminUserList extends HttpServlet {
         String keyword   = req.getParameter("keyword");
         String roleGroup = req.getParameter("roleGroup");
         String status    = req.getParameter("status");
+        int page = parsePositiveInt(req.getParameter("page"), 1);
+        int pageSize = 10;
 
         try {
             UserStatDTO stats = userDAO.getStats();
             req.setAttribute("stats", stats);
 
-            List<UserAccountDTO> users = userDAO.getUsers(keyword, roleGroup, status);
+            int totalRecords = userDAO.getUsersCount(keyword, roleGroup, status);
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalRecords / pageSize));
+            if (page > totalPages) {
+                page = totalPages;
+            }
+
+            List<UserAccountDTO> users =
+                    userDAO.getUsers(keyword, roleGroup, status, page, pageSize);
             req.setAttribute("users", users);
+            req.setAttribute("page", page);
+            req.setAttribute("pageSize", pageSize);
+            req.setAttribute("totalPages", totalPages);
+            req.setAttribute("totalRecords", totalRecords);
 
             req.setAttribute("filterKeyword",   keyword   != null ? keyword   : "");
             req.setAttribute("filterRoleGroup", roleGroup != null ? roleGroup : "");
@@ -52,6 +65,19 @@ public class AdminUserList extends HttpServlet {
 
         } catch (SQLException e) {
             throw new ServletException("Loi truy van du lieu user", e);
+        }
+    }
+
+    private int parsePositiveInt(String value, int defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 }

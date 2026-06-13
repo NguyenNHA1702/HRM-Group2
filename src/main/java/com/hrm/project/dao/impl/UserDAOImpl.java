@@ -120,7 +120,9 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<UserAccountDTO> getUsers(String keyword,
                                          String roleGroup,
-                                         String status) throws SQLException {
+                                         String status,
+                                         int page,
+                                         int pageSize) throws SQLException {
 
         StringBuilder sql = new StringBuilder(
                 "SELECT ua.id," +
@@ -159,7 +161,9 @@ public class UserDAOImpl implements UserDAO {
             sql.append(" AND ua.is_active = 0");
         }
 
-        sql.append(" ORDER BY ua.id DESC");
+        sql.append(" ORDER BY ua.id DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
 
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -174,6 +178,51 @@ public class UserDAOImpl implements UserDAO {
                     list.add(mapRow(rs));
                 }
                 return list;
+            }
+        }
+    }
+
+    @Override
+    public int getUsersCount(String keyword,
+                             String roleGroup,
+                             String status) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*)" +
+                        " FROM user_accounts ua" +
+                        " JOIN roles r ON r.id = ua.role_id" +
+                        " JOIN role_groups rg ON rg.id = r.group_id" +
+                        " LEFT JOIN employees e ON e.id = ua.employee_id" +
+                        " WHERE 1 = 1"
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (ua.username LIKE ? OR e.full_name LIKE ?)");
+            params.add("%" + keyword.trim() + "%");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        if (roleGroup != null && !roleGroup.trim().isEmpty()) {
+            sql.append(" AND rg.code = ?");
+            params.add(roleGroup.trim());
+        }
+
+        if ("1".equals(status)) {
+            sql.append(" AND ua.is_active = 1");
+        } else if ("0".equals(status)) {
+            sql.append(" AND ua.is_active = 0");
+        }
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
             }
         }
     }

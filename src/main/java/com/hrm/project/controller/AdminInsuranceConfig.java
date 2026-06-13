@@ -50,6 +50,9 @@ public class AdminInsuranceConfig extends HttpServlet {
 
         String keyword = req.getParameter("keyword");
         String status  = req.getParameter("status");
+        int pageSize = 5;
+        int ratePage = parsePositiveInt(req.getParameter("ratePage"), 1);
+        int groupPage = parsePositiveInt(req.getParameter("groupPage"), 1);
 
         if (keyword != null && keyword.trim().isEmpty()) keyword = null;
         if (status  != null && status.isEmpty())          status  = null;
@@ -60,13 +63,31 @@ public class AdminInsuranceConfig extends HttpServlet {
             req.setAttribute("stats", stats);
 
             // Danh sách tỷ lệ bảo hiểm
-            List<InsuranceDAO.InsuranceRateDTO> insuranceRates = insuranceDAO.getAllRates();
+            int totalRates = insuranceDAO.getRatesCount();
+            int totalRatePages = Math.max(1, (int) Math.ceil((double) totalRates / pageSize));
+            if (ratePage > totalRatePages) {
+                ratePage = totalRatePages;
+            }
+            List<InsuranceDAO.InsuranceRateDTO> insuranceRates =
+                    insuranceDAO.getRates(ratePage, pageSize);
             req.setAttribute("insuranceRates", insuranceRates);
+            req.setAttribute("ratePage", ratePage);
+            req.setAttribute("totalRates", totalRates);
+            req.setAttribute("totalRatePages", totalRatePages);
 
             // Danh sách đối tượng áp dụng
+            int totalGroups = insuranceDAO.getApplicableGroupsCount();
+            int totalGroupPages = Math.max(1, (int) Math.ceil((double) totalGroups / pageSize));
+            if (groupPage > totalGroupPages) {
+                groupPage = totalGroupPages;
+            }
             List<InsuranceDAO.InsuranceApplicableGroupDTO> applicableGroups =
-                    insuranceDAO.getAllApplicableGroups();
+                    insuranceDAO.getApplicableGroups(groupPage, pageSize);
             req.setAttribute("applicableGroups", applicableGroups);
+            req.setAttribute("groupPage", groupPage);
+            req.setAttribute("totalGroups", totalGroups);
+            req.setAttribute("totalGroupPages", totalGroupPages);
+            req.setAttribute("pageSize", pageSize);
 
             // Danh sách bảo hiểm nhân viên
             List<InsuranceConfigDTO> insurances;
@@ -139,6 +160,19 @@ public class AdminInsuranceConfig extends HttpServlet {
     private String getRoleGroup(HttpServletRequest req) {
         HttpSession session = req.getSession(false);
         return session == null ? null : (String) session.getAttribute("roleGroup");
+    }
+
+    private int parsePositiveInt(String value, int defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     private boolean canViewInsurance(String roleGroup) {
