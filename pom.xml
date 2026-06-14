@@ -60,11 +60,6 @@
       <version>2.10.1</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-mysql</artifactId>
-      <version>8.5.13</version>
-    </dependency>
 
     <dependency>
       <groupId>org.mindrot</groupId>
@@ -90,13 +85,19 @@
         <configuration>
           <container>
             <containerId>tomcat9x</containerId>
+            <home>${project.build.directory}/cargo4/installs/tomcat-9.0.83/apache-tomcat-9.0.83</home>
             <zipUrlInstaller>
               <url>https://repo1.maven.org/maven2/org/apache/tomcat/tomcat/9.0.83/tomcat-9.0.83.zip</url>
+              <downloadDir>${project.build.directory}/cargo4/downloads</downloadDir>
+              <extractDir>${project.build.directory}/cargo4/installs</extractDir>
             </zipUrlInstaller>
           </container>
           <configuration>
+            <home>${project.build.directory}/cargo4/configurations/tomcat9x</home>
             <properties>
-              <cargo.servlet.port>8080</cargo.servlet.port>
+              <cargo.servlet.port>8088</cargo.servlet.port>
+              <cargo.rmi.port>8212</cargo.rmi.port>
+              <cargo.tomcat.ajp.port>8014</cargo.tomcat.ajp.port>
             </properties>
           </configuration>
           <deployables>

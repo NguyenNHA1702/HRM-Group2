@@ -115,8 +115,6 @@ public class InsuranceDAOImpl implements InsuranceDAO {
 
     /**
      * Tìm kiếm cấu hình bảo hiểm
-     * @param keyword Tìm kiếm theo mã nhân viên, tên, số bảo hiểm
-     * @param status "active" / "inactive" / "" (tất cả)
      */
     @Override
     public List<InsuranceConfigDTO> search(String keyword, String status) throws SQLException {
@@ -135,7 +133,6 @@ public class InsuranceDAOImpl implements InsuranceDAO {
 
         List<Object> params = new ArrayList<>();
 
-        // Filter theo keyword
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append("AND (e.employee_code LIKE ? OR e.full_name LIKE ? OR ic.insurance_number LIKE ?) ");
             String searchPattern = "%" + keyword.trim() + "%";
@@ -144,7 +141,6 @@ public class InsuranceDAOImpl implements InsuranceDAO {
             params.add(searchPattern);
         }
 
-        // Filter theo trạng thái
         if (status != null && !status.isEmpty()) {
             if ("active".equalsIgnoreCase(status)) {
                 sql.append("AND ic.is_active = true ");
@@ -160,7 +156,6 @@ public class InsuranceDAOImpl implements InsuranceDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            // Set parameters
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
@@ -308,7 +303,7 @@ public class InsuranceDAOImpl implements InsuranceDAO {
     }
 
     /**
-     * Lấy thống kê bảo hiểm
+     * Lấy thống kê loại bảo hiểm (từ bảng insurance_rate)
      */
     @Override
     public InsuranceStatDTO getStats() throws SQLException {
@@ -316,17 +311,18 @@ public class InsuranceDAOImpl implements InsuranceDAO {
                 "COUNT(*) as total, " +
                 "SUM(CASE WHEN is_active = true THEN 1 ELSE 0 END) as active, " +
                 "SUM(CASE WHEN is_active = false THEN 1 ELSE 0 END) as inactive " +
-                "FROM insurance_config";
+                "FROM insurance_rate";
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             if (rs.next()) {
-                int total = rs.getInt("total");
-                int active = rs.getInt("active");
-                int inactive = rs.getInt("inactive");
-                return new InsuranceStatDTO(total, active, inactive);
+                return new InsuranceStatDTO(
+                        rs.getInt("total"),
+                        rs.getInt("active"),
+                        rs.getInt("inactive")
+                );
             }
         } catch (SQLException e) {
             logger.warning("Error fetching insurance stats: " + e.getMessage());
@@ -441,7 +437,111 @@ public class InsuranceDAOImpl implements InsuranceDAO {
         }
     }
 
-    // =============== Helper Methods ===============
+    // ═══════════════════════════════════════════════════════════════
+    // Insurance Applicable Group implementations
+    // ═══════════════════════════════════════════════════════════════
+
+    @Override
+    public List<InsuranceApplicableGroupDTO> getAllApplicableGroups() throws SQLException {
+        String sql = "SELECT id, name, description, condition_detail, sort_order, is_active " +
+                "FROM insurance_applicable_group ORDER BY sort_order ASC, id ASC";
+        List<InsuranceApplicableGroupDTO> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(new InsuranceApplicableGroupDTO(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getString("condition_detail"),
+                        rs.getInt("sort_order"),
+                        rs.getBoolean("is_active")
+                ));
+            }
+        } catch (SQLException e) {
+            logger.severe("Error fetching applicable groups: " + e.getMessage());
+            throw e;
+        }
+        return list;
+    }
+
+    @Override
+    public boolean createApplicableGroup(InsuranceApplicableGroupDTO group) throws SQLException {
+        String sql = "INSERT INTO insurance_applicable_group " +
+                "(name, description, condition_detail, sort_order, is_active) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, group.name);
+            ps.setString(2, group.description);
+            ps.setString(3, group.conditionDetail);
+            ps.setInt(4, group.sortOrder);
+            ps.setBoolean(5, group.active);
+            int result = ps.executeUpdate();
+            logger.info("Created applicable group: " + group.name);
+            return result > 0;
+        } catch (SQLException e) {
+            logger.severe("Error creating applicable group: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public boolean updateApplicableGroup(InsuranceApplicableGroupDTO group) throws SQLException {
+        String sql = "UPDATE insurance_applicable_group SET " +
+                "name = ?, description = ?, condition_detail = ?, sort_order = ?, is_active = ? " +
+                "WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, group.name);
+            ps.setString(2, group.description);
+            ps.setString(3, group.conditionDetail);
+            ps.setInt(4, group.sortOrder);
+            ps.setBoolean(5, group.active);
+            ps.setInt(6, group.id);
+            int result = ps.executeUpdate();
+            logger.info("Updated applicable group: id=" + group.id);
+            return result > 0;
+        } catch (SQLException e) {
+            logger.severe("Error updating applicable group: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public boolean deleteApplicableGroup(int id) throws SQLException {
+        String sql = "DELETE FROM insurance_applicable_group WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            int result = ps.executeUpdate();
+            logger.info("Deleted applicable group: id=" + id);
+            return result > 0;
+        } catch (SQLException e) {
+            logger.severe("Error deleting applicable group: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public boolean toggleApplicableGroupActive(int id, boolean isActive) throws SQLException {
+        String sql = "UPDATE insurance_applicable_group SET is_active = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, isActive);
+            ps.setInt(2, id);
+            int result = ps.executeUpdate();
+            logger.info("Toggled applicable group status: id=" + id + " -> " + isActive);
+            return result > 0;
+        } catch (SQLException e) {
+            logger.severe("Error toggling applicable group status: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Helper Methods
+    // ═══════════════════════════════════════════════════════════════
 
     /**
      * Map ResultSet sang InsuranceConfig object

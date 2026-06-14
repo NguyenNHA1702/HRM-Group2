@@ -66,8 +66,8 @@ public class LeaveTypeDAOImpl implements LeaveTypeDAO {
 
         String sql =
                 "INSERT INTO leave_types " +
-                        "(code, name, days_per_year, is_paid, description, is_active) " +
-                        "VALUES(?,?,?,?,?,?)";
+                        "(code, name, days_per_year, is_paid, is_active) " +
+                        "VALUES(?,?,?,?,?)";
 
         try (
                 Connection con = DBConnection.getConnection();
@@ -76,10 +76,13 @@ public class LeaveTypeDAOImpl implements LeaveTypeDAO {
 
             ps.setString(1, leaveType.getCode());
             ps.setString(2, leaveType.getName());
-            ps.setDouble(3, leaveType.getDaysPerYear());
+            if (leaveType.getDaysPerYear() != null) {
+                ps.setDouble(3, leaveType.getDaysPerYear());
+            } else {
+                ps.setNull(3, Types.DECIMAL);
+            }
             ps.setBoolean(4, leaveType.isPaid());
-            ps.setString(5, leaveType.getDescription());
-            ps.setBoolean(6, leaveType.isActive());
+            ps.setBoolean(5, leaveType.isActive());
 
             return ps.executeUpdate() > 0;
 
@@ -95,7 +98,7 @@ public class LeaveTypeDAOImpl implements LeaveTypeDAO {
 
         String sql =
                 "UPDATE leave_types " +
-                        "SET code=?, name=?, days_per_year=?, is_paid=?, description=? " +
+                        "SET code=?, name=?, days_per_year=?, is_paid=? " +
                         "WHERE id=?";
 
         try (
@@ -105,10 +108,13 @@ public class LeaveTypeDAOImpl implements LeaveTypeDAO {
 
             ps.setString(1, leaveType.getCode());
             ps.setString(2, leaveType.getName());
-            ps.setDouble(3, leaveType.getDaysPerYear());
+            if (leaveType.getDaysPerYear() != null) {
+                ps.setDouble(3, leaveType.getDaysPerYear());
+            } else {
+                ps.setNull(3, Types.DECIMAL);
+            }
             ps.setBoolean(4, leaveType.isPaid());
-            ps.setString(5, leaveType.getDescription());
-            ps.setInt(6, leaveType.getId());
+            ps.setInt(5, leaveType.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -151,9 +157,17 @@ public class LeaveTypeDAOImpl implements LeaveTypeDAO {
         t.setId(rs.getInt("id"));
         t.setCode(rs.getString("code"));
         t.setName(rs.getString("name"));
-        t.setDaysPerYear(rs.getDouble("days_per_year"));
+
+        // Handles NULL safely for days_per_year using object wrappers
+        Object daysObj = rs.getObject("days_per_year");
+        if (daysObj != null) {
+            t.setDaysPerYear(((Number) daysObj).doubleValue());
+        } else {
+            t.setDaysPerYear(null);
+        }
+
         t.setPaid(rs.getBoolean("is_paid"));
-        t.setDescription(rs.getString("description"));
+        // t.setDescription(rs.getString("description")); // Ignored: column does not exist in DB
         t.setActive(rs.getBoolean("is_active"));
 
         return t;

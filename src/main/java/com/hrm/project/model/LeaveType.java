@@ -5,10 +5,10 @@ public class LeaveType {
     private int id;
     private String code;
     private String name;
-    private double daysPerYear;   // decimal(5,1) trong DB
-    private boolean paid;         // is_paid trong DB
-    private String description;
-    private boolean active;       // is_active trong DB
+    private Double daysPerYear;   // Changed from double to Double to support NULL safely
+    private boolean paid;
+    private String description;   // Ensure your DAO does NOT try to map rs.getString("description")
+    private boolean active;
 
     public LeaveType() {}
 
@@ -21,8 +21,8 @@ public class LeaveType {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public double getDaysPerYear() { return daysPerYear; }
-    public void setDaysPerYear(double daysPerYear) { this.daysPerYear = daysPerYear; }
+    public Double getDaysPerYear() { return daysPerYear; }
+    public void setDaysPerYear(Double daysPerYear) { this.daysPerYear = daysPerYear; }
 
     public boolean isPaid() { return paid; }
     public void setPaid(boolean paid) { this.paid = paid; }
