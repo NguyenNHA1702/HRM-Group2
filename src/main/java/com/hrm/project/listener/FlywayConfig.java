@@ -52,7 +52,8 @@ public class FlywayConfig implements ServletContextListener {
                     .baselineOnMigrate(true)
                     .load();
 
-            System.out.println("[FLYWAY LOGGER] Bước 5: Thực thi lệnh quét và chạy file Migration (flyway.migrate())...");
+            System.out.println("[FLYWAY LOGGER] Bước 5: Thực thi repair và migrate...");
+            flyway.repair(); // FIX FAILED MIGRATIONS
             int migrationCount = flyway.migrate().migrationsExecuted;
 
             System.out.println("[FLYWAY LOGGER] -> THÀNH CÔNG RỰC RỠ: Đã chạy thành công " + migrationCount + " file SQL migration!");

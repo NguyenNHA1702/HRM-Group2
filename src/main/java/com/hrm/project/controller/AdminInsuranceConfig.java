@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
@@ -39,8 +40,19 @@ public class AdminInsuranceConfig extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("text/html; charset=UTF-8");
 
+        String roleGroup = getRoleGroup(req);
+        if (!canViewInsurance(roleGroup)) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Bạn không có quyền xem thông tin bảo hiểm.");
+            return;
+        }
+        req.setAttribute("canManageInsurance", canManageInsurance(roleGroup));
+
         String keyword = req.getParameter("keyword");
         String status  = req.getParameter("status");
+        int pageSize = 5;
+        int ratePage = parsePositiveInt(req.getParameter("ratePage"), 1);
+        int groupPage = parsePositiveInt(req.getParameter("groupPage"), 1);
 
         if (keyword != null && keyword.trim().isEmpty()) keyword = null;
         if (status  != null && status.isEmpty())          status  = null;
@@ -51,13 +63,31 @@ public class AdminInsuranceConfig extends HttpServlet {
             req.setAttribute("stats", stats);
 
             // Danh sách tỷ lệ bảo hiểm
-            List<InsuranceDAO.InsuranceRateDTO> insuranceRates = insuranceDAO.getAllRates();
+            int totalRates = insuranceDAO.getRatesCount();
+            int totalRatePages = Math.max(1, (int) Math.ceil((double) totalRates / pageSize));
+            if (ratePage > totalRatePages) {
+                ratePage = totalRatePages;
+            }
+            List<InsuranceDAO.InsuranceRateDTO> insuranceRates =
+                    insuranceDAO.getRates(ratePage, pageSize);
             req.setAttribute("insuranceRates", insuranceRates);
+            req.setAttribute("ratePage", ratePage);
+            req.setAttribute("totalRates", totalRates);
+            req.setAttribute("totalRatePages", totalRatePages);
 
             // Danh sách đối tượng áp dụng
+            int totalGroups = insuranceDAO.getApplicableGroupsCount();
+            int totalGroupPages = Math.max(1, (int) Math.ceil((double) totalGroups / pageSize));
+            if (groupPage > totalGroupPages) {
+                groupPage = totalGroupPages;
+            }
             List<InsuranceDAO.InsuranceApplicableGroupDTO> applicableGroups =
-                    insuranceDAO.getAllApplicableGroups();
+                    insuranceDAO.getApplicableGroups(groupPage, pageSize);
             req.setAttribute("applicableGroups", applicableGroups);
+            req.setAttribute("groupPage", groupPage);
+            req.setAttribute("totalGroups", totalGroups);
+            req.setAttribute("totalGroupPages", totalGroupPages);
+            req.setAttribute("pageSize", pageSize);
 
             // Danh sách bảo hiểm nhân viên
             List<InsuranceConfigDTO> insurances;
@@ -94,6 +124,12 @@ public class AdminInsuranceConfig extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("text/html; charset=UTF-8");
 
+        if (!canManageInsurance(getRoleGroup(req))) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Bạn chỉ có quyền xem thông tin bảo hiểm.");
+            return;
+        }
+
         String action = req.getParameter("action");
 
         try {
@@ -119,6 +155,37 @@ public class AdminInsuranceConfig extends HttpServlet {
             req.getSession().setAttribute("flash_error", "Lỗi: " + e.getMessage());
             resp.sendRedirect(req.getContextPath() + "/admin/insurance");
         }
+    }
+
+    private String getRoleGroup(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        return session == null ? null : (String) session.getAttribute("roleGroup");
+    }
+
+    private int parsePositiveInt(String value, int defaultValue) {
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    private boolean canViewInsurance(String roleGroup) {
+        return "ADMIN".equals(roleGroup)
+                || "HR".equals(roleGroup)
+                || "MANAGER".equals(roleGroup)
+                || "EMPLOYEE".equals(roleGroup);
+    }
+
+    private boolean canManageInsurance(String roleGroup) {
+        return "ADMIN".equals(roleGroup)
+                || "HR".equals(roleGroup)
+                || "MANAGER".equals(roleGroup);
     }
 
     // ═══════════════════════════════════════════════════════════════

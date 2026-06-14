@@ -4,17 +4,15 @@ public class SalaryScale {
     private int id;
     private String grade;
     private double basicSalary;
-    private double allowance;
     private String description;
     private boolean active;
 
     public SalaryScale() {}
 
-    public SalaryScale(int id, String grade, double basicSalary, double allowance, String description, boolean active) {
+    public SalaryScale(int id, String grade, double basicSalary, String description, boolean active) {
         this.id = id;
         this.grade = grade;
         this.basicSalary = basicSalary;
-        this.allowance = allowance;
         this.description = description;
         this.active = active;
     }
@@ -27,9 +25,6 @@ public class SalaryScale {
 
     public double getBasicSalary() { return basicSalary; }
     public void setBasicSalary(double basicSalary) { this.basicSalary = basicSalary; }
-
-    public double getAllowance() { return allowance; }
-    public void setAllowance(double allowance) { this.allowance = allowance; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

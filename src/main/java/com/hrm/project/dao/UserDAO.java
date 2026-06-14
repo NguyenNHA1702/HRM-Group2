@@ -38,7 +38,9 @@ public interface UserDAO {
                     String phone, String dateOfBirth, String gender, String personalEmail,
                     Integer departmentId, Integer positionId, boolean isActive) throws SQLException;
 
-    List<UserAccountDTO> getUsers(String keyword, String roleGroup, String status) throws SQLException;
+    List<UserAccountDTO> getUsers(String keyword, String roleGroup, String status,
+                                  int page, int pageSize) throws SQLException;
+    int getUsersCount(String keyword, String roleGroup, String status) throws SQLException;
     UserStatDTO getStats() throws SQLException;
     List<Object[]> getRoleGroups() throws SQLException;
     void toggleActive(int userId, boolean active) throws SQLException;
@@ -59,4 +61,16 @@ public interface UserDAO {
     // Get all employees for dropdowns/selects
     List<UserAccount> getAllEmployees() throws SQLException;
 
+    /**
+     * Suggest employees matching a search term (by employee_code or full_name).
+     * Returns at most 10 results for autocomplete.
+     */
+    List<Object[]> suggestEmployees(String term) throws SQLException;
+
+    /**
+     * Check whether an employee with the given ID exists.
+     */
+    boolean employeeExists(int employeeId) throws SQLException;
+
+    List<com.hrm.project.model.SalaryHistory> getSalaryHistoryByEmployeeId(int employeeId);
 }
