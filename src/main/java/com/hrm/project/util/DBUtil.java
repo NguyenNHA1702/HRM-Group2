@@ -10,7 +10,7 @@ import java.sql.SQLException;
  */
 public class DBUtil {
 
-    private static final String DB_URL  = "jdbc:mysql://localhost:3306/hrm_db"
+    private static final String DB_URL  = "jdbc:mysql://127.0.0.1:3306/hrm_db"
             + "?useUnicode=true&characterEncoding=UTF-8"
             + "&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh"
             + "&allowPublicKeyRetrieval=true";
