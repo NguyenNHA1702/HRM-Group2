@@ -81,6 +81,7 @@
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 120px;">Mã Phòng</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Tên Phòng Ban</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Phòng Ban Cha</th>
+                        <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Trưởng phòng</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 110px;">Số nhân sự</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; max-width: 300px;">Mô tả</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 130px;">Trạng thái</th>
@@ -105,6 +106,19 @@
                                     </c:when>
                                     <c:otherwise>
                                         <span class="text-muted" style="font-size: 13px;">-</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${not empty dept.managerName}">
+                                        <span class="font-weight-normal text-dark">${dept.managerName}</span>
+                                        <c:if test="${not empty dept.managerCode}">
+                                            <br><small class="text-muted">${dept.managerCode}</small>
+                                        </c:if>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="text-muted" style="font-size: 13px;">Chưa bổ nhiệm</span>
                                     </c:otherwise>
                                 </c:choose>
                             </td>
@@ -138,6 +152,9 @@
                                         data-parent="${dept.parentId}"
                                         data-desc="${dept.description}"
                                         data-active="${dept.isActive}"
+                                        data-managerid="${dept.managerId}"
+                                        data-managercode="${dept.managerCode}"
+                                        data-managername="${dept.managerName}"
                                         title="Chỉnh sửa">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4e73df" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -148,7 +165,7 @@
                         </tr>
                     </c:forEach>
                     <tr id="noDataRow" style="display: none;">
-                        <td colspan="8" class="text-center text-muted py-4" style="background: white;">Không tìm thấy phòng ban nào phù hợp với bộ lọc!</td>
+                        <td colspan="9" class="text-center text-muted py-4" style="background: white;">Không tìm thấy phòng ban nào phù hợp với bộ lọc!</td>
                     </tr>
                     </tbody>
                 </table>
@@ -187,6 +204,15 @@
                         <label class="text-dark font-weight-500" style="font-size: 14px;">Tên Phòng Ban <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="deptName" class="form-control" style="border-radius: 6px; padding: 10px;" required>
                     </div>
+                     <div class="form-group mb-3 position-relative">
+                        <label class="text-dark font-weight-500" style="font-size: 14px;" for="manager_search">Trưởng phòng <span class="text-danger">*</span></label>
+                        <input type="text" id="manager_search" class="form-control"
+                               placeholder="Gõ mã NV hoặc tên để tìm..." autocomplete="off"
+                               style="border-radius: 6px; padding: 10px;" required>
+                        <div id="suggestion_box" class="dropdown-menu w-100 shadow-sm" style="display: none; max-height: 200px; overflow-y: auto; position: absolute; z-index: 1000; top: 100%;"></div>
+                        <input type="hidden" id="manager_id" name="manager_id">
+                        <small id="managerHint" class="text-muted" style="font-size: 12px; display: none;"></small>
+                    </div>
                     <div class="form-group mb-3">
                         <label class="text-dark font-weight-500" style="font-size: 14px;">Phòng Ban Cha (Cấp trên)</label>
                         <select name="parentId" id="deptParent" class="form-control" style="border-radius: 6px; height: auto; padding: 8px 12px;">
@@ -219,6 +245,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/js/departments.js"></script>
+<script>const CTX = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/departments.js?v=<%= System.currentTimeMillis() %>"></script>
 </body>
 </html>

@@ -12,9 +12,10 @@ public class DepartmentDAOImpl implements DepartmentDAO {
     @Override
     public List<Department> getAllDepartments() {
         List<Department> list = new ArrayList<>();
-        String sql = "SELECT d1.*, d2.name AS parent_name, COUNT(e.id) AS total_emp " +
+        String sql = "SELECT d1.*, d2.name AS parent_name, mgr.employee_code AS manager_code, mgr.full_name AS manager_name, COUNT(e.id) AS total_emp " +
                 "FROM departments d1 " +
                 "LEFT JOIN departments d2 ON d1.parent_id = d2.id " +
+                "LEFT JOIN employees mgr ON d1.manager_id = mgr.id " +
                 "LEFT JOIN employees e ON e.department_id = d1.id " + // JOIN sang bảng nhân viên
                 "GROUP BY d1.id " +
                 "ORDER BY d1.id DESC";
@@ -33,6 +34,8 @@ public class DepartmentDAOImpl implements DepartmentDAO {
                 d.setDescription(rs.getString("description"));
                 d.setIsActive(rs.getInt("is_active"));
                 d.setParentName(rs.getString("parent_name"));
+                d.setManagerName(rs.getString("manager_name"));
+                d.setManagerCode(rs.getString("manager_code"));
                 d.setTotalEmployees(rs.getInt("total_emp"));
                 list.add(d);
             }
@@ -44,15 +47,16 @@ public class DepartmentDAOImpl implements DepartmentDAO {
 
     @Override
     public boolean addDepartment(Department d) {
-        String sql = "INSERT INTO departments (code, name, parent_id, description, is_active) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO departments (code, name, manager_id, parent_id, description, is_active) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, d.getCode());
             ps.setString(2, d.getName());
-            if (d.getParentId() != null) ps.setInt(3, d.getParentId()); else ps.setNull(3, Types.INTEGER);
-            ps.setString(4, d.getDescription());
-            ps.setInt(5, d.getIsActive());
+            if (d.getManagerId() != null) ps.setInt(3, d.getManagerId()); else ps.setNull(3, Types.INTEGER);
+            if (d.getParentId() != null) ps.setInt(4, d.getParentId()); else ps.setNull(4, Types.INTEGER);
+            ps.setString(5, d.getDescription());
+            ps.setInt(6, d.getIsActive());
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
@@ -63,16 +67,17 @@ public class DepartmentDAOImpl implements DepartmentDAO {
 
     @Override
     public boolean updateDepartment(Department d) {
-        String sql = "UPDATE departments SET code = ?, name = ?, parent_id = ?, description = ?, is_active = ? WHERE id = ?";
+        String sql = "UPDATE departments SET code = ?, name = ?, manager_id = ?, parent_id = ?, description = ?, is_active = ? WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, d.getCode());
             ps.setString(2, d.getName());
-            if (d.getParentId() != null) ps.setInt(3, d.getParentId()); else ps.setNull(3, Types.INTEGER);
-            ps.setString(4, d.getDescription());
-            ps.setInt(5, d.getIsActive());
-            ps.setInt(6, d.getId());
+            if (d.getManagerId() != null) ps.setInt(3, d.getManagerId()); else ps.setNull(3, Types.INTEGER);
+            if (d.getParentId() != null) ps.setInt(4, d.getParentId()); else ps.setNull(4, Types.INTEGER);
+            ps.setString(5, d.getDescription());
+            ps.setInt(6, d.getIsActive());
+            ps.setInt(7, d.getId());
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
