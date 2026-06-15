@@ -81,19 +81,32 @@ public class DepartmentController extends HttpServlet {
             d.setParentId(Integer.parseInt(parentIdStr));
         }
 
-        // Retrieve and log mandatory manager_id
         String managerIdParam = request.getParameter("manager_id");
         if (managerIdParam == null || managerIdParam.trim().isEmpty()) {
             managerIdParam = request.getParameter("managerId");
         }
-        System.out.println("Received manager_id parameter: " + managerIdParam);
-
+        int managerId = -1;
         if (managerIdParam != null && !managerIdParam.trim().isEmpty()) {
-            d.setManagerId(Integer.parseInt(managerIdParam.trim()));
+            managerId = Integer.parseInt(managerIdParam.trim());
+            d.setManagerId(managerId);
         } else {
             request.setAttribute("message", "Lỗi: manager_id là bắt buộc!");
             doGet(request, response);
             return;
+        }
+
+        // Validate that manager does not have Admin or HR positions (position_id <= 6)
+        try {
+            com.hrm.project.model.UserAccount manager = userDAO.getUserForAdminUpdate(managerId);
+            if (manager != null && manager.getPositionId() <= 6) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.setContentType("text/plain");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("Error: Cannot assign an Admin or HR personnel as a Department Manager!");
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         if ("create".equals(action) || "add".equals(action)) {
