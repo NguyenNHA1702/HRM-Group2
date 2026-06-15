@@ -50,6 +50,29 @@ public class LeaveBalanceDAOImpl implements LeaveBalanceDAO {
 
     @Override
     public List<LeaveBalance> getAll() {
+        // Tự động khởi tạo quỹ phép cho nhân viên mới hoạt động chưa có cấu hình
+        String initSql =
+                "INSERT IGNORE INTO leave_balances (employee_id, leave_type_id, used_days, remaining_days) " +
+                "SELECT e.id, lt.id, 0.00, COALESCE(lt.days_per_year, 0) " +
+                "FROM employees e " +
+                "CROSS JOIN leave_types lt " +
+                "WHERE e.status = 'ACTIVE' AND lt.is_active = 1 " +
+                "  AND (lt.code != 'MATERNITY' OR LOWER(e.gender) IN ('nữ', 'nu', 'female', 'f'))";
+
+        // Xóa các bản ghi nghỉ thai sản của nhân sự nam (nếu có do seed cũ hoặc gán nhầm)
+        String cleanupSql =
+                "DELETE FROM leave_balances " +
+                "WHERE leave_type_id IN (SELECT id FROM leave_types WHERE code = 'MATERNITY') " +
+                "  AND employee_id IN (SELECT id FROM employees WHERE LOWER(gender) NOT IN ('nữ', 'nu', 'female', 'f') OR gender IS NULL)";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement psInit = con.prepareStatement(initSql);
+             PreparedStatement psClean = con.prepareStatement(cleanupSql)) {
+            psInit.executeUpdate();
+            psClean.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         List<LeaveBalance> list = new ArrayList<>();
 
@@ -118,6 +141,95 @@ public class LeaveBalanceDAOImpl implements LeaveBalanceDAO {
             e.printStackTrace();
         }
 
+        return false;
+    }
+
+    @Override
+    public boolean updateBalance(int id, double usedDays, double remainingDays) {
+
+        String sql =
+                "UPDATE leave_balances " +
+                        "SET used_days=?, remaining_days=? " +
+                        "WHERE id=?";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setDouble(1, usedDays);
+            ps.setDouble(2, remainingDays);
+            ps.setInt(3, id);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public int resetAll() {
+
+        String sql =
+                "UPDATE leave_balances lb " +
+                        "JOIN leave_types lt ON lt.id = lb.leave_type_id " +
+                        "SET lb.used_days = 0, " +
+                        "    lb.remaining_days = COALESCE(lt.days_per_year, 0)";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            return ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean create(int employeeId, int leaveTypeId, double totalDays) {
+
+        String sql =
+                "INSERT INTO leave_balances " +
+                        "(employee_id, leave_type_id, used_days, remaining_days) " +
+                        "VALUES (?, ?, 0, ?)";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setInt(1, employeeId);
+            ps.setInt(2, leaveTypeId);
+            ps.setDouble(3, totalDays);
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean exists(int employeeId, int leaveTypeId) {
+
+        String sql =
+                "SELECT COUNT(*) FROM leave_balances " +
+                        "WHERE employee_id=? AND leave_type_id=?";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setInt(1, employeeId);
+            ps.setInt(2, leaveTypeId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1) > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
