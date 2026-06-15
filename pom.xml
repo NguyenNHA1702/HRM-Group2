@@ -101,7 +101,7 @@
           <configuration>
             <home>${project.build.directory}/cargo4/configurations/tomcat9x</home>
             <properties>
-              <cargo.servlet.port>8088</cargo.servlet.port>
+              <cargo.servlet.port>8080</cargo.servlet.port>
               <cargo.rmi.port>8212</cargo.rmi.port>
               <cargo.tomcat.ajp.port>8014</cargo.tomcat.ajp.port>
             </properties>
