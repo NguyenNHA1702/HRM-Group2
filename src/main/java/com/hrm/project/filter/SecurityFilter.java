@@ -73,7 +73,16 @@ public class SecurityFilter implements Filter {
                         path.equals("/admin/payrolls") || path.equals("/admin/payroll/generate") ||
                         path.equals("/admin/payroll/detail"));
 
-        if (!isHrAllowedAdminPath &&
+        boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&
+                (path.equals("/admin/insurance") ||
+                        path.equals("/admin/insurance/action"));
+
+        boolean isEmployeeAllowedAdminPath = "EMPLOYEE".equals(roleGroup) &&
+                "GET".equalsIgnoreCase(req.getMethod()) &&
+                path.equals("/admin/insurance");
+
+        if (!isHrAllowedAdminPath && !isManagerAllowedAdminPath &&
+                !isEmployeeAllowedAdminPath &&
                 (path.startsWith("/admin") || path.equals("/phan-quyen") ||
                         path.equals("/quan-ly-users") || path.equals("/cau-hinh"))) {
 

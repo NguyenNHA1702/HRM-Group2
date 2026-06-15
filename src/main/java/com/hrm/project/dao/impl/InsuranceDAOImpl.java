@@ -384,6 +384,44 @@ public class InsuranceDAOImpl implements InsuranceDAO {
     }
 
     @Override
+    public List<InsuranceRateDTO> getRates(int page, int pageSize) throws SQLException {
+        String sql = "SELECT id, name, code, employee_rate, employer_rate, note, is_active " +
+                "FROM insurance_rate ORDER BY id ASC LIMIT ? OFFSET ?";
+        List<InsuranceRateDTO> list = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, pageSize);
+            ps.setInt(2, (page - 1) * pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new InsuranceRateDTO(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("code"),
+                            rs.getDouble("employee_rate"),
+                            rs.getDouble("employer_rate"),
+                            rs.getString("note"),
+                            rs.getBoolean("is_active")
+                    ));
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public int getRatesCount() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM insurance_rate";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
+    }
+
+    @Override
     public boolean createRate(InsuranceRateDTO rate) throws SQLException {
         String sql = "INSERT INTO insurance_rate (name, code, employee_rate, employer_rate, note, is_active) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
@@ -464,6 +502,47 @@ public class InsuranceDAOImpl implements InsuranceDAO {
             throw e;
         }
         return list;
+    }
+
+    @Override
+    public List<InsuranceApplicableGroupDTO> getApplicableGroups(int page, int pageSize)
+            throws SQLException {
+        String sql = "SELECT id, name, description, condition_detail, sort_order, is_active " +
+                "FROM insurance_applicable_group ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?";
+        List<InsuranceApplicableGroupDTO> list = new ArrayList<>();
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, pageSize);
+            ps.setInt(2, (page - 1) * pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new InsuranceApplicableGroupDTO(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getString("condition_detail"),
+                            rs.getInt("sort_order"),
+                            rs.getBoolean("is_active")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Error fetching applicable groups by page: " + e.getMessage());
+            throw e;
+        }
+        return list;
+    }
+
+    @Override
+    public int getApplicableGroupsCount() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM insurance_applicable_group";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : 0;
+        }
     }
 
     @Override

@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Quản lý Bảo hiểm | HRMS</title>
+    <title>${canManageInsurance ? 'Quản lý Bảo hiểm' : 'Thông tin Bảo hiểm'} | HRMS</title>
 
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
@@ -75,6 +75,7 @@
         .badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:11.5px; font-weight:600; white-space:nowrap; }
         .badge-active   { background:var(--green-light);  color:#15803d; cursor:pointer; }
         .badge-inactive { background:var(--red-light);    color:#b91c1c; cursor:pointer; }
+        .readonly-status { cursor:default; }
         .badge-code     { background:var(--brand-light);  color:var(--brand); font-size:11px; }
 
         .rate-pill-emp  { display:inline-block; background:#eef2ff; color:#4f46e5; padding:4px 12px; border-radius:20px; font-weight:700; font-size:14px; }
@@ -99,6 +100,14 @@
         .insurance-rate-input label { font-size:12px; color:var(--muted); margin-bottom:4px; font-weight:600; }
         .insurance-rate-input input { padding:8px 10px; border:1px solid var(--border); border-radius:9px; font-size:14px; }
         .rate-total-preview { padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:9px; font-size:14px; font-weight:700; color:var(--text); }
+
+        /* â”€â”€ Pagination â”€â”€ */
+        .pagination-container { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-top:1px solid var(--border); background:#fff; border-bottom-left-radius:12px; border-bottom-right-radius:12px; font-size:13.5px; color:var(--muted); }
+        .pagination { display:flex; gap:6px; list-style:none; padding:0; margin:0; }
+        .page-item a { display:flex; align-items:center; justify-content:center; min-width:32px; height:32px; padding:0 8px; border:1px solid var(--border); border-radius:6px; color:var(--text); text-decoration:none; transition:all .15s; font-weight:500; }
+        .page-item.active a { background:var(--brand); color:#fff; border-color:var(--brand); }
+        .page-item.disabled a { opacity:.5; cursor:not-allowed; background:#f8fafc; pointer-events:none; }
+        .page-item:not(.active):not(.disabled) a:hover { background:#f1f5f9; border-color:#cbd5e1; }
     </style>
 </head>
 
@@ -132,8 +141,12 @@
         <%-- Page Header --%>
         <div class="page-header">
             <div>
-                <h1>Quản lý Bảo hiểm</h1>
-                <p class="subtitle">Cấu hình tỷ lệ và đối tượng áp dụng bảo hiểm bắt buộc</p>
+                <h1>${canManageInsurance ? 'Quản lý Bảo hiểm' : 'Thông tin Bảo hiểm'}</h1>
+                <p class="subtitle">
+                    ${canManageInsurance
+                            ? 'Cấu hình tỷ lệ và đối tượng áp dụng bảo hiểm bắt buộc'
+                            : 'Theo dõi tỷ lệ và đối tượng áp dụng bảo hiểm trong hệ thống'}
+                </p>
             </div>
         </div>
 
@@ -180,10 +193,12 @@
                     </div>
                     <p class="section-block-sub">Tỷ lệ % trích từ lương của người lao động và phần đóng góp của doanh nghiệp</p>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="openModal('createRateModal')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Thêm loại bảo hiểm
-                </button>
+                <c:if test="${canManageInsurance}">
+                    <button type="button" class="btn btn-primary" onclick="openModal('createRateModal')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Thêm loại bảo hiểm
+                    </button>
+                </c:if>
             </div>
 
             <div class="card">
@@ -199,7 +214,9 @@
                             <th style="text-align:center;">Tổng (%)</th>
                             <th>Ghi chú</th>
                             <th>Trạng thái</th>
-                            <th>Hành động</th>
+                            <c:if test="${canManageInsurance}">
+                                <th>Hành động</th>
+                            </c:if>
                         </tr>
                         </thead>
                         <tbody>
@@ -207,21 +224,25 @@
                             <c:when test="${not empty insuranceRates}">
                                 <c:forEach var="rate" items="${insuranceRates}" varStatus="loop">
                                     <tr id="rate-row-${rate.id}">
-                                        <td>${loop.count}</td>
+                                        <td>${(ratePage - 1) * pageSize + loop.count}</td>
                                         <td style="font-weight:600; color:var(--text)">${rate.name}</td>
                                         <td><span class="badge badge-code">${rate.code}</span></td>
                                         <td style="text-align:center;">
                                             <span class="rate-pill-emp" id="emp-rate-${rate.id}">${rate.employeeRate}%</span>
-                                            <input type="number" class="rate-input-inline" id="emp-input-${rate.id}"
-                                                   value="${rate.employeeRate}" step="0.1" min="0" max="100"
-                                                   onchange="updateTotal(${rate.id})">
+                                            <c:if test="${canManageInsurance}">
+                                                <input type="number" class="rate-input-inline" id="emp-input-${rate.id}"
+                                                       value="${rate.employeeRate}" step="0.1" min="0" max="100"
+                                                       onchange="updateTotal(${rate.id})">
+                                            </c:if>
                                         </td>
                                         <td style="text-align:center;">
                                             <span class="rate-pill-emp2" id="emp2-rate-${rate.id}">${rate.employerRate}%</span>
-                                            <input type="number" class="rate-input-inline" id="emp2-input-${rate.id}"
-                                                   style="border-color:#16a34a;"
-                                                   value="${rate.employerRate}" step="0.1" min="0" max="100"
-                                                   onchange="updateTotal(${rate.id})">
+                                            <c:if test="${canManageInsurance}">
+                                                <input type="number" class="rate-input-inline" id="emp2-input-${rate.id}"
+                                                       style="border-color:#16a34a;"
+                                                       value="${rate.employerRate}" step="0.1" min="0" max="100"
+                                                       onchange="updateTotal(${rate.id})">
+                                            </c:if>
                                         </td>
                                         <td style="text-align:center;">
                                             <span id="total-rate-${rate.id}" style="font-weight:700; color:var(--text);">
@@ -230,44 +251,101 @@
                                         </td>
                                         <td style="color:var(--muted); font-size:13px;">${rate.note}</td>
                                         <td>
-                                            <span class="badge ${rate.active ? 'badge-active' : 'badge-inactive'}"
-                                                  onclick="confirmToggleRate(${rate.id}, ${rate.active})">
-                                                ${rate.active ? 'Đang áp dụng' : 'Đã dừng'}
-                                            </span>
+                                            <c:choose>
+                                                <c:when test="${canManageInsurance}">
+                                                    <span class="badge ${rate.active ? 'badge-active' : 'badge-inactive'}"
+                                                          onclick="confirmToggleRate(${rate.id}, ${rate.active})">
+                                                        ${rate.active ? 'Đang áp dụng' : 'Đã dừng'}
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge readonly-status ${rate.active ? 'badge-active' : 'badge-inactive'}">
+                                                        ${rate.active ? 'Đang áp dụng' : 'Đã dừng'}
+                                                    </span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
-                                        <td>
-                                            <div class="actions">
-                                                <button class="action-btn edit" id="edit-btn-${rate.id}"
-                                                        onclick="toggleEditRate(${rate.id})" title="Chỉnh sửa">
-                                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                </button>
-                                                <button class="action-btn save" id="save-btn-${rate.id}"
-                                                        onclick="saveRate(${rate.id})" title="Lưu"
-                                                        style="display:none;">
-                                                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                                </button>
-                                                <button class="action-btn cancel-edit" id="cancel-btn-${rate.id}"
-                                                        onclick="cancelEditRate(${rate.id})" title="Hủy"
-                                                        style="display:none;">
-                                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                                </button>
-                                                <button class="action-btn delete"
-                                                        data-id="${rate.id}"
-                                                        data-name="${rate.name}"
-                                                        onclick="confirmDeleteRate(this)" title="Xóa">
-                                                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                                </button>
-                                            </div>
-                                        </td>
+                                        <c:if test="${canManageInsurance}">
+                                            <td>
+                                                <div class="actions">
+                                                    <button class="action-btn edit" id="edit-btn-${rate.id}"
+                                                            onclick="toggleEditRate(${rate.id})" title="Chỉnh sửa">
+                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                    </button>
+                                                    <button class="action-btn save" id="save-btn-${rate.id}"
+                                                            onclick="saveRate(${rate.id})" title="Lưu"
+                                                            style="display:none;">
+                                                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                                    </button>
+                                                    <button class="action-btn cancel-edit" id="cancel-btn-${rate.id}"
+                                                            onclick="cancelEditRate(${rate.id})" title="Hủy"
+                                                            style="display:none;">
+                                                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                    </button>
+                                                    <button class="action-btn delete"
+                                                            data-id="${rate.id}"
+                                                            data-name="${rate.name}"
+                                                            onclick="confirmDeleteRate(this)" title="Xóa">
+                                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </c:if>
                                     </tr>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
-                                <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">Chưa có cấu hình tỷ lệ bảo hiểm nào.</td></tr>
+                                <tr><td colspan="${canManageInsurance ? 9 : 8}" style="text-align:center;padding:40px;color:var(--muted)">Chưa có cấu hình tỷ lệ bảo hiểm nào.</td></tr>
                             </c:otherwise>
                         </c:choose>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="pagination-container">
+                    <div>
+                        Hiển thị từ
+                        <c:choose>
+                            <c:when test="${totalRates == 0}">0</c:when>
+                            <c:otherwise>${(ratePage - 1) * pageSize + 1}</c:otherwise>
+                        </c:choose>
+                        đến
+                        <c:choose>
+                            <c:when test="${ratePage * pageSize > totalRates}">${totalRates}</c:when>
+                            <c:otherwise>${ratePage * pageSize}</c:otherwise>
+                        </c:choose>
+                        trên tổng số <strong>${totalRates}</strong> bản ghi
+                    </div>
+
+                    <c:if test="${totalRatePages > 1}">
+                        <ul class="pagination">
+                            <li class="page-item ${ratePage == 1 ? 'disabled' : ''}">
+                                <c:url var="previousRatePageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage - 1}"/>
+                                    <c:param name="groupPage" value="${groupPage}"/>
+                                </c:url>
+                                <a href="${previousRatePageUrl}#rateTable" title="Trang trước">&laquo;</a>
+                            </li>
+
+                            <c:forEach var="i" begin="1" end="${totalRatePages}">
+                                <c:url var="ratePageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${i}"/>
+                                    <c:param name="groupPage" value="${groupPage}"/>
+                                </c:url>
+                                <li class="page-item ${ratePage == i ? 'active' : ''}">
+                                    <a href="${ratePageUrl}#rateTable">${i}</a>
+                                </li>
+                            </c:forEach>
+
+                            <li class="page-item ${ratePage == totalRatePages ? 'disabled' : ''}">
+                                <c:url var="nextRatePageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage + 1}"/>
+                                    <c:param name="groupPage" value="${groupPage}"/>
+                                </c:url>
+                                <a href="${nextRatePageUrl}#rateTable" title="Trang sau">&raquo;</a>
+                            </li>
+                        </ul>
+                    </c:if>
                 </div>
             </div>
 
@@ -289,10 +367,12 @@
                     </div>
                     <p class="section-block-sub">Quy định nhóm người lao động thuộc diện tham gia bảo hiểm bắt buộc của công ty</p>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="openModal('createGroupModal')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Thêm nhóm đối tượng
-                </button>
+                <c:if test="${canManageInsurance}">
+                    <button type="button" class="btn btn-primary" onclick="openModal('createGroupModal')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Thêm nhóm đối tượng
+                    </button>
+                </c:if>
             </div>
 
             <div class="card">
@@ -306,7 +386,9 @@
                             <th>Mô tả chi tiết</th>
 
                             <th>Trạng thái</th>
-                            <th>Hành động</th>
+                            <c:if test="${canManageInsurance}">
+                                <th>Hành động</th>
+                            </c:if>
                         </tr>
                         </thead>
                         <tbody>
@@ -314,7 +396,7 @@
                             <c:when test="${not empty applicableGroups}">
                                 <c:forEach var="grp" items="${applicableGroups}" varStatus="loop">
                                     <tr id="group-row-${grp.id}">
-                                        <td>${loop.count}</td>
+                                        <td>${(groupPage - 1) * pageSize + loop.count}</td>
                                         <td style="font-weight:600; color:var(--text); max-width:220px;">${grp.name}</td>
                                         <td style="max-width:200px;">
                                             <c:choose>
@@ -332,41 +414,98 @@
                                         </td>
 
                                         <td>
-                                            <span class="badge ${grp.active ? 'badge-active' : 'badge-inactive'}"
-                                                  onclick="confirmToggleGroup(${grp.id}, ${grp.active})">
-                                                ${grp.active ? 'Đang áp dụng' : 'Đã dừng'}
-                                            </span>
+                                            <c:choose>
+                                                <c:when test="${canManageInsurance}">
+                                                    <span class="badge ${grp.active ? 'badge-active' : 'badge-inactive'}"
+                                                          onclick="confirmToggleGroup(${grp.id}, ${grp.active})">
+                                                        ${grp.active ? 'Đang áp dụng' : 'Đã dừng'}
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge readonly-status ${grp.active ? 'badge-active' : 'badge-inactive'}">
+                                                        ${grp.active ? 'Đang áp dụng' : 'Đã dừng'}
+                                                    </span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </td>
-                                        <td>
-                                            <div class="actions">
-                                                <button type="button" class="action-btn edit"
-                                                        data-id="${grp.id}"
-                                                        data-name="${fn:escapeXml(grp.name)}"
-                                                        data-desc="${fn:escapeXml(grp.description)}"
-                                                        data-cond="${fn:escapeXml(grp.conditionDetail)}"
-                                                        data-active="${grp.active}"
-                                                        onclick="openEditGroup(this)"
-                                                        title="Chỉnh sửa">
-                                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                </button>
-                                                <button type="button" class="action-btn delete"
-                                                        data-id="${grp.id}"
-                                                        data-name="${fn:escapeXml(grp.name)}"
-                                                        onclick="confirmDeleteGroup(this)"
-                                                        title="Xóa">
-                                                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                                </button>
-                                            </div>
-                                        </td>
+                                        <c:if test="${canManageInsurance}">
+                                            <td>
+                                                <div class="actions">
+                                                    <button type="button" class="action-btn edit"
+                                                            data-id="${grp.id}"
+                                                            data-name="${fn:escapeXml(grp.name)}"
+                                                            data-desc="${fn:escapeXml(grp.description)}"
+                                                            data-cond="${fn:escapeXml(grp.conditionDetail)}"
+                                                            data-active="${grp.active}"
+                                                            onclick="openEditGroup(this)"
+                                                            title="Chỉnh sửa">
+                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                    </button>
+                                                    <button type="button" class="action-btn delete"
+                                                            data-id="${grp.id}"
+                                                            data-name="${fn:escapeXml(grp.name)}"
+                                                            onclick="confirmDeleteGroup(this)"
+                                                            title="Xóa">
+                                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </c:if>
                                     </tr>
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
-                                <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Chưa có nhóm đối tượng nào được cấu hình.</td></tr>
+                                <tr><td colspan="${canManageInsurance ? 6 : 5}" style="text-align:center;padding:40px;color:var(--muted)">Chưa có nhóm đối tượng nào được cấu hình.</td></tr>
                             </c:otherwise>
                         </c:choose>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="pagination-container">
+                    <div>
+                        Hiển thị từ
+                        <c:choose>
+                            <c:when test="${totalGroups == 0}">0</c:when>
+                            <c:otherwise>${(groupPage - 1) * pageSize + 1}</c:otherwise>
+                        </c:choose>
+                        đến
+                        <c:choose>
+                            <c:when test="${groupPage * pageSize > totalGroups}">${totalGroups}</c:when>
+                            <c:otherwise>${groupPage * pageSize}</c:otherwise>
+                        </c:choose>
+                        trên tổng số <strong>${totalGroups}</strong> bản ghi
+                    </div>
+
+                    <c:if test="${totalGroupPages > 1}">
+                        <ul class="pagination">
+                            <li class="page-item ${groupPage == 1 ? 'disabled' : ''}">
+                                <c:url var="previousGroupPageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage}"/>
+                                    <c:param name="groupPage" value="${groupPage - 1}"/>
+                                </c:url>
+                                <a href="${previousGroupPageUrl}#groupTable" title="Trang trước">&laquo;</a>
+                            </li>
+
+                            <c:forEach var="i" begin="1" end="${totalGroupPages}">
+                                <c:url var="groupPageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage}"/>
+                                    <c:param name="groupPage" value="${i}"/>
+                                </c:url>
+                                <li class="page-item ${groupPage == i ? 'active' : ''}">
+                                    <a href="${groupPageUrl}#groupTable">${i}</a>
+                                </li>
+                            </c:forEach>
+
+                            <li class="page-item ${groupPage == totalGroupPages ? 'disabled' : ''}">
+                                <c:url var="nextGroupPageUrl" value="/admin/insurance">
+                                    <c:param name="ratePage" value="${ratePage}"/>
+                                    <c:param name="groupPage" value="${groupPage + 1}"/>
+                                </c:url>
+                                <a href="${nextGroupPageUrl}#groupTable" title="Trang sau">&raquo;</a>
+                            </li>
+                        </ul>
+                    </c:if>
                 </div>
             </div>
 
@@ -382,6 +521,7 @@
     </main>
 </div>
 
+        <c:if test="${canManageInsurance}">
         <%-- ═══════════════════════ MODALS ════════════════════════════ --%>
 
         <%-- Modal Thêm loại bảo hiểm --%>
@@ -557,6 +697,7 @@
             <input type="hidden" name="action"  value="deleteApplicableGroup">
             <input type="hidden" name="groupId" id="deleteGroupId">
         </form>
+        </c:if>
 
 <script>
 // ══════════════════════════════════════════════════════════
