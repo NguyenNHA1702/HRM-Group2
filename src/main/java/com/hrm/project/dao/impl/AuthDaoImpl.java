@@ -29,28 +29,33 @@ public class AuthDaoImpl implements AuthDao {
 
                     int positionId = rs.getInt("position_id");
                     int isActualManager = rs.getInt("is_actual_manager");
-                    String finalRoleGroupCode = rs.getString("role_group_code");
-                    String finalRoleName = rs.getString("role_name");
-                    int finalRoleId = rs.getInt("role_id");
+                    String finalRoleGroupCode;
+                    String finalRoleName;
+                    int finalRoleId;
 
-                    // 1. Luôn ưu tiên vị trí Giám đốc Điều Hành (position_id = 1) là ADMIN
+                    // 1. First, check if the user is an Admin (position_id = 1) -> Redirect to Admin Dashboard
                     if (positionId == 1) {
                         finalRoleGroupCode = "ADMIN";
                         finalRoleName = "Admin";
                         finalRoleId = 1;
                     }
-                    // 2. Nếu tài khoản được phân vai MANAGER nhưng thực tế không quản lý phòng ban nào nữa:
-                    else if ("MANAGER".equals(finalRoleGroupCode) && isActualManager == 0) {
-                        // Trả lại vai trò cũ dựa theo vị trí công tác của họ
-                        if (positionId == 2 || positionId == 3) {
-                            finalRoleGroupCode = "HR";
-                            finalRoleName = (positionId == 2) ? "HR Manager" : "HR Specialist";
-                            finalRoleId = 3;
-                        } else {
-                            finalRoleGroupCode = "EMPLOYEE";
-                            finalRoleName = "Employee";
-                            finalRoleId = 9;
-                        }
+                    // 2. Second, check if the user belongs to the HR block (position_id IN (2, 3, 4, 5, 6)) -> Redirect to HR Dashboard
+                    else if (positionId >= 2 && positionId <= 6) {
+                        finalRoleGroupCode = "HR";
+                        finalRoleName = (positionId == 2) ? "HR Manager" : "HR Specialist";
+                        finalRoleId = 3;
+                    }
+                    // 3. Third, check if the user is a regular Department Manager (position_id = 7 or is dynamically linked as a manager)
+                    else if (positionId == 7 || isActualManager > 0) {
+                        finalRoleGroupCode = "MANAGER";
+                        finalRoleName = "Manager";
+                        finalRoleId = 7;
+                    }
+                    // 4. Default -> Employee Dashboard
+                    else {
+                        finalRoleGroupCode = "EMPLOYEE";
+                        finalRoleName = "Employee";
+                        finalRoleId = 9;
                     }
 
                     // -----------------------------------------------------------------

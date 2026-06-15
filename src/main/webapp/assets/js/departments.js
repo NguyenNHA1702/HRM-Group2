@@ -1,4 +1,5 @@
 function openAddModal() {
+    $('#modalAlert').remove();
     document.getElementById('modalTitle').innerText = "Add New Department";
     document.getElementById('modalAction').value = "add";
     document.getElementById('deptId').value = "";
@@ -18,6 +19,7 @@ function openAddModal() {
 }
 
 function openEditModal(button) {
+    $('#modalAlert').remove();
     document.getElementById('modalTitle').innerText = "Update Department Information";
     document.getElementById('modalAction').value = "update";
 
@@ -128,7 +130,16 @@ $(document).ready(function() {
         }
     });
 
-    // Enforce manager selection requirement on submit
+    function showModalError(message) {
+        let alertDiv = $('#modalAlert');
+        if (alertDiv.length === 0) {
+            $('#departmentModal .modal-body').prepend('<div id="modalAlert" class="alert alert-danger" style="border-radius: 6px; font-size: 14px;"></div>');
+            alertDiv = $('#modalAlert');
+        }
+        alertDiv.text(message).show();
+    }
+
+    // Enforce manager selection requirement on submit and validate manager positions
     $('#departmentModal form').on('submit', function(e) {
         const managerId = $('#manager_id').val();
         console.log("Submitting manager_id:", managerId);
@@ -136,7 +147,47 @@ $(document).ready(function() {
             e.preventDefault();
             alert('Vui lòng chọn Trưởng phòng từ danh sách gợi ý.');
             $('#manager_search').focus();
+            return;
         }
+
+        e.preventDefault();
+        const form = this;
+        const url = form.action;
+        const formData = new FormData(form);
+        const searchParams = new URLSearchParams();
+        for (const pair of formData.entries()) {
+            searchParams.append(pair[0], pair[1]);
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: searchParams.toString()
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || "Error: Cannot assign an Admin or HR personnel as a Department Manager!");
+                });
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (html.indexOf("Error: Cannot assign an Admin or HR personnel") !== -1) {
+                showModalError(html);
+            } else {
+                // Replace page content to reflect changes and keep the success messages
+                document.open();
+                document.write(html);
+                document.close();
+            }
+        })
+        .catch(error => {
+            console.error("Submission Error:", error);
+            showModalError(error.message);
+        });
     });
 });
 
