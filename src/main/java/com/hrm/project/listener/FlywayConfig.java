@@ -50,6 +50,7 @@ public class FlywayConfig implements ServletContextListener {
                     .dataSource(dbUrl, user, pass)
                     .locations("classpath:db/migration") // Khóa cứng đường dẫn quét thư mục resources công khai
                     .baselineOnMigrate(true)
+                    .outOfOrder(true)
                     .load();
 
             System.out.println("[FLYWAY LOGGER] Bước 5: Thực thi repair và migrate...");
