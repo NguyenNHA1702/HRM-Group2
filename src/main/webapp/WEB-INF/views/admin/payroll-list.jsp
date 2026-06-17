@@ -204,6 +204,12 @@
                                     <i class="fa-solid fa-exclamation-circle"></i> Có lỗi xảy ra khi tạo bảng lương. Vui lòng kiểm tra lại cấu hình công hoặc bảo hiểm.
                                 </div>
                             </c:if>
+                            <c:if test="${param.error == 'no_attendance'}">
+                                <div
+                                    style="background: #fee2e2; color: #b91c1c; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                                    <i class="fa-solid fa-exclamation-circle"></i> Không thể tính lương vì thiếu dữ liệu bảng công của một số nhân viên.
+                                </div>
+                            </c:if>
 
                             <c:choose>
                                 <c:when test="${empty payrolls}">
@@ -279,6 +285,15 @@
                                                             class="btn btn-sm btn-outline">
                                                             <i class="fa-solid fa-eye"></i> Xem Chi Tiết
                                                         </a>
+                                                        <c:if test="${p.status == 'DRAFT'}">
+                                                            <form action="${pageContext.request.contextPath}/admin/payroll/generate" method="post" style="margin: 0;">
+                                                                <input type="hidden" name="month" value="${p.month}">
+                                                                <input type="hidden" name="year" value="${p.year}">
+                                                                <button type="submit" class="btn btn-sm btn-outline" style="color: #b45309; border-color: #fcd34d;" title="Tính lại dựa trên dữ liệu mới" onclick="return confirm('Bạn có chắc chắn muốn xóa bản nháp cũ và tính lại bảng lương tháng này?');">
+                                                                    <i class="fa-solid fa-rotate-right"></i> Tính Lại
+                                                                </button>
+                                                            </form>
+                                                        </c:if>
                                                         <c:if test="${p.status == 'DRAFT' && sessionScope.roleGroup == 'ADMIN'}">
                                                             <form action="${pageContext.request.contextPath}/admin/payroll/approve" method="post" style="margin: 0;">
                                                                 <input type="hidden" name="id" value="${p.id}">

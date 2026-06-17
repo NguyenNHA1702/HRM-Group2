@@ -30,6 +30,12 @@ public class GeneratePayrollController extends HttpServlet {
             return;
         }
 
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        if (!"ADMIN".equals(roleGroup) && !"HR".equals(roleGroup)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only ADMIN or HR can generate payroll.");
+            return;
+        }
+
         try {
             int month = Integer.parseInt(request.getParameter("month"));
             int year = Integer.parseInt(request.getParameter("year"));
@@ -51,7 +57,11 @@ public class GeneratePayrollController extends HttpServlet {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=invalid_data");
+            if (e.getMessage() != null && e.getMessage().contains("thiếu bảng công")) {
+                response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=no_attendance");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=invalid_data");
+            }
         }
     }
 }
