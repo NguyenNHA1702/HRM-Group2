@@ -197,7 +197,79 @@ public class PayrollDAOImpl implements PayrollDAO {
     }
 
     @Override
-    public boolean generatePayroll(int month, int year, int createdBy) {
+    public int countEmployeesMissingAttendanceSummary(int month, int year) {
+        String sql = "SELECT COUNT(*) FROM employees e " +
+                     "JOIN user_accounts ua ON e.id = ua.employee_id " +
+                     "WHERE ua.is_active = 1 AND e.status != 'TERMINATED' " +
+                     "AND NOT EXISTS (" +
+                     "   SELECT 1 FROM attendance_summary ats " +
+                     "   WHERE ats.employee_id = e.id AND ats.month = ? AND ats.year = ?" +
+                     ")";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, month);
+            ps.setInt(2, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // Indicate error
+    }
+
+    @Override
+    public PayrollDetail getPayrollDetailById(int detailId) {
+        String sql = "SELECT pd.*, p.month, p.year, p.status, e.full_name, e.employee_code, d.name as dept_name, pos.name as pos_name " +
+                     "FROM payroll_details pd " +
+                     "JOIN payrolls p ON pd.payroll_id = p.id " +
+                     "JOIN employees e ON pd.employee_id = e.id " +
+                     "LEFT JOIN departments d ON e.department_id = d.id " +
+                     "LEFT JOIN positions pos ON e.position_id = pos.id " +
+                     "WHERE pd.id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, detailId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    PayrollDetail d = new PayrollDetail();
+                    d.setId(rs.getInt("id"));
+                    d.setPayrollId(rs.getInt("payroll_id"));
+                    d.setEmployeeId(rs.getInt("employee_id"));
+                    d.setBasicSalary(rs.getDouble("basic_salary"));
+                    d.setAllowanceAmount(rs.getDouble("allowance_amount"));
+                    d.setInsuranceDeduction(rs.getDouble("insurance_deduction"));
+                    d.setTaxDeduction(rs.getDouble("tax_deduction"));
+                    d.setUnpaidLeaveDeduction(rs.getDouble("unpaid_leave_deduction"));
+                    d.setNetSalary(rs.getDouble("net_salary"));
+                    d.setNotes(rs.getString("notes"));
+                    d.setEmployeeName(rs.getString("full_name"));
+                    d.setEmployeeCode(rs.getString("employee_code"));
+                    d.setDepartmentName(rs.getString("dept_name"));
+                    d.setPositionName(rs.getString("pos_name"));
+                    d.setMonth(rs.getInt("month"));
+                    d.setYear(rs.getInt("year"));
+                    d.setStatus(rs.getString("status"));
+                    return d;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean generatePayroll(int month, int year, int createdBy) throws Exception {
+        int missingCount = countEmployeesMissingAttendanceSummary(month, year);
+        if (missingCount < 0) {
+            throw new Exception("Lỗi hệ thống khi kiểm tra bảng công.");
+        } else if (missingCount > 0) {
+            throw new Exception("Không thể tính lương vì thiếu bảng công của " + missingCount + " nhân viên.");
+        }
+
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
