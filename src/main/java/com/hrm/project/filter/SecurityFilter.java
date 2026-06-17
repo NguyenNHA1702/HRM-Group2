@@ -71,7 +71,7 @@ public class SecurityFilter implements Filter {
                         path.equals("/admin/insurance") || path.equals("/admin/insurance/action") ||
                         path.equals("/admin/users") || path.equals("/admin/user/update") ||
                         path.equals("/admin/payrolls") || path.equals("/admin/payroll/generate") ||
-                        path.equals("/admin/payroll/detail"));
+                        path.equals("/admin/payroll/detail") || path.equals("/admin/payroll/export-excel"));
 
         boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&
                 (path.equals("/admin/insurance") ||
