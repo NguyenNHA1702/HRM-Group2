@@ -268,7 +268,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <button type="button" class="btn btn-sm btn-outline" 
-                                            onclick="openPayslipModal('${d.month}/${d.year}', ${d.basicSalary}, ${d.allowanceAmount}, ${d.insuranceDeduction}, ${d.taxDeduction}, ${d.unpaidLeaveDeduction}, ${d.netSalary})">
+                                            onclick="openPayslipModal(${d.id}, '${d.status}', '${d.month}/${d.year}', ${d.basicSalary}, ${d.allowanceAmount}, ${d.insuranceDeduction}, ${d.taxDeduction}, ${d.unpaidLeaveDeduction}, ${d.netSalary})">
                                             <i class="fa-solid fa-eye"></i> Xem Chi Tiết
                                         </button>
                                     </td>
@@ -323,7 +323,10 @@
                     <span class="total-value" id="mNet">0 đ</span>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px;">
+                <a href="#" id="btnDownloadPdf" class="btn" style="background: #ef4444; color: white; display: none; text-decoration: none;">
+                    <i class="fa-solid fa-file-pdf"></i> Download PDF
+                </a>
                 <button class="btn btn-outline" onclick="closePayslipModal()">Đóng</button>
             </div>
         </div>
@@ -334,7 +337,7 @@
             return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
         }
 
-        function openPayslipModal(period, basic, allow, ins, tax, unpaid, net) {
+        function openPayslipModal(id, status, period, basic, allow, ins, tax, unpaid, net) {
             document.getElementById('mPeriod').innerText = period;
             document.getElementById('mBasic').innerText = formatVND(basic);
             document.getElementById('mAllow').innerText = '+ ' + formatVND(allow);
@@ -344,6 +347,15 @@
             document.getElementById('mTax').innerText = '- ' + formatVND(tax);
             document.getElementById('mUnpaid').innerText = '- ' + formatVND(unpaid);
             document.getElementById('mNet').innerText = formatVND(net);
+
+            var pdfBtn = document.getElementById('btnDownloadPdf');
+            if (status === 'APPROVED' || status === 'PAID') {
+                pdfBtn.style.display = 'inline-flex';
+                pdfBtn.href = '${pageContext.request.contextPath}/luong/export-pdf?detailId=' + id;
+            } else {
+                pdfBtn.style.display = 'none';
+                pdfBtn.href = '#';
+            }
 
             document.getElementById('payslipModal').classList.add('active');
         }
