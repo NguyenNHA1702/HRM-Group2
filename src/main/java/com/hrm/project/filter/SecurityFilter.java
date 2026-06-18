@@ -67,6 +67,9 @@ public class SecurityFilter implements Filter {
         String roleGroup = (String) session.getAttribute("roleGroup");
 
         boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
+                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") || path.equals("/admin/leave-types"));
+
+        if (!isHrAllowedAdminPath &&
                 (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") ||
                         path.equals("/admin/insurance") || path.equals("/admin/insurance/action") ||
                         path.equals("/admin/users") || path.equals("/admin/user/update") ||

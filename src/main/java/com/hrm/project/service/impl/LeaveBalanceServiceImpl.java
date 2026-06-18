@@ -23,14 +23,32 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
     }
 
     @Override
-    public boolean deductBalance(
-            int employeeId,
-            int leaveTypeId,
-            double days) {
-
-        return leaveBalanceDAO.deductBalance(
-                employeeId,
-                leaveTypeId,
-                days);
+    public boolean deductBalance(int employeeId, int leaveTypeId, double days) {
+        return leaveBalanceDAO.deductBalance(employeeId, leaveTypeId, days);
     }
-}
+
+    @Override
+    public boolean updateBalance(int id, double usedDays, double remainingDays) {
+        return leaveBalanceDAO.updateBalance(id, usedDays, remainingDays);
+    }
+
+    @Override
+    public int resetAll() {
+        return leaveBalanceDAO.resetAll();
+    }
+
+    @Override
+    public boolean create(int employeeId, int leaveTypeId, double totalDays) {
+        return leaveBalanceDAO.create(employeeId, leaveTypeId, totalDays);
+    }
+
+    @Override
+    public boolean exists(int employeeId, int leaveTypeId) {
+        return leaveBalanceDAO.exists(employeeId, leaveTypeId);
+    }
+
+    @Override
+    public boolean delete(int id) {
+        return leaveBalanceDAO.delete(id);
+    }
+}
