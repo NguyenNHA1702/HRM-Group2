@@ -73,7 +73,7 @@ public class DashboardDaoImpl implements DashboardDao {
             String sql2 =
                     "SELECT COALESCE(SUM(pd.net_salary),0) AS fund " +
                             "FROM payroll_details pd " +
-                            "JOIN payrolls p ON p.id = pd.payroll_period_id " +
+                            "JOIN payrolls p ON p.id = pd.payroll_id " +
                             "WHERE p.year = YEAR(CURDATE()) " +
                             "AND p.month = MONTH(CURDATE())";
             try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql2)) {
