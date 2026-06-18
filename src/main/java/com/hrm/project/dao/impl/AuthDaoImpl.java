@@ -27,36 +27,10 @@ public class AuthDaoImpl implements AuthDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
 
-                    int positionId = rs.getInt("position_id");
-                    int isActualManager = rs.getInt("is_actual_manager");
-                    String finalRoleGroupCode;
-                    String finalRoleName;
-                    int finalRoleId;
+                    int finalRoleId = rs.getInt("role_id");
+                    String finalRoleName = rs.getString("role_name");
+                    String finalRoleGroupCode = rs.getString("role_group_code");
 
-                    // 1. First, check if the user is an Admin (position_id = 1) -> Redirect to Admin Dashboard
-                    if (positionId == 1) {
-                        finalRoleGroupCode = "ADMIN";
-                        finalRoleName = "Admin";
-                        finalRoleId = 1;
-                    }
-                    // 2. Second, check if the user belongs to the HR block (position_id IN (2, 3, 4, 5, 6)) -> Redirect to HR Dashboard
-                    else if (positionId >= 2 && positionId <= 6) {
-                        finalRoleGroupCode = "HR";
-                        finalRoleName = (positionId == 2) ? "HR Manager" : "HR Specialist";
-                        finalRoleId = 3;
-                    }
-                    // 3. Third, check if the user is a regular Department Manager (position_id = 7 or is dynamically linked as a manager)
-                    else if (positionId == 7 || isActualManager > 0) {
-                        finalRoleGroupCode = "MANAGER";
-                        finalRoleName = "Manager";
-                        finalRoleId = 7;
-                    }
-                    // 4. Default -> Employee Dashboard
-                    else {
-                        finalRoleGroupCode = "EMPLOYEE";
-                        finalRoleName = "Employee";
-                        finalRoleId = 9;
-                    }
 
                     // -----------------------------------------------------------------
                     // CƠ CHẾ BẺ KHÓA ĐỂ DEV TEST NHANH:

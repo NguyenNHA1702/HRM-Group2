@@ -70,10 +70,12 @@ public class DashboardDaoImpl implements DashboardDao {
                 }
             }
             // Quỹ lương
-            String sql2 = "SELECT COALESCE(SUM(pd.net_salary),0) AS fund " +
-                    "FROM payroll_details pd " +
-                    "JOIN payrolls p ON p.id = pd.payroll_id " +
-                    "WHERE p.year = YEAR(CURDATE()) AND p.month = MONTH(CURDATE())";
+            String sql2 =
+                    "SELECT COALESCE(SUM(pd.net_salary),0) AS fund " +
+                            "FROM payroll_details pd " +
+                            "JOIN payrolls p ON p.id = pd.payroll_period_id " +
+                            "WHERE p.year = YEAR(CURDATE()) " +
+                            "AND p.month = MONTH(CURDATE())";
             try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql2)) {
                 if (rs.next()) dto.setPayrollFund(rs.getLong("fund"));
             }

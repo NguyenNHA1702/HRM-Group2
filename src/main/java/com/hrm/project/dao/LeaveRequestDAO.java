@@ -1,6 +1,8 @@
 package com.hrm.project.dao;
 
 import com.hrm.project.model.LeaveRequest;
+import com.hrm.project.model.dtos.response.LeaveSummaryDto;
+import java.sql.Date;
 import java.util.List;
 
 public interface LeaveRequestDAO {
@@ -18,4 +20,6 @@ public interface LeaveRequestDAO {
     boolean reject(int requestId, int approverId);
 
     boolean cancel(int requestId);
-}
+
+    List<LeaveSummaryDto> getLeaveSummaryReport(Date fromDate, Date toDate, Integer departmentId);
+}

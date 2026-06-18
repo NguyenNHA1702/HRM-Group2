@@ -13,4 +13,14 @@ public interface LeaveBalanceService {
             int employeeId,
             int leaveTypeId,
             double days);
-}
+
+    boolean updateBalance(int id, double usedDays, double remainingDays);
+
+    int resetAll();
+
+    boolean create(int employeeId, int leaveTypeId, double totalDays);
+
+    boolean exists(int employeeId, int leaveTypeId);
+
+    boolean delete(int id);
+}
