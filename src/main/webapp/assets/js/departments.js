@@ -1,4 +1,5 @@
 function openAddModal() {
+    $('#modalAlert').remove();
     document.getElementById('modalTitle').innerText = "Add New Department";
     document.getElementById('modalAction').value = "add";
     document.getElementById('deptId').value = "";
@@ -8,9 +9,17 @@ function openAddModal() {
     document.getElementById('deptParent').value = "";
     document.getElementById('deptDesc').value = "";
     document.getElementById('deptActive').value = "1";
+
+    // Reset autocomplete
+    document.getElementById('manager_search').value = "";
+    document.getElementById('manager_id').value = "";
+    document.getElementById('managerHint').style.display = "none";
+    document.getElementById('suggestion_box').innerHTML = "";
+    $('#suggestion_box').hide();
 }
 
 function openEditModal(button) {
+    $('#modalAlert').remove();
     document.getElementById('modalTitle').innerText = "Update Department Information";
     document.getElementById('modalAction').value = "update";
 
@@ -21,6 +30,23 @@ function openEditModal(button) {
     document.getElementById('deptParent').value = button.getAttribute('data-parent') || "";
     document.getElementById('deptDesc').value = button.getAttribute('data-desc');
     document.getElementById('deptActive').value = button.getAttribute('data-active');
+
+    // Populate manager autocomplete
+    const mgrId = button.getAttribute('data-managerid') || "";
+    const mgrCode = button.getAttribute('data-managercode') || "";
+    const mgrName = button.getAttribute('data-managername') || "";
+    document.getElementById('manager_id').value = mgrId;
+    if (mgrId && mgrCode && mgrName) {
+        document.getElementById('manager_search').value = mgrCode + " - " + mgrName;
+        const hint = document.getElementById('managerHint');
+        hint.innerText = "✔ Đã chọn: " + mgrName + " (ID: " + mgrId + ")";
+        hint.style.display = "block";
+        hint.style.color = "#137333";
+    } else {
+        document.getElementById('manager_search').value = "";
+        document.getElementById('managerHint').style.display = "none";
+    }
+    $('#suggestion_box').hide().empty();
 }
 
 const rowsPerPage = 10;
@@ -30,6 +56,139 @@ let filteredRows = [];
 document.addEventListener("DOMContentLoaded", function () {
     initFilteredRows();
     renderTable();
+});
+
+// jQuery Manager Autocomplete Integration
+let managerSuggestTimer = null;
+
+$(document).ready(function() {
+    $(document).on('keyup', '#manager_search', function() {
+        const keyword = $(this).val().trim();
+        console.log("Searching for:", keyword);
+        $('#manager_id').val('');
+        $('#managerHint').hide();
+
+        if (keyword.length < 2) {
+            $('#suggestion_box').hide().empty();
+            return;
+        }
+
+        clearTimeout(managerSuggestTimer);
+        managerSuggestTimer = setTimeout(() => {
+            const url = CTX + '/hr/departments?action=suggest_manager&term=' + encodeURIComponent(keyword);
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error("HTTP error " + res.status);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const suggestions = $('#suggestion_box');
+                    suggestions.empty();
+                    if (data && data.length > 0) {
+                        data.forEach(emp => {
+                            suggestions.append(
+                                $('<button type="button" class="dropdown-item"></button>')
+                                    .text(emp.code + ' - ' + emp.name)
+                                    .data('id', emp.id)
+                                    .data('name', emp.name)
+                            );
+                        });
+                        suggestions.show();
+                    } else {
+                        suggestions.hide();
+                    }
+                })
+                .catch(error => {
+                    console.error("AJAX Error Details:", error);
+                });
+        }, 300);
+    });
+
+    $(document).on('click', '#suggestion_box .dropdown-item', function(e) {
+        e.preventDefault();
+        const empId = $(this).data('id');
+        const empName = $(this).data('name');
+        const textVal = $(this).text();
+
+        $('#manager_id').val(empId);
+        $('#manager_search').val(textVal);
+        $('#managerHint')
+            .text("✔ Đã chọn: " + empName + " (ID: " + empId + ")")
+            .css('color', '#137333')
+            .show();
+        $('#suggestion_box').hide().empty();
+
+        console.log("Selected Manager ID:", $('#manager_id').val());
+    });
+
+    // Hide suggestions dropdown when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#manager_search, #suggestion_box').length) {
+            $('#suggestion_box').hide();
+        }
+    });
+
+    function showModalError(message) {
+        let alertDiv = $('#modalAlert');
+        if (alertDiv.length === 0) {
+            $('#departmentModal .modal-body').prepend('<div id="modalAlert" class="alert alert-danger" style="border-radius: 6px; font-size: 14px;"></div>');
+            alertDiv = $('#modalAlert');
+        }
+        alertDiv.text(message).show();
+    }
+
+    // Enforce manager selection requirement on submit and validate manager positions
+    $('#departmentModal form').on('submit', function(e) {
+        const managerId = $('#manager_id').val();
+        console.log("Submitting manager_id:", managerId);
+        if (!managerId) {
+            e.preventDefault();
+            alert('Vui lòng chọn Trưởng phòng từ danh sách gợi ý.');
+            $('#manager_search').focus();
+            return;
+        }
+
+        e.preventDefault();
+        const form = this;
+        const url = form.action;
+        const formData = new FormData(form);
+        const searchParams = new URLSearchParams();
+        for (const pair of formData.entries()) {
+            searchParams.append(pair[0], pair[1]);
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: searchParams.toString()
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || "Error: Cannot assign an Admin or HR personnel as a Department Manager!");
+                });
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (html.indexOf("Error: Cannot assign an Admin or HR personnel") !== -1) {
+                showModalError(html);
+            } else {
+                // Replace page content to reflect changes and keep the success messages
+                document.open();
+                document.write(html);
+                document.close();
+            }
+        })
+        .catch(error => {
+            console.error("Submission Error:", error);
+            showModalError(error.message);
+        });
+    });
 });
 
 function initFilteredRows() {

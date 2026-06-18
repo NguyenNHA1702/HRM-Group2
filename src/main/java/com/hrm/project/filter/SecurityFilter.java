@@ -33,17 +33,19 @@ public class SecurityFilter implements Filter {
         // In log ra Terminal để Tiến theo dõi luồng chạy thực tế
         System.out.println("[BẢO VỆ FILTER] Đang quét qua URL: " + path);
 
-        // 1. Loại bỏ hoàn toàn các trang mặc định, tài nguyên tĩnh (css, js, ảnh) khỏi bộ lọc chặn
+        // 1. Loại bỏ hoàn toàn các trang mặc định, tài nguyên tĩnh (css, js, ảnh) khỏi
+        // bộ lọc chặn
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
                 path.startsWith("/login") || path.startsWith("/logout") ||
                 path.startsWith("/forgot-password") || path.startsWith("/assets") ||
-                path.equals("/check-db")) {
+                path.startsWith("/uploads") || path.equals("/check-db")) {
 
             chain.doFilter(request, response);
             return;
         }
 
-        // 2. KIỂM TRA ĐĂNG NHẬP: Nếu chưa có phiên làm việc -> Cho ra rìa, quay về login
+        // 2. KIỂM TRA ĐĂNG NHẬP: Nếu chưa có phiên làm việc -> Cho ra rìa, quay về
+        // login
         if (session == null || session.getAttribute("roleGroup") == null) {
             System.out.println("[BẢO VỆ FILTER] -> CHẶN: Chưa đăng nhập. Đá về /login");
             resp.sendRedirect(req.getContextPath() + "/login");
@@ -64,14 +66,28 @@ public class SecurityFilter implements Filter {
 
         String roleGroup = (String) session.getAttribute("roleGroup");
 
-        
-        
         boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
                 (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") || path.equals("/admin/leave-types"));
 
         if (!isHrAllowedAdminPath &&
+                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") ||
+                        path.equals("/admin/insurance") || path.equals("/admin/insurance/action") ||
+                        path.equals("/admin/users") || path.equals("/admin/user/update") ||
+                        path.equals("/admin/payrolls") || path.equals("/admin/payroll/generate") ||
+                        path.equals("/admin/payroll/detail") || path.equals("/admin/payroll/export-excel"));
+
+        boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&
+                (path.equals("/admin/insurance") ||
+                        path.equals("/admin/insurance/action"));
+
+        boolean isEmployeeAllowedAdminPath = "EMPLOYEE".equals(roleGroup) &&
+                "GET".equalsIgnoreCase(req.getMethod()) &&
+                path.equals("/admin/insurance");
+
+        if (!isHrAllowedAdminPath && !isManagerAllowedAdminPath &&
+                !isEmployeeAllowedAdminPath &&
                 (path.startsWith("/admin") || path.equals("/phan-quyen") ||
-                path.equals("/quan-ly-users") || path.equals("/cau-hinh"))) {
+                        path.equals("/quan-ly-users") || path.equals("/cau-hinh"))) {
 
             if (!"ADMIN".equals(roleGroup)) {
                 System.out.println("[BẢO VỆ FILTER] -> TỪ CHỐI: User " + roleGroup + " đòi vào vùng Admin!");

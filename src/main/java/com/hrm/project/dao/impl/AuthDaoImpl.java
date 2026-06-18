@@ -10,10 +10,12 @@ public class AuthDaoImpl implements AuthDao {
 
     @Override
     public LoginResponseDto findByEmailAndPassword(String email, String passwordRaw) {
-        String sql = "SELECT e.employee_id, ua.id AS account_id, ua.role_id, e.full_name, e.work_email, e.role_name, e.role_group_code, e.avatar_url, ua.password_hash " +
+        String sql = "SELECT e.employee_id, ua.id AS account_id, ua.role_id, e.full_name, e.work_email, e.role_name, e.role_group_code, e.avatar_url, ua.password_hash, emp.position_id, " +
+                "(SELECT COUNT(*) FROM departments WHERE manager_id = e.employee_id) AS is_actual_manager " +
                 "FROM vw_my_profile e " +
                 "JOIN user_accounts ua ON e.employee_id = ua.employee_id " +
                 "JOIN roles r ON ua.role_id = r.id " +
+                "JOIN employees emp ON e.employee_id = emp.id " +
                 "WHERE e.work_email = ? AND ua.is_active = 1 AND r.is_active = 1";
 
 
@@ -25,6 +27,11 @@ public class AuthDaoImpl implements AuthDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
 
+                    int finalRoleId = rs.getInt("role_id");
+                    String finalRoleName = rs.getString("role_name");
+                    String finalRoleGroupCode = rs.getString("role_group_code");
+
+
                     // -----------------------------------------------------------------
                     // CƠ CHẾ BẺ KHÓA ĐỂ DEV TEST NHANH:
                     // Nếu nhập đúng pass "123456", hệ thống tự động bypass không check chuỗi dummy trong DB nữa
@@ -35,11 +42,11 @@ public class AuthDaoImpl implements AuthDao {
                         LoginResponseDto dto = new LoginResponseDto();
                         dto.setEmployeeId(rs.getInt("employee_id"));
                         dto.setAccountId(rs.getInt("account_id"));
-                        dto.setRoleId(rs.getInt("role_id"));
+                        dto.setRoleId(finalRoleId);
                         dto.setFullName(rs.getString("full_name"));
                         dto.setWorkEmail(rs.getString("work_email"));
-                        dto.setRoleName(rs.getString("role_name"));
-                        dto.setRoleGroupCode(rs.getString("role_group_code"));
+                        dto.setRoleName(finalRoleName);
+                        dto.setRoleGroupCode(finalRoleGroupCode);
                         dto.setAvatarUrl(rs.getString("avatar_url"));
 
                         System.out.println("[DEBUG LOGIN] -> Đăng nhập THÀNH CÔNG (Bypass) cho user: " + dto.getFullName());
@@ -58,11 +65,11 @@ public class AuthDaoImpl implements AuthDao {
                         LoginResponseDto dto = new LoginResponseDto();
                         dto.setEmployeeId(rs.getInt("employee_id"));
                         dto.setAccountId(rs.getInt("account_id"));
-                        dto.setRoleId(rs.getInt("role_id"));
+                        dto.setRoleId(finalRoleId);
                         dto.setFullName(rs.getString("full_name"));
                         dto.setWorkEmail(rs.getString("work_email"));
-                        dto.setRoleName(rs.getString("role_name"));
-                        dto.setRoleGroupCode(rs.getString("role_group_code"));
+                        dto.setRoleName(finalRoleName);
+                        dto.setRoleGroupCode(finalRoleGroupCode);
                         dto.setAvatarUrl(rs.getString("avatar_url"));
                         return dto;
                     } else {

@@ -15,6 +15,8 @@ public class Department {
 
     // Trường bổ trợ để hiển thị tên phòng ban cha ra Table cho đẹp
     private String parentName;
+    private String managerName;
+    private String managerCode;
 
     // Constructor không tham số (Bắt buộc phải có trong kiến trúc web)
     public Department() {}
@@ -65,4 +67,10 @@ public class Department {
 
     public int getTotalEmployees() { return totalEmployees; }
     public void setTotalEmployees(int totalEmployees) { this.totalEmployees = totalEmployees; }
+
+    public String getManagerName() { return managerName; }
+    public void setManagerName(String managerName) { this.managerName = managerName; }
+
+    public String getManagerCode() { return managerCode; }
+    public void setManagerCode(String managerCode) { this.managerCode = managerCode; }
 }
