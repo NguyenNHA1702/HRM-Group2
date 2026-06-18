@@ -57,6 +57,21 @@ public class DepartmentController extends HttpServlet {
             return;
         }
 
+        if ("getMembers".equals(action)) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            try {
+                int departmentId = Integer.parseInt(request.getParameter("id"));
+                List<com.hrm.project.model.UserAccountDTO> members = departmentService.getMembersByDepartment(departmentId);
+                response.getWriter().write(gson.toJson(members));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"success\":false,\"message\":\"" + e.getMessage() + "\"}");
+            }
+            return;
+        }
+
         List<Department> list = departmentService.getAllDepartments();
         request.setAttribute("departments", list);
 
@@ -70,6 +85,118 @@ public class DepartmentController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
+
+        // Handle JSON or direct status change actions
+        if ("deactivate".equals(action)) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                int activeCount = departmentService.countActiveEmployees(id);
+                if (activeCount > 0) {
+                    response.getWriter().write("{\"success\": false, \"message\": \"Cannot deactivate department. There are still active employees or a manager assigned to this department. Please transfer them first.\"}");
+                    return;
+                }
+                boolean success = departmentService.deactivateDepartment(id);
+                response.getWriter().write("{\"success\": " + success + "}");
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"success\": false, \"message\": \"" + e.getMessage() + "\"}");
+            }
+            return;
+        }
+
+        if ("activate".equals(action)) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                boolean success = departmentService.activateDepartment(id);
+                response.getWriter().write("{\"success\": " + success + "}");
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"success\": false, \"message\": \"" + e.getMessage() + "\"}");
+            }
+            return;
+        }
+
+        if ("bulkTransfer".equals(action) || (request.getContentType() != null && request.getContentType().contains("application/json"))) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            try {
+                int targetDepartmentId = -1;
+                java.util.List<Integer> employeeIds = new java.util.ArrayList<>();
+                
+                if (request.getContentType() != null && request.getContentType().contains("application/json")) {
+                    JsonObject payload = gson.fromJson(request.getReader(), JsonObject.class);
+                    if (payload.has("targetDepartmentId")) {
+                        targetDepartmentId = payload.get("targetDepartmentId").getAsInt();
+                    }
+                    if (payload.has("employeeIds")) {
+                        JsonArray arr = payload.getAsJsonArray("employeeIds");
+                        for (int i = 0; i < arr.size(); i++) {
+                            employeeIds.add(arr.get(i).getAsInt());
+                        }
+                    }
+                } else {
+                    targetDepartmentId = Integer.parseInt(request.getParameter("targetDepartmentId"));
+                    String[] ids = request.getParameterValues("employeeIds");
+                    if (ids != null) {
+                        for (String idStr : ids) {
+                            if (idStr.contains(",")) {
+                                for (String part : idStr.split(",")) {
+                                    if (!part.trim().isEmpty()) {
+                                        employeeIds.add(Integer.parseInt(part.trim()));
+                                    }
+                                }
+                            } else {
+                                if (!idStr.trim().isEmpty()) {
+                                    employeeIds.add(Integer.parseInt(idStr.trim()));
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Check if target department is vacant/managerless BEFORE the transfer
+                boolean isTargetEmptyOrManagerless = false;
+                try (java.sql.Connection conn = com.hrm.project.dao.impl.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement(
+                         "SELECT manager_id, (SELECT COUNT(*) FROM employees WHERE department_id = ? AND UPPER(status) = 'ACTIVE') AS emp_count " +
+                         "FROM departments WHERE id = ?")) {
+                    ps.setInt(1, targetDepartmentId);
+                    ps.setInt(2, targetDepartmentId);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            int mgrId = rs.getInt("manager_id");
+                            boolean isManagerNull = rs.wasNull();
+                            int empCount = rs.getInt("emp_count");
+                            if (isManagerNull || empCount == 0) {
+                                isTargetEmptyOrManagerless = true;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                
+                boolean success = departmentService.bulkTransferEmployees(targetDepartmentId, employeeIds);
+                boolean requireManagerAlert = success && isTargetEmptyOrManagerless;
+                
+                JsonObject jsonResponse = new JsonObject();
+                jsonResponse.addProperty("success", success);
+                jsonResponse.addProperty("requireManagerAlert", requireManagerAlert);
+                response.getWriter().write(gson.toJson(jsonResponse));
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"success\": false, \"message\": \"" + e.getMessage() + "\"}");
+            }
+            return;
+        }
+
         Department d = new Department();
         d.setCode(request.getParameter("code"));
         d.setName(request.getParameter("name"));
@@ -117,6 +244,14 @@ public class DepartmentController extends HttpServlet {
             }
         } else if ("update".equals(action)) {
             d.setId(Integer.parseInt(request.getParameter("id")));
+            if (d.getIsActive() == 0) {
+                int activeCount = departmentService.countActiveEmployees(d.getId());
+                if (activeCount > 0) {
+                    request.setAttribute("message", "Lỗi: Cannot deactivate department. There are still active employees or a manager assigned to this department. Please transfer them first.");
+                    doGet(request, response);
+                    return;
+                }
+            }
             if (departmentService.updateDepartment(d)) {
                 request.setAttribute("message", "Cập nhật thông tin thành công!");
             } else {

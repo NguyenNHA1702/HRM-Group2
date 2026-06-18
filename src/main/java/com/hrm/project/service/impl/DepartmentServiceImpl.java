@@ -5,6 +5,7 @@ import com.hrm.project.dao.impl.DepartmentDAOImpl;
 import com.hrm.project.model.Department;
 import com.hrm.project.service.DepartmentService;
 import com.hrm.project.dao.impl.DBConnection;
+import com.hrm.project.model.UserAccountDTO;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -39,6 +40,31 @@ public class DepartmentServiceImpl implements DepartmentService {
             triggerManagerHook(d.getManagerId());
         }
         return success;
+    }
+
+    @Override
+    public boolean deactivateDepartment(int id) {
+        return departmentDAO.deactivateDepartment(id);
+    }
+
+    @Override
+    public boolean activateDepartment(int id) {
+        return departmentDAO.activateDepartment(id);
+    }
+
+    @Override
+    public int countActiveEmployees(int departmentId) {
+        return departmentDAO.countActiveEmployees(departmentId);
+    }
+
+    @Override
+    public List<UserAccountDTO> getMembersByDepartment(int departmentId) {
+        return departmentDAO.getMembersByDepartment(departmentId);
+    }
+
+    @Override
+    public boolean bulkTransferEmployees(int targetDepartmentId, List<Integer> employeeIds) {
+        return departmentDAO.bulkTransferEmployees(targetDepartmentId, employeeIds);
     }
 
     private void triggerManagerHook(int managerId) {

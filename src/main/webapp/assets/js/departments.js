@@ -189,6 +189,194 @@ $(document).ready(function() {
             showModalError(error.message);
         });
     });
+
+    // --- Deactivate action click ---
+    $(document).on('click', '.btn-deactivate', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        
+        if (confirm('Bạn có chắc chắn muốn vô hiệu hóa phòng ban "' + name + '" không?')) {
+            $.ajax({
+                url: CTX + '/hr/departments',
+                type: 'POST',
+                data: {
+                    action: 'deactivate',
+                    id: id
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Vô hiệu hóa phòng ban thành công!');
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error deactivating department:', error);
+                    alert('Lỗi hệ thống: Không thể vô hiệu hóa phòng ban.');
+                }
+            });
+        }
+    });
+
+    // --- Activate action click ---
+    $(document).on('click', '.btn-activate', function(e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        
+        if (confirm('Bạn có chắc chắn muốn kích hoạt lại phòng ban "' + name + '" không?')) {
+            $.ajax({
+                url: CTX + '/hr/departments',
+                type: 'POST',
+                data: {
+                    action: 'activate',
+                    id: id
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Kích hoạt phòng ban thành công!');
+                        location.reload();
+                    } else {
+                        alert(response.message || 'Kích hoạt thất bại.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error activating department:', error);
+                    alert('Lỗi hệ thống: Không thể kích hoạt phòng ban.');
+                }
+            });
+        }
+    });
+
+    let currentDeptId = null;
+
+    // --- View Members Click (Populate modal and table) ---
+    $(document).on('click', '.view-members', function(e) {
+        e.preventDefault();
+        currentDeptId = $(this).data('id');
+        $('#transferAlert').hide().empty();
+        $('#checkAllMembers').prop('checked', false);
+        $('#targetDeptSelect').val('');
+        
+        // Hide the current department option in the select dropdown so we don't transfer to itself
+        $('#targetDeptSelect option').show();
+        if (currentDeptId) {
+            $('#targetDeptSelect option[value="' + currentDeptId + '"]').hide();
+        }
+        
+        const tbody = $('#membersTable tbody');
+        tbody.html('<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm mr-2"></span>Đang tải danh sách thành viên...</td></tr>');
+        
+        $('#deptMembersModal').modal('show');
+        
+        $.ajax({
+            url: CTX + '/hr/departments',
+            type: 'GET',
+            data: {
+                action: 'getMembers',
+                id: currentDeptId
+            },
+            success: function(members) {
+                tbody.empty();
+                if (members && members.length > 0) {
+                    members.forEach(function(member) {
+                        const posName = member.positionName ? member.positionName : 'Chưa có chức vụ';
+                        tbody.append(
+                            '<tr>' +
+                            '  <td class="text-center"><input type="checkbox" class="member-checkbox" data-id="' + member.id + '" style="width: 16px; height: 16px; cursor: pointer;"></td>' +
+                            '  <td><span class="font-weight-bold text-dark">' + member.employeeCode + '</span></td>' +
+                            '  <td>' + member.fullName + '</td>' +
+                            '  <td><span class="badge badge-light border text-secondary px-2 py-1" style="border-radius: 6px;">' + posName + '</span></td>' +
+                            '</tr>'
+                        );
+                    });
+                } else {
+                    tbody.html('<tr><td colspan="4" class="text-center text-muted py-4">Phòng ban này chưa có nhân sự hoặc không có nhân sự hoạt động.</td></tr>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching members:', error);
+                tbody.html('<tr><td colspan="4" class="text-center text-danger py-4">Có lỗi xảy ra khi tải danh sách thành viên.</td></tr>');
+            }
+        });
+    });
+
+    // --- Check/Uncheck All Members ---
+    $(document).on('change', '#checkAllMembers', function() {
+        const isChecked = $(this).prop('checked');
+        $('.member-checkbox').prop('checked', isChecked);
+    });
+
+    // Sync header checkbox state when individual checkboxes are toggled
+    $(document).on('change', '.member-checkbox', function() {
+        const total = $('.member-checkbox').length;
+        const checked = $('.member-checkbox:checked').length;
+        $('#checkAllMembers').prop('checked', total > 0 && total === checked);
+    });
+
+    // --- Bulk Transfer Selected Members ---
+    $(document).on('click', '#btnTransferSelected', function(e) {
+        e.preventDefault();
+        $('#transferAlert').hide().empty();
+        
+        const targetDeptId = $('#targetDeptSelect').val();
+        if (!targetDeptId) {
+            $('#transferAlert').text('Vui lòng chọn phòng ban nhận cần điều chuyển.').show();
+            return;
+        }
+        
+        const employeeIds = [];
+        $('.member-checkbox:checked').each(function() {
+            employeeIds.push(parseInt($(this).data('id')));
+        });
+        
+        if (employeeIds.length === 0) {
+            $('#transferAlert').text('Vui lòng chọn ít nhất một nhân viên để điều chuyển.').show();
+            return;
+        }
+        
+        if (confirm('Bạn có chắc chắn muốn điều chuyển ' + employeeIds.length + ' nhân sự sang phòng ban mới không?')) {
+            $.ajax({
+                url: CTX + '/hr/departments',
+                type: 'POST',
+                data: {
+                    action: 'bulkTransfer',
+                    targetDepartmentId: targetDeptId,
+                    employeeIds: employeeIds.join(',')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        if (response.requireManagerAlert) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Transfer successful!',
+                                    text: 'Note: This department currently has no Manager. Please assign a Department Manager immediately.',
+                                    confirmButtonText: 'OK'
+                                }).then(function() {
+                                    location.reload();
+                                });
+                            } else {
+                                alert('Transfer successful! Note: This department currently has no Manager. Please assign a Department Manager immediately.');
+                                location.reload();
+                            }
+                        } else {
+                            alert('Điều chuyển nhân sự thành công!');
+                            location.reload();
+                        }
+                    } else {
+                        $('#transferAlert').text(response.message || 'Lỗi: Không thể thực hiện điều chuyển.').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error during bulk transfer:', error);
+                    $('#transferAlert').text('Lỗi hệ thống: Điều chuyển thất bại.').show();
+                }
+            });
+        }
+    });
 });
 
 function initFilteredRows() {

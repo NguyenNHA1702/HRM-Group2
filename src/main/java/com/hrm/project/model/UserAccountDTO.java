@@ -16,8 +16,10 @@ public class UserAccountDTO {
     private String  roleName;          // ten role chi tiet
     private String  employeeCode;      // ma NV (null neu admin thuan)
     private boolean isActive;
-    private LocalDateTime lastLoginAt;
+    private transient LocalDateTime lastLoginAt;
     private boolean forceResetPwd;
+    private String  positionName;
+    private int     positionId;
 
     // --- Constructors -------------------------------------------
     public UserAccountDTO() {}
@@ -28,7 +30,6 @@ public class UserAccountDTO {
 
     public int getEmployeeId() { return employeeId; }
     public void setEmployeeId(int employeeId) { this.employeeId = employeeId; }
-
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -53,6 +54,12 @@ public class UserAccountDTO {
 
     public boolean isForceResetPwd() { return forceResetPwd; }
     public void setForceResetPwd(boolean forceResetPwd) { this.forceResetPwd = forceResetPwd; }
+
+    public String getPositionName() { return positionName; }
+    public void setPositionName(String positionName) { this.positionName = positionName; }
+
+    public int getPositionId() { return positionId; }
+    public void setPositionId(int positionId) { this.positionId = positionId; }
 
     // --- Helpers (dung trong JSP) -------------------------------
     /** Ten hien thi cho badge Role. */
