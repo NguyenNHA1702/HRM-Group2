@@ -309,7 +309,9 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<Department> getAllDepartments() {
         List<Department> list = new ArrayList<>();
-        String sql = "SELECT id, code, name FROM departments WHERE is_active = 1";
+        String sql = "SELECT d1.*, d2.name AS parent_name FROM departments d1 " +
+                     "LEFT JOIN departments d2 ON d1.parent_id = d2.id " +
+                     "WHERE d1.is_active = 1";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

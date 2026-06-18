@@ -67,7 +67,7 @@ public class SecurityFilter implements Filter {
         
         
         boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
-                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types"));
+                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") || path.equals("/admin/leave-types"));
 
         if (!isHrAllowedAdminPath &&
                 (path.startsWith("/admin") || path.equals("/phan-quyen") ||

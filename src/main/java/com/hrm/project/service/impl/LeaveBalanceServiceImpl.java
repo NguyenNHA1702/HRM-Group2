@@ -46,4 +46,9 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
     public boolean exists(int employeeId, int leaveTypeId) {
         return leaveBalanceDAO.exists(employeeId, leaveTypeId);
     }
+
+    @Override
+    public boolean delete(int id) {
+        return leaveBalanceDAO.delete(id);
+    }
 }

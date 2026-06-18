@@ -26,4 +26,6 @@ public interface LeaveBalanceDAO {
     /** Kiểm tra bản ghi đã tồn tại chưa */
     boolean exists(int employeeId, int leaveTypeId);
 
+    /** Xóa quỹ phép */
+    boolean delete(int id);
 }

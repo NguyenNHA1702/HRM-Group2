@@ -21,4 +21,6 @@ public interface LeaveBalanceService {
     boolean create(int employeeId, int leaveTypeId, double totalDays);
 
     boolean exists(int employeeId, int leaveTypeId);
+
+    boolean delete(int id);
 }

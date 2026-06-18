@@ -3,6 +3,7 @@ package com.hrm.project.controller;
 import com.hrm.project.model.LeaveBalance;
 import com.hrm.project.model.LeaveType;
 import com.hrm.project.model.UserAccount;
+import com.hrm.project.model.Department;
 import com.hrm.project.dao.UserDAO;
 import com.hrm.project.dao.impl.UserDAOImpl;
 import com.hrm.project.service.LeaveBalanceService;
@@ -59,7 +60,7 @@ public class HrLeaveBalanceController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request,
                          HttpServletResponse response)
-            throws ServletException, IOException {
+             throws ServletException, IOException {
 
         // Kiểm tra quyền HR
         HttpSession session = request.getSession(false);
@@ -76,6 +77,8 @@ public class HrLeaveBalanceController extends HttpServlet {
         } catch (Exception e) {
             employees = new java.util.ArrayList<>();
         }
+
+        List<Department> departments = userDAO.getAllDepartments();
 
         // Group by employee
         Map<Integer, List<LeaveBalance>> grouped = balances.stream()
@@ -94,6 +97,7 @@ public class HrLeaveBalanceController extends HttpServlet {
         request.setAttribute("balanceRows", balanceRows);
         request.setAttribute("leaveTypes",  leaveTypes);
         request.setAttribute("employees",   employees);
+        request.setAttribute("departments", departments);
 
         String msg = request.getParameter("msg");
         if (msg != null) request.setAttribute("msg", msg);
@@ -143,22 +147,68 @@ public class HrLeaveBalanceController extends HttpServlet {
         } else if ("create".equals(action)) {
             // ── Thêm quỹ phép mới cho nhân viên ──
             try {
-                int    employeeId  = Integer.parseInt(request.getParameter("employeeId"));
-                int    leaveTypeId = Integer.parseInt(request.getParameter("leaveTypeId"));
-                double totalDays   = Double.parseDouble(request.getParameter("totalDays"));
+                String scope = request.getParameter("scope");
+                int leaveTypeId = Integer.parseInt(request.getParameter("leaveTypeId"));
+                double totalDays = Double.parseDouble(request.getParameter("totalDays"));
 
-                if (leaveBalanceService.exists(employeeId, leaveTypeId)) {
-                    response.sendRedirect(redirectUrl + "?msg=duplicate");
-                    return;
+                List<UserAccount> allEmployees;
+                try {
+                    allEmployees = userDAO.getAllEmployees();
+                } catch (Exception e) {
+                    allEmployees = new ArrayList<>();
                 }
 
-                boolean ok = leaveBalanceService.create(employeeId, leaveTypeId, totalDays);
-                response.sendRedirect(redirectUrl + "?msg=" + (ok ? "create_ok" : "create_fail"));
+                int addedCount = 0;
+
+                if ("all".equals(scope)) {
+                    // Thêm cho tất cả nhân viên chưa có loại phép này
+                    for (UserAccount emp : allEmployees) {
+                        if (!leaveBalanceService.exists(emp.getEmployeeId(), leaveTypeId)) {
+                            boolean ok = leaveBalanceService.create(emp.getEmployeeId(), leaveTypeId, totalDays);
+                            if (ok) addedCount++;
+                        }
+                    }
+                } else if ("dept".equals(scope)) {
+                    // Thêm theo phòng ban
+                    int departmentId = Integer.parseInt(request.getParameter("departmentId"));
+                    for (UserAccount emp : allEmployees) {
+                        if (emp.getDepartmentId() == departmentId) {
+                            if (!leaveBalanceService.exists(emp.getEmployeeId(), leaveTypeId)) {
+                                boolean ok = leaveBalanceService.create(emp.getEmployeeId(), leaveTypeId, totalDays);
+                                if (ok) addedCount++;
+                            }
+                        }
+                    }
+                } else {
+                    // Một nhân viên cụ thể (scope = "one")
+                    int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+                    if (leaveBalanceService.exists(employeeId, leaveTypeId)) {
+                        response.sendRedirect(redirectUrl + "?msg=duplicate");
+                        return;
+                    }
+                    boolean ok = leaveBalanceService.create(employeeId, leaveTypeId, totalDays);
+                    if (ok) addedCount++;
+                }
+
+                if (addedCount > 0) {
+                    response.sendRedirect(redirectUrl + "?msg=create_ok");
+                } else {
+                    response.sendRedirect(redirectUrl + "?msg=no_records_added");
+                }
 
             } catch (NumberFormatException e) {
                 response.sendRedirect(redirectUrl + "?msg=invalid_input");
             }
 
+        } else if ("delete".equals(action)) {
+            // ── Xóa quỹ phép ──
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                boolean ok = leaveBalanceService.delete(id);
+                response.sendRedirect(redirectUrl + "?msg=" + (ok ? "delete_ok" : "delete_fail"));
+            } catch (NumberFormatException e) {
+                response.sendRedirect(redirectUrl + "?msg=invalid_input");
+            }
         } else {
             response.sendRedirect(redirectUrl);
         }

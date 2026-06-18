@@ -57,7 +57,8 @@ public class LeaveBalanceDAOImpl implements LeaveBalanceDAO {
                 "FROM employees e " +
                 "CROSS JOIN leave_types lt " +
                 "WHERE e.status = 'ACTIVE' AND lt.is_active = 1 " +
-                "  AND (lt.code != 'MATERNITY' OR LOWER(e.gender) IN ('nữ', 'nu', 'female', 'f'))";
+                "  AND (lt.code != 'MATERNITY' OR LOWER(e.gender) IN ('nữ', 'nu', 'female', 'f')) " +
+                "  AND NOT EXISTS (SELECT 1 FROM leave_balances lb WHERE lb.employee_id = e.id)";
 
         // Xóa các bản ghi nghỉ thai sản của nhân sự nam (nếu có do seed cũ hoặc gán nhầm)
         String cleanupSql =
@@ -227,6 +228,19 @@ public class LeaveBalanceDAOImpl implements LeaveBalanceDAO {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) return rs.getInt(1) > 0;
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean delete(int id) {
+        String sql = "DELETE FROM leave_balances WHERE id=?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
         }

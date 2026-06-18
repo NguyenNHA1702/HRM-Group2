@@ -2,6 +2,7 @@ package com.hrm.project.dao.impl;
 
 import com.hrm.project.dao.LeaveRequestDAO;
 import com.hrm.project.model.LeaveRequest;
+import com.hrm.project.model.dtos.response.LeaveSummaryDto;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -248,5 +249,66 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
         r.setUpdatedAt(rs.getTimestamp("updated_at"));
 
         return r;
+    }
+
+    @Override
+    public List<LeaveSummaryDto> getLeaveSummaryReport(Date fromDate, Date toDate, Integer departmentId) {
+        List<LeaveSummaryDto> list = new ArrayList<>();
+        String sql = "SELECT " +
+                "    e.id AS employee_id, " +
+                "    e.employee_code, " +
+                "    e.full_name, " +
+                "    d.name AS department_name, " +
+                "    lt.name AS leave_type_name, " +
+                "    COALESCE(SUM(CASE WHEN lr.status = 'APPROVED' AND lr.start_date <= ? AND lr.end_date >= ? THEN (DATEDIFF(LEAST(lr.end_date, ?), GREATEST(lr.start_date, ?)) + 1) ELSE 0.0 END), 0.0) AS total_approved, " +
+                "    COALESCE(SUM(CASE WHEN lr.status = 'PENDING' AND lr.start_date <= ? AND lr.end_date >= ? THEN (DATEDIFF(LEAST(lr.end_date, ?), GREATEST(lr.start_date, ?)) + 1) ELSE 0.0 END), 0.0) AS total_pending, " +
+                "    COALESCE(lb.remaining_days, 0.0) AS remaining_days " +
+                "FROM employees e " +
+                "JOIN departments d ON e.department_id = d.id " +
+                "CROSS JOIN leave_types lt " +
+                "LEFT JOIN leave_balances lb ON e.id = lb.employee_id AND lt.id = lb.leave_type_id " +
+                "LEFT JOIN leave_requests lr ON e.id = lr.employee_id AND lt.id = lr.leave_type_id " +
+                "WHERE e.status = 'ACTIVE' AND lt.is_active = 1 " +
+                "  AND (? IS NULL OR e.department_id = ?) " +
+                "GROUP BY e.id, lt.id, e.employee_code, e.full_name, d.name, lt.name, lb.remaining_days " +
+                "ORDER BY e.full_name, lt.name";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setDate(1, toDate);
+            ps.setDate(2, fromDate);
+            ps.setDate(3, toDate);
+            ps.setDate(4, fromDate);
+            ps.setDate(5, toDate);
+            ps.setDate(6, fromDate);
+            ps.setDate(7, toDate);
+            ps.setDate(8, fromDate);
+            if (departmentId == null) {
+                ps.setNull(9, Types.INTEGER);
+                ps.setNull(10, Types.INTEGER);
+            } else {
+                ps.setInt(9, departmentId);
+                ps.setInt(10, departmentId);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                LeaveSummaryDto dto = new LeaveSummaryDto();
+                dto.setEmployeeId(rs.getInt("employee_id"));
+                dto.setEmployeeCode(rs.getString("employee_code"));
+                dto.setFullName(rs.getString("full_name"));
+                dto.setDepartmentName(rs.getString("department_name"));
+                dto.setLeaveTypeName(rs.getString("leave_type_name"));
+                dto.setTotalApprovedDays(rs.getDouble("total_approved"));
+                dto.setTotalPendingDays(rs.getDouble("total_pending"));
+                dto.setRemainingDays(rs.getDouble("remaining_days"));
+                list.add(dto);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }
