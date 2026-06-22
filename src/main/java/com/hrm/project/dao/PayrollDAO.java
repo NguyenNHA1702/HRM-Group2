@@ -21,4 +21,8 @@ public interface PayrollDAO {
      */
     int countEmployeesMissingAttendanceSummary(int month, int year);
     boolean updatePayrollStatus(int id, String status, int userId);
+    
+    List<Payroll> getPayrolls(Integer year, String searchKeyword, int offset, int limit);
+    int getTotalPayrollsCount(Integer year, String searchKeyword);
+    double getTotalAmountYTD(int year);
 }
