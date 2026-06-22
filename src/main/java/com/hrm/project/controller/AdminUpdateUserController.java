@@ -72,35 +72,41 @@ public class AdminUpdateUserController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String fullName = request.getParameter("fullName");
-            
+
             String phone = request.getParameter("phone");
             if (phone != null && phone.trim().isEmpty()) {
                 phone = null;
             }
-            
+
             String personalEmail = request.getParameter("personalEmail");
             if (personalEmail != null && personalEmail.trim().isEmpty()) {
                 personalEmail = null;
             }
-            
+
             String dateOfBirth = request.getParameter("dateOfBirth");
             if (dateOfBirth != null && dateOfBirth.trim().isEmpty()) {
                 dateOfBirth = null;
             }
-            
+
             String gender = request.getParameter("gender");
             if (gender != null && gender.trim().isEmpty()) {
                 gender = null;
             }
-            
+
             String departmentIdStr = request.getParameter("departmentId");
-            int departmentId = (departmentIdStr != null && !departmentIdStr.trim().isEmpty()) ? Integer.parseInt(departmentIdStr) : 0;
-            
+            int departmentId = (departmentIdStr != null && !departmentIdStr.trim().isEmpty())
+                    ? Integer.parseInt(departmentIdStr)
+                    : 0;
+
             String positionIdStr = request.getParameter("positionId");
-            int positionId = (positionIdStr != null && !positionIdStr.trim().isEmpty()) ? Integer.parseInt(positionIdStr) : 0;
+            int positionId = (positionIdStr != null && !positionIdStr.trim().isEmpty())
+                    ? Integer.parseInt(positionIdStr)
+                    : 0;
 
             String salaryScaleIdStr = request.getParameter("salaryScaleId");
-            int salaryScaleId = (salaryScaleIdStr != null && !salaryScaleIdStr.trim().isEmpty()) ? Integer.parseInt(salaryScaleIdStr) : 0;
+            int salaryScaleId = (salaryScaleIdStr != null && !salaryScaleIdStr.trim().isEmpty())
+                    ? Integer.parseInt(salaryScaleIdStr)
+                    : 0;
 
             String[] allowanceTypeIdsStr = request.getParameterValues("allowanceTypeIds");
             java.util.List<Integer> allowanceTypeIds = new java.util.ArrayList<>();
@@ -111,9 +117,9 @@ public class AdminUpdateUserController extends HttpServlet {
                     }
                 }
             }
-            
+
             String status = request.getParameter("status");
-            
+
             String roleIdStr = request.getParameter("roleId");
             int roleId = (roleIdStr != null && !roleIdStr.trim().isEmpty()) ? Integer.parseInt(roleIdStr) : 0;
 
@@ -138,9 +144,11 @@ public class AdminUpdateUserController extends HttpServlet {
 
             boolean success = userDAO.updateUserByAdmin(user);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&success=1&tab=" + java.net.URLEncoder.encode(activeTab, "UTF-8"));
+                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&success=1&tab="
+                        + java.net.URLEncoder.encode(activeTab, "UTF-8"));
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&error=1&tab=" + java.net.URLEncoder.encode(activeTab, "UTF-8"));
+                response.sendRedirect(request.getContextPath() + "/admin/user/update?id=" + id + "&error=1&tab="
+                        + java.net.URLEncoder.encode(activeTab, "UTF-8"));
             }
         } catch (Exception e) {
             e.printStackTrace();

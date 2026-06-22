@@ -156,12 +156,13 @@ public class PayrollDAOImpl implements PayrollDAO {
     @Override
     public List<PayrollDetail> getEmployeeSalaryHistory(int employeeId) {
         List<PayrollDetail> list = new ArrayList<>();
-        String sql = "SELECT pd.*, p.month, p.year, p.status, e.full_name, e.employee_code, d.name as dept_name, pos.name as pos_name " +
+        String sql = "SELECT pd.*, p.month, p.year, p.status, e.full_name, e.employee_code, d.name as dept_name, pos.name as pos_name, ats.standard_days, ats.actual_worked_days " +
                      "FROM payroll_details pd " +
                      "JOIN payrolls p ON pd.payroll_id = p.id " +
                      "JOIN employees e ON pd.employee_id = e.id " +
                      "LEFT JOIN departments d ON e.department_id = d.id " +
                      "LEFT JOIN positions pos ON e.position_id = pos.id " +
+                     "LEFT JOIN attendance_summary ats ON ats.employee_id = e.id AND ats.month = p.month AND ats.year = p.year " +
                      "WHERE pd.employee_id = ? AND p.status IN ('APPROVED', 'PAID') " +
                      "ORDER BY p.year DESC, p.month DESC";
         try (Connection conn = DBConnection.getConnection();
@@ -187,6 +188,8 @@ public class PayrollDAOImpl implements PayrollDAO {
                     d.setMonth(rs.getInt("month"));
                     d.setYear(rs.getInt("year"));
                     d.setStatus(rs.getString("status"));
+                    d.setStandardDays(rs.getInt("standard_days"));
+                    d.setActualDays(rs.getInt("actual_worked_days"));
                     list.add(d);
                 }
             }
@@ -457,6 +460,117 @@ public class PayrollDAOImpl implements PayrollDAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    @Override
+    public List<Payroll> getPayrolls(Integer year, String searchKeyword, int offset, int limit) {
+        List<Payroll> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT p.*, e1.full_name as created_name, e2.full_name as approved_name, e3.full_name as paid_name ");
+        sql.append("FROM payrolls p ");
+        sql.append("LEFT JOIN employees e1 ON p.created_by = e1.id ");
+        sql.append("LEFT JOIN employees e2 ON p.approved_by = e2.id ");
+        sql.append("LEFT JOIN employees e3 ON p.paid_by = e3.id ");
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (year != null) {
+            sql.append("AND p.year = ? ");
+            params.add(year);
+        }
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            sql.append("AND (p.month LIKE ? OR p.year LIKE ? OR p.status LIKE ?) ");
+            String kw = "%" + searchKeyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        sql.append("ORDER BY p.year DESC, p.month DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        try (Connection conn = DBConnection.getConnection()) {
+            ensureApprovedPaidMetadataColumnsExist(conn);
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Payroll p = new Payroll();
+                        p.setId(rs.getInt("id"));
+                        p.setMonth(rs.getInt("month"));
+                        p.setYear(rs.getInt("year"));
+                        p.setStatus(rs.getString("status"));
+                        p.setTotalEmployees(rs.getInt("total_employees"));
+                        p.setTotalAmount(rs.getDouble("total_amount"));
+                        p.setCreatedBy(rs.getInt("created_by"));
+                        p.setApprovedBy(rs.getInt("approved_by"));
+                        p.setApprovedAt(rs.getTimestamp("approved_at"));
+                        p.setPaidBy(rs.getInt("paid_by"));
+                        p.setPaidAt(rs.getTimestamp("paid_at"));
+                        p.setCreatedAt(rs.getTimestamp("created_at"));
+                        p.setUpdatedAt(rs.getTimestamp("updated_at"));
+                        p.setCreatedByName(rs.getString("created_name"));
+                        p.setApprovedByName(rs.getString("approved_name"));
+                        p.setPaidByName(rs.getString("paid_name"));
+                        list.add(p);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public int getTotalPayrollsCount(Integer year, String searchKeyword) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM payrolls p WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (year != null) {
+            sql.append("AND p.year = ? ");
+            params.add(year);
+        }
+        if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+            sql.append("AND (p.month LIKE ? OR p.year LIKE ? OR p.status LIKE ?) ");
+            String kw = "%" + searchKeyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    @Override
+    public double getTotalAmountYTD(int year) {
+        String sql = "SELECT SUM(total_amount) FROM payrolls WHERE year = ? AND status IN ('APPROVED', 'PAID')";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0.0;
     }
 
     private void ensureAttendanceSummaryTableExists(Connection conn) {
