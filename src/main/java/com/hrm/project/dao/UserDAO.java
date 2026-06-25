@@ -68,6 +68,12 @@ public interface UserDAO {
     List<Object[]> suggestEmployees(String term) throws SQLException;
 
     /**
+     * Suggest all active employees matching a search term (by employee_code or full_name) for contracts.
+     * Unlike suggestEmployees, this does not exclude admins, HRs, or department managers.
+     */
+    List<Object[]> suggestEmployeesForContract(String term) throws SQLException;
+
+    /**
      * Check whether an employee with the given ID exists.
      */
     boolean employeeExists(int employeeId) throws SQLException;
