@@ -99,7 +99,7 @@ public class ContractApiController extends HttpServlet {
         }
 
         try {
-            java.util.List<Object[]> rows = userDAO.suggestEmployees(term.trim());
+            java.util.List<Object[]> rows = userDAO.suggestEmployeesForContract(term.trim());
             JsonArray jsonArray = new JsonArray();
             for (Object[] row : rows) {
                 JsonObject obj = new JsonObject();
