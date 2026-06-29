@@ -68,6 +68,20 @@
                     <a href="${pageContext.request.contextPath}/admin/payrolls" class="btn btn-outline">
                         <i class="fa-solid fa-arrow-left"></i> Quay lại
                     </a>
+                    <c:if test="${sessionScope.roleGroup == 'ADMIN' || sessionScope.roleGroup == 'HR'}">
+                        <a href="${pageContext.request.contextPath}/admin/payroll/export-excel?payrollId=${payroll.id}" class="btn btn-outline" style="color: #0f766e; border-color: #5eead4;" title="Tải xuống bảng lương (Excel)">
+                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                        </a>
+                    </c:if>
+                    <c:if test="${payroll.status == 'DRAFT'}">
+                        <form action="${pageContext.request.contextPath}/admin/payroll/generate" method="post" style="margin: 0;">
+                            <input type="hidden" name="month" value="${payroll.month}">
+                            <input type="hidden" name="year" value="${payroll.year}">
+                            <button type="submit" class="btn btn-outline" style="color: #b45309; border-color: #fcd34d;" title="Tính lại dựa trên dữ liệu mới" onclick="return confirm('Bạn có chắc chắn muốn xóa bản nháp cũ và tính lại bảng lương tháng này?');">
+                                <i class="fa-solid fa-rotate-right"></i> Tính Lại
+                            </button>
+                        </form>
+                    </c:if>
                     <c:if test="${payroll.status == 'DRAFT' && sessionScope.roleGroup == 'ADMIN'}">
                         <form action="${pageContext.request.contextPath}/admin/payroll/approve" method="post" style="margin: 0;">
                             <input type="hidden" name="id" value="${payroll.id}">
@@ -89,16 +103,35 @@
                 </div>
             </div>
             
+            <c:set var="totalGross" value="0" />
+            <c:set var="totalAllowance" value="0" />
+            <c:set var="totalDeduction" value="0" />
+            <c:forEach items="${details}" var="d">
+                <c:set var="totalGross" value="${totalGross + d.basicSalary}" />
+                <c:set var="totalAllowance" value="${totalAllowance + d.allowanceAmount}" />
+                <c:set var="totalDeduction" value="${totalDeduction + d.insuranceDeduction + d.taxDeduction + d.unpaidLeaveDeduction}" />
+            </c:forEach>
             <div class="summary-cards">
                 <div class="card">
                     <div class="card-title">Tổng Nhân Viên</div>
                     <div class="card-value">${payroll.totalEmployees}</div>
                 </div>
                 <div class="card">
-                    <div class="card-title">Tổng Lương Thực Nhận (Net)</div>
-                    <div class="card-value"><fmt:formatNumber value="${payroll.totalAmount}" pattern="#,##0"/> đ</div>
+                    <div class="card-title">Tổng Lương Cơ Bản</div>
+                    <div class="card-value"><fmt:formatNumber value="${totalGross}" pattern="#,##0"/> đ</div>
                 </div>
-                <!-- Additional summary cards could be calculated and displayed here -->
+                <div class="card">
+                    <div class="card-title">Tổng Phụ Cấp</div>
+                    <div class="card-value text-green">+<fmt:formatNumber value="${totalAllowance}" pattern="#,##0"/> đ</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Tổng Khấu Trừ</div>
+                    <div class="card-value text-red">-<fmt:formatNumber value="${totalDeduction}" pattern="#,##0"/> đ</div>
+                </div>
+                <div class="card" style="grid-column: span 4; background: #f8fafc; border: 2px solid #e2e8f0;">
+                    <div class="card-title">Tổng Lương Thực Nhận (Net)</div>
+                    <div class="card-value" style="color: #4f46e5;"><fmt:formatNumber value="${payroll.totalAmount}" pattern="#,##0"/> đ</div>
+                </div>
             </div>
 
             <div style="overflow-x: auto;">

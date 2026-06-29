@@ -81,6 +81,7 @@
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 120px;">Mã Phòng</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Tên Phòng Ban</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Phòng Ban Cha</th>
+                        <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Trưởng phòng</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 110px;">Số nhân sự</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; max-width: 300px;">Mô tả</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 130px;">Trạng thái</th>
@@ -109,9 +110,24 @@
                                 </c:choose>
                             </td>
                             <td>
-                                <span class="badge badge-pill text-secondary px-2 py-1" style="background-color: #f1f5f9; color: #6366f1 !important; font-weight: 600; font-size: 13px; border-radius: 50px;">
-                                    <c:out value="${dept.totalEmployees}" /> người
-                                </span>
+                                <c:choose>
+                                    <c:when test="${not empty dept.managerName}">
+                                        <span class="font-weight-normal text-dark">${dept.managerName}</span>
+                                        <c:if test="${not empty dept.managerCode}">
+                                            <br><small class="text-muted">${dept.managerCode}</small>
+                                        </c:if>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="text-muted" style="font-size: 13px;">Chưa bổ nhiệm</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
+                            <td>
+                                <a href="#" class="view-members" data-id="${dept.id}">
+                                    <span class="badge badge-pill text-secondary px-2 py-1" style="background-color: #f1f5f9; color: #6366f1 !important; font-weight: 600; font-size: 13px; border-radius: 50px;">
+                                        <c:out value="${dept.totalEmployees}" /> người
+                                    </span>
+                                </a>
                             </td>
                             <td class="text-muted" style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 <c:out value="${not empty dept.description ? dept.description : '_'}" />
@@ -127,28 +143,58 @@
                                 </c:choose>
                             </td>
                             <td class="text-center px-4">
-                                <button class="btn btn-link p-0 border-0"
-                                        style="outline: none; background: none;"
-                                        data-toggle="modal"
-                                        data-target="#departmentModal"
-                                        onclick="openEditModal(this)"
-                                        data-id="${dept.id}"
-                                        data-code="${dept.code}"
-                                        data-name="${dept.name}"
-                                        data-parent="${dept.parentId}"
-                                        data-desc="${dept.description}"
-                                        data-active="${dept.isActive}"
-                                        title="Chỉnh sửa">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4e73df" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                </button>
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-link p-0 border-0"
+                                            style="outline: none; background: none;"
+                                            data-toggle="modal"
+                                            data-target="#departmentModal"
+                                            onclick="openEditModal(this)"
+                                            data-id="${dept.id}"
+                                            data-code="${dept.code}"
+                                            data-name="${dept.name}"
+                                            data-parent="${dept.parentId}"
+                                            data-desc="${dept.description}"
+                                            data-active="${dept.isActive}"
+                                            data-managerid="${dept.managerId}"
+                                            data-managercode="${dept.managerCode}"
+                                            data-managername="${dept.managerName}"
+                                            title="Chỉnh sửa">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4e73df" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                    </button>
+                                    <c:choose>
+                                        <c:when test="${dept.isActive == 1}">
+                                            <button class="btn btn-link p-0 border-0 btn-deactivate ml-2"
+                                                    style="outline: none; background: none;"
+                                                    data-id="${dept.id}"
+                                                    data-name="${dept.name}"
+                                                    title="Vô hiệu hóa">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e74a3b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                                </svg>
+                                            </button>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <button class="btn btn-link p-0 border-0 btn-activate ml-2"
+                                                    style="outline: none; background: none;"
+                                                    data-id="${dept.id}"
+                                                    data-name="${dept.name}"
+                                                    title="Kích hoạt">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1cc88a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                             </td>
                         </tr>
                     </c:forEach>
                     <tr id="noDataRow" style="display: none;">
-                        <td colspan="8" class="text-center text-muted py-4" style="background: white;">Không tìm thấy phòng ban nào phù hợp với bộ lọc!</td>
+                        <td colspan="9" class="text-center text-muted py-4" style="background: white;">Không tìm thấy phòng ban nào phù hợp với bộ lọc!</td>
                     </tr>
                     </tbody>
                 </table>
@@ -187,6 +233,15 @@
                         <label class="text-dark font-weight-500" style="font-size: 14px;">Tên Phòng Ban <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="deptName" class="form-control" style="border-radius: 6px; padding: 10px;" required>
                     </div>
+                     <div class="form-group mb-3 position-relative">
+                        <label class="text-dark font-weight-500" style="font-size: 14px;" for="manager_search">Trưởng phòng <span class="text-danger">*</span></label>
+                        <input type="text" id="manager_search" class="form-control"
+                               placeholder="Gõ mã NV hoặc tên để tìm..." autocomplete="off"
+                               style="border-radius: 6px; padding: 10px;" required>
+                        <div id="suggestion_box" class="dropdown-menu w-100 shadow-sm" style="display: none; max-height: 200px; overflow-y: auto; position: absolute; z-index: 1000; top: 100%;"></div>
+                        <input type="hidden" id="manager_id" name="manager_id">
+                        <small id="managerHint" class="text-muted" style="font-size: 12px; display: none;"></small>
+                    </div>
                     <div class="form-group mb-3">
                         <label class="text-dark font-weight-500" style="font-size: 14px;">Phòng Ban Cha (Cấp trên)</label>
                         <select name="parentId" id="deptParent" class="form-control" style="border-radius: 6px; height: auto; padding: 8px 12px;">
@@ -217,8 +272,64 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<div class="modal fade" id="deptMembersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title font-weight-bold text-dark" style="font-size: 20px;">Danh sách nhân sự phòng ban</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="outline: none;">
+                    <span aria-hidden="true" style="font-size: 24px;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body py-3">
+                <div class="card border-0 shadow-sm p-3 mb-4" style="border-radius: 8px; background-color: #f8f9fa;">
+                    <label class="text-dark font-weight-500 mb-2" style="font-size: 14px;">Điều chuyển nhân sự đã chọn sang phòng ban khác:</label>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <select id="targetDeptSelect" class="form-control" style="border-radius: 6px; height: auto; padding: 8px 12px;">
+                                <option value="">-- Chọn phòng ban nhận --</option>
+                                <c:forEach var="d" items="${departments}">
+                                    <c:if test="${d.isActive == 1}">
+                                        <option value="${d.id}">${d.name}</option>
+                                    </c:if>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mt-2 mt-md-0">
+                            <button id="btnTransferSelected" class="btn text-white w-100" style="background-color: #6366f1; border-radius: 6px; font-weight: 500; padding: 9px 12px;">Xác nhận điều chuyển</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transferAlert" class="alert alert-danger" style="display: none; border-radius: 6px; font-size: 14px;"></div>
+
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" id="membersTable" style="background: white;">
+                        <thead style="background-color: #fafafa; border-bottom: 2px solid #f0f0f0;">
+                            <tr>
+                                <th style="border: none; width: 40px;" class="text-center">
+                                    <input type="checkbox" id="checkAllMembers" style="width: 16px; height: 16px; cursor: pointer;">
+                                </th>
+                                <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 150px;">Mã nhân viên</th>
+                                <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Họ và tên</th>
+                                <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Chức vụ</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 14px; color: #4a5568;">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light px-4" data-dismiss="modal" style="border-radius: 6px; font-weight: 500;">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/js/departments.js"></script>
+<script>const CTX = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/departments.js?v=<%= System.currentTimeMillis() %>"></script>
 </body>
 </html>

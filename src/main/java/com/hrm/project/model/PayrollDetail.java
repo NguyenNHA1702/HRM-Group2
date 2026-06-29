@@ -25,6 +25,8 @@ public class PayrollDetail {
     private int month;
     private int year;
     private String status;
+    private int standardDays;
+    private int actualDays;
 
     public PayrollDetail() {}
 
@@ -81,4 +83,10 @@ public class PayrollDetail {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public int getStandardDays() { return standardDays; }
+    public void setStandardDays(int standardDays) { this.standardDays = standardDays; }
+
+    public int getActualDays() { return actualDays; }
+    public void setActualDays(int actualDays) { this.actualDays = actualDays; }
 }

@@ -723,7 +723,36 @@ public class UserDAOImpl implements UserDAO {
     @Override
     public List<Object[]> suggestEmployees(String term) throws SQLException {
         String sql = "SELECT id, employee_code, full_name FROM employees " +
-                     "WHERE employee_code LIKE ? OR full_name LIKE ? LIMIT 10";
+                     "WHERE (employee_code LIKE ? OR full_name LIKE ?) " +
+                     "AND status = 'Active' " +
+                     "AND position_id NOT IN (1, 2, 3, 4, 5, 6) " +
+                     "AND id NOT IN (SELECT DISTINCT manager_id FROM departments WHERE manager_id IS NOT NULL) " +
+                     "LIMIT 10";
+        List<Object[]> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            String pattern = "%" + term + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                            rs.getInt("id"),
+                            rs.getString("employee_code"),
+                            rs.getString("full_name")
+                    });
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<Object[]> suggestEmployeesForContract(String term) throws SQLException {
+        String sql = "SELECT id, employee_code, full_name FROM employees " +
+                     "WHERE (employee_code LIKE ? OR full_name LIKE ?) " +
+                     "AND status = 'Active' " +
+                     "LIMIT 10";
         List<Object[]> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
