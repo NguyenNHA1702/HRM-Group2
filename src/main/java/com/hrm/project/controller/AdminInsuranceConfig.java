@@ -184,8 +184,7 @@ public class AdminInsuranceConfig extends HttpServlet {
 
     private boolean canManageInsurance(String roleGroup) {
         return "ADMIN".equals(roleGroup)
-                || "HR".equals(roleGroup)
-                || "MANAGER".equals(roleGroup);
+                || "HR".equals(roleGroup);
     }
 
     // ═══════════════════════════════════════════════════════════════
