@@ -34,7 +34,7 @@
         </div>
 
         <%-- ═══ ALERT ═══ --%>
-        <div id="alertContainer"></div>
+        <div id="alertContainer" style="position: fixed; top: 24px; right: 24px; z-index: 9999; min-width: 320px; max-width: 450px;"></div>
 
         <%-- ═══ ACTION BUTTON ═══ --%>
         <div class="mb-4">
@@ -68,6 +68,7 @@
                         <option value="">Tất cả loại HĐ</option>
                         <option value="1">Thử việc</option>
                         <option value="2">Chính thức 1 năm</option>
+                        <option value="5">Chính thức 3 năm</option>
                         <option value="3">Không thời hạn</option>
                         <option value="4">Thời vụ</option>
                     </select>
@@ -240,6 +241,7 @@
                             <select id="formContractType" class="form-control" style="padding: 8px 12px;">
                                 <option value="1">Thử việc</option>
                                 <option value="2">Chính thức 1 năm</option>
+                                <option value="5">Chính thức 3 năm</option>
                                 <option value="3">Không thời hạn</option>
                                 <option value="4">Thời vụ</option>
                             </select>
