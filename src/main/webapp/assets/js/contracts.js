@@ -542,6 +542,19 @@ function applyEndDateRule() {
             endDateEl.readOnly = true;
             break;
 
+        case "5": // Chính thức 3 năm → auto +3 years, lock field
+            if (startDate) {
+                const d = new Date(startDate);
+                d.setFullYear(d.getFullYear() + 3);
+                endDateEl.value = d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0');
+            } else {
+                endDateEl.value = "";
+            }
+            endDateEl.readOnly = true;
+            break;
+
         case "3": // Không thời hạn → clear & lock
             endDateEl.value    = "";
             endDateEl.readOnly = true;
