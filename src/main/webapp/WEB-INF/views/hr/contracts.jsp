@@ -20,6 +20,25 @@
         .salary-cell { font-family: 'Segoe UI', monospace; font-weight: 600; color: #1a73e8; }
         .modal-content { border-radius: 12px; }
         .form-control, .custom-select { border-radius: 6px; }
+
+        /* ── Allowance popover in table ── */
+        .allowance-cell { position: relative; }
+        .allowance-trigger { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; transition: all 0.15s ease; white-space: nowrap; }
+        .allowance-trigger:hover { background-color: #dcfce7; border-color: #86efac; }
+        .allowance-trigger .count-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background-color: #15803d; color: #fff; font-size: 10px; font-weight: 700; }
+        .allowance-popover { display: none; position: absolute; z-index: 100; top: 100%; left: 0; margin-top: 4px; min-width: 220px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; padding: 10px 0; }
+        .allowance-cell:hover .allowance-popover { display: block; }
+        .allowance-popover-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; font-size: 13px; }
+        .allowance-popover-item:not(:last-child) { border-bottom: 1px solid #f3f4f6; }
+        .allowance-popover-item .code { font-weight: 600; color: #374151; }
+        .allowance-popover-item .name { color: #6b7280; margin-left: 4px; }
+        .allowance-popover-item .amount { font-weight: 600; color: #059669; white-space: nowrap; }
+        .no-allowance { color: #9ca3af; font-size: 13px; font-style: italic; }
+
+        /* ── Modal allowance container ── */
+        #allowancesContainer { scrollbar-width: thin; scrollbar-color: #d1d5db transparent; }
+        #allowancesContainer::-webkit-scrollbar { width: 5px; }
+        #allowancesContainer::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
     </style>
 </head>
 <body style="background-color: #f8f9fa;">
@@ -90,7 +109,7 @@
                 <table class="table table-hover align-middle mb-0" style="background: white;" id="contractTable">
                     <thead style="background-color: #fafafa; border-bottom: 2px solid #f0f0f0;">
                     <tr>
-                        <th class="text-secondary font-weight-bold text-uppercase px-4 py-3" style="font-size: 11px; border: none; width: 60px;">ID</th>
+                        <th class="text-secondary font-weight-bold text-uppercase px-4 py-3" style="font-size: 11px; border: none; width: 60px;">STT</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 100px;">Mã NV</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Họ Tên</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none;">Phòng Ban</th>
@@ -98,6 +117,7 @@
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 130px;">Loại HĐ</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 180px;">Thời hạn</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 130px;">Lương cứng</th>
+                        <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 110px;">Phụ cấp</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 110px;">Trạng thái</th>
                         <th class="text-secondary font-weight-bold text-uppercase text-center px-4 py-3" style="font-size: 11px; border: none; width: 130px;">Thao tác</th>
                     </tr>
@@ -111,7 +131,7 @@
                             data-type="${c.contractType}"
                             data-status="${c.status}"
                             style="border-bottom: 1px solid #f1f5f9; transition: all 0.2s;">
-                            <td class="px-4 text-muted">${c.id}</td>
+                            <td class="px-4 text-muted row-index" data-id="${c.id}">${c.id}</td>
                             <td><span class="font-weight-bold text-dark" style="letter-spacing: 0.5px;">${c.employeeCode}</span></td>
                             <td class="font-weight-normal text-dark">${c.employeeFullName}</td>
                             <td>
@@ -135,6 +155,28 @@
                                 </c:choose>
                             </td>
                             <td class="salary-cell"><fmt:formatNumber value="${c.baseSalary}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ</td>
+                            <td class="allowance-cell">
+                                <c:choose>
+                                    <c:when test="${not empty c.allowances}">
+                                        <c:set var="allowanceCount" value="0" />
+                                        <c:forEach var="a" items="${c.allowances}"><c:set var="allowanceCount" value="${allowanceCount + 1}" /></c:forEach>
+                                        <span class="allowance-trigger">
+                                            <span class="count-badge">${allowanceCount}</span> phụ cấp
+                                        </span>
+                                        <div class="allowance-popover">
+                                            <c:forEach var="allowance" items="${c.allowances}">
+                                                <div class="allowance-popover-item">
+                                                    <span><span class="code">${allowance.code}</span><span class="name">- ${allowance.name}</span></span>
+                                                    <span class="amount"><fmt:formatNumber value="${allowance.amount}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ</span>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="no-allowance">—</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
                             <td>
                                 <c:choose>
                                     <c:when test="${c.status == 1}"><span class="badge badge-status badge-active">Active</span></c:when>
@@ -158,7 +200,7 @@
                                     <button class="btn-icon" title="Gia hạn hợp đồng"
                                             data-id="${c.id}" data-employeeid="${c.employeeId}"
                                             data-empname="${c.employeeFullName}" data-contractnumber="${c.contractNumber}"
-                                            data-type="${c.contractType}" data-salary="${c.baseSalary}"
+                                            data-type="${c.contractType}" data-salary="${c.baseSalary}" data-allowances="${c.allowanceTypeIdsString}"
                                             onclick="openRenewModal(this)">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="23 4 23 10 17 10"></polyline>
@@ -182,7 +224,7 @@
                         </tr>
                     </c:forEach>
                     <tr id="noDataRow" style="display: none;">
-                        <td colspan="10" class="text-center text-muted py-4" style="background: white;">Không tìm thấy hợp đồng nào phù hợp với bộ lọc!</td>
+                        <td colspan="11" class="text-center text-muted py-4" style="background: white;">Không tìm thấy hợp đồng nào phù hợp với bộ lọc!</td>
                     </tr>
                     </tbody>
                 </table>
@@ -270,13 +312,34 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-group mb-2">
-                    <label class="text-dark font-weight-500" style="font-size: 14px;">Ghi chú</label>
-                    <textarea id="formDescription" class="form-control" rows="2" style="border-radius: 6px;"></textarea>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group mb-3">
+                            <label class="text-dark font-weight-500" style="font-size: 14px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -2px;"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>
+                                Các loại phụ cấp được hưởng
+                            </label>
+                            <div id="allowancesContainer" class="p-3 border rounded" style="max-height: 170px; overflow-y: auto; border-radius: 8px !important; border: 1px solid #e5e7eb !important; background-color: #fafbfc;">
+                                <span class="text-muted" style="font-size: 13px;">Đang tải danh sách phụ cấp...</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group mb-2">
-                    <label class="text-dark font-weight-500" style="font-size: 14px;">File hợp đồng scan <span class="text-danger">*</span> <small class="text-muted">(PDF, JPG, JPEG, PNG)</small></label>
-                    <input type="file" id="formContractFile" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png" style="padding: 8px;">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group mb-2">
+                            <label class="text-dark font-weight-500" style="font-size: 14px;">Ghi chú</label>
+                            <textarea id="formDescription" class="form-control" rows="2" style="border-radius: 6px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group mb-2">
+                            <label class="text-dark font-weight-500" style="font-size: 14px;">File hợp đồng scan <span class="text-danger">*</span> <small class="text-muted">(PDF, JPG, JPEG, PNG)</small></label>
+                            <input type="file" id="formContractFile" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png" style="padding: 8px;">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer border-top-0 pt-0">
