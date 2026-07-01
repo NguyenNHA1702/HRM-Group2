@@ -34,6 +34,18 @@ public class ContractServiceImpl implements ContractService {
         }
         contract.setBaseSalary(baseSalary);
 
+        // Check if contract number already exists
+        if (contractDAO.checkContractNumberExists(contract.getContractNumber())) {
+            throw new RuntimeException(
+                    "Thất bại: Số hợp đồng '" + contract.getContractNumber() + "' đã tồn tại trong hệ thống.");
+        }
+
+        // Check if at least one allowance is selected
+        if (contract.getAllowanceTypeIds() == null || contract.getAllowanceTypeIds().isEmpty()) {
+            throw new RuntimeException(
+                    "Thất bại: Hợp đồng bắt buộc phải chọn ít nhất 1 loại phụ cấp.");
+        }
+
         // Business rule 1: mỗi nhân viên chỉ được có tối đa 1 hợp đồng Active
         String activeContractNumber = contractDAO.getActiveContractNumber(contract.getEmployeeId());
         if (activeContractNumber != null) {
@@ -73,6 +85,18 @@ public class ContractServiceImpl implements ContractService {
                     "Thất bại: Bậc lương không tồn tại hoặc đã bị vô hiệu hóa (ID: " + salaryScaleId + ").");
         }
         newContract.setBaseSalary(baseSalary);
+
+        // Check if contract number already exists
+        if (contractDAO.checkContractNumberExists(newContract.getContractNumber())) {
+            throw new RuntimeException(
+                    "Thất bại: Số hợp đồng '" + newContract.getContractNumber() + "' đã tồn tại trong hệ thống.");
+        }
+
+        // Check if at least one allowance is selected
+        if (newContract.getAllowanceTypeIds() == null || newContract.getAllowanceTypeIds().isEmpty()) {
+            throw new RuntimeException(
+                    "Thất bại: Hợp đồng bắt buộc phải chọn ít nhất 1 loại phụ cấp.");
+        }
 
         // Business rule: không cho phép gia hạn hợp đồng Không xác định thời hạn
         int oldContractType = contractDAO.getContractTypeById(oldContractId);

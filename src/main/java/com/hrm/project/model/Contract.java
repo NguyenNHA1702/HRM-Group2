@@ -16,6 +16,7 @@ public class Contract {
     private String fileUrl; // Optional contract file URL or upload path
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private java.util.List<Integer> allowanceTypeIds;
 
     // Default Constructor
     public Contract() {
@@ -132,5 +133,13 @@ public class Contract {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public java.util.List<Integer> getAllowanceTypeIds() {
+        return allowanceTypeIds;
+    }
+
+    public void setAllowanceTypeIds(java.util.List<Integer> allowanceTypeIds) {
+        this.allowanceTypeIds = allowanceTypeIds;
     }
 }

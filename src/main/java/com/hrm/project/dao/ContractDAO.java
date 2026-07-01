@@ -12,6 +12,8 @@ public interface ContractDAO {
 
     boolean createContract(Contract contract);
 
+    boolean checkContractNumberExists(String contractNumber);
+
     boolean checkActiveContractExists(int employeeId);
 
     /**
