@@ -18,6 +18,8 @@ public class ContractDTO {
     private String statusLabel;
     private String description;
     private String fileUrl;
+    private java.util.List<Integer> allowanceTypeIds;
+    private java.util.List<com.hrm.project.model.AllowanceType> allowances;
 
     // Default Constructor
     public ContractDTO() {
@@ -142,5 +144,35 @@ public class ContractDTO {
 
     public void setFileUrl(String fileUrl) {
         this.fileUrl = fileUrl;
+    }
+
+    public java.util.List<Integer> getAllowanceTypeIds() {
+        return allowanceTypeIds;
+    }
+
+    public void setAllowanceTypeIds(java.util.List<Integer> allowanceTypeIds) {
+        this.allowanceTypeIds = allowanceTypeIds;
+    }
+
+    public String getAllowanceTypeIdsString() {
+        if (allowanceTypeIds == null || allowanceTypeIds.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < allowanceTypeIds.size(); i++) {
+            sb.append(allowanceTypeIds.get(i));
+            if (i < allowanceTypeIds.size() - 1) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
+
+    public java.util.List<com.hrm.project.model.AllowanceType> getAllowances() {
+        return allowances;
+    }
+
+    public void setAllowances(java.util.List<com.hrm.project.model.AllowanceType> allowances) {
+        this.allowances = allowances;
     }
 }

@@ -5,11 +5,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.hrm.project.dao.SalaryScaleDAO;
 import com.hrm.project.dao.UserDAO;
+import com.hrm.project.dao.AllowanceTypeDAO;
 import com.hrm.project.dao.impl.SalaryScaleDAOImpl;
 import com.hrm.project.dao.impl.UserDAOImpl;
+import com.hrm.project.dao.impl.AllowanceTypeDAOImpl;
 import com.hrm.project.enums.ContractStatus;
 import com.hrm.project.model.Contract;
 import com.hrm.project.model.SalaryScale;
+import com.hrm.project.model.AllowanceType;
 import com.hrm.project.service.ContractService;
 import com.hrm.project.service.impl.ContractServiceImpl;
 
@@ -44,6 +47,7 @@ public class ContractApiController extends HttpServlet {
     private final ContractService contractService = new ContractServiceImpl();
     private final UserDAO userDAO = new UserDAOImpl();
     private final SalaryScaleDAO salaryScaleDAO = new SalaryScaleDAOImpl();
+    private final AllowanceTypeDAO allowanceTypeDAO = new AllowanceTypeDAOImpl();
     private final Gson gson = new Gson();
 
     private static final String UPLOAD_DIR = "uploads/contracts";
@@ -81,6 +85,9 @@ public class ContractApiController extends HttpServlet {
                 break;
             case "get_salary_scales":
                 handleGetSalaryScales(request, response);
+                break;
+            case "get_active_allowances":
+                handleGetActiveAllowances(request, response);
                 break;
             default:
                 sendJson(response, HttpServletResponse.SC_BAD_REQUEST,
@@ -137,6 +144,32 @@ public class ContractApiController extends HttpServlet {
             e.printStackTrace();
             sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "error", "Lỗi khi lấy danh sách bậc lương: " + e.getMessage());
+        }
+    }
+
+    // ── action=get_active_allowances ──────────────────────────────────────
+    private void handleGetActiveAllowances(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        try {
+            java.util.List<AllowanceType> list = allowanceTypeDAO.getAllAllowanceTypes();
+            JsonArray jsonArray = new JsonArray();
+            for (AllowanceType at : list) {
+                if (at.isActive()) {
+                    JsonObject obj = new JsonObject();
+                    obj.addProperty("id", at.getId());
+                    obj.addProperty("code", at.getCode());
+                    obj.addProperty("name", at.getName());
+                    obj.addProperty("amount", at.getAmount());
+                    jsonArray.add(obj);
+                }
+            }
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(gson.toJson(jsonArray));
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "error", "Lỗi khi lấy danh sách phụ cấp: " + e.getMessage());
         }
     }
 
@@ -266,6 +299,19 @@ public class ContractApiController extends HttpServlet {
         contract.setDescription(description);
         contract.setFileUrl(savedFileUrl);
 
+        String[] allowanceTypeIdsArr = request.getParameterValues("allowanceTypeIds");
+        java.util.List<Integer> allowanceTypeIds = new java.util.ArrayList<>();
+        if (allowanceTypeIdsArr != null) {
+            for (String idStr : allowanceTypeIdsArr) {
+                try {
+                    allowanceTypeIds.add(Integer.parseInt(idStr.trim()));
+                } catch (NumberFormatException e) {
+                    // Ignore malformed id
+                }
+            }
+        }
+        contract.setAllowanceTypeIds(allowanceTypeIds);
+
         try {
             boolean success = contractService.createContract(contract, salaryScaleId);
             if (success) {
@@ -345,6 +391,19 @@ public class ContractApiController extends HttpServlet {
         // baseSalary will be resolved from salaryScaleId in the Service layer
         newContract.setStatus(ContractStatus.ACTIVE.getValue());
         newContract.setDescription(description);
+
+        String[] allowanceTypeIdsArr = request.getParameterValues("allowanceTypeIds");
+        java.util.List<Integer> allowanceTypeIds = new java.util.ArrayList<>();
+        if (allowanceTypeIdsArr != null) {
+            for (String idStr : allowanceTypeIdsArr) {
+                try {
+                    allowanceTypeIds.add(Integer.parseInt(idStr.trim()));
+                } catch (NumberFormatException e) {
+                    // Ignore malformed id
+                }
+            }
+        }
+        newContract.setAllowanceTypeIds(allowanceTypeIds);
 
         try {
             boolean success = contractService.renewContract(oldContractId, newContract, salaryScaleId);

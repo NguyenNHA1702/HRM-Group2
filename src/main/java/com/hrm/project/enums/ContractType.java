@@ -4,7 +4,8 @@ public enum ContractType {
     PROBATION(1, "Thử việc"),
     OFFICIAL_1Y(2, "Chính thức 1 năm"),
     INDEFINITE(3, "Không thời hạn"),
-    SEASONAL(4, "Thời vụ");
+    SEASONAL(4, "Thời vụ"),
+    OFFICIAL_3Y(5, "Chính thức 3 năm");
 
     private final int value;
     private final String label;

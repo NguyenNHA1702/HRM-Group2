@@ -724,7 +724,7 @@ public class UserDAOImpl implements UserDAO {
     public List<Object[]> suggestEmployees(String term) throws SQLException {
         String sql = "SELECT id, employee_code, full_name FROM employees " +
                      "WHERE (employee_code LIKE ? OR full_name LIKE ?) " +
-                     "AND status = 'Active' " +
+                     "AND status IN ('ACTIVE', 'PROBATION') " +
                      "AND position_id NOT IN (1, 2, 3, 4, 5, 6) " +
                      "AND id NOT IN (SELECT DISTINCT manager_id FROM departments WHERE manager_id IS NOT NULL) " +
                      "LIMIT 10";
@@ -751,7 +751,7 @@ public class UserDAOImpl implements UserDAO {
     public List<Object[]> suggestEmployeesForContract(String term) throws SQLException {
         String sql = "SELECT id, employee_code, full_name FROM employees " +
                      "WHERE (employee_code LIKE ? OR full_name LIKE ?) " +
-                     "AND status = 'Active' " +
+                     "AND status IN ('ACTIVE', 'PROBATION') " +
                      "LIMIT 10";
         List<Object[]> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();

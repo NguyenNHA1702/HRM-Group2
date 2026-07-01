@@ -84,6 +84,8 @@ public class ContractDAOImpl implements ContractDAO {
 
                     dto.setDescription(rs.getString("description"));
                     dto.setFileUrl(hasFileUrl ? rs.getString("file_url") : null);
+                    dto.setAllowanceTypeIds(getAllowanceTypeIdsByContractId(con, dto.getId()));
+                    dto.setAllowances(getAllowancesByContractId(con, dto.getId()));
 
                     list.add(dto);
 
@@ -145,7 +147,7 @@ public class ContractDAOImpl implements ContractDAO {
 
         try (
                 Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
+                PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
         ) {
 
             ps.setString(1, contract.getContractNumber());
@@ -176,12 +178,58 @@ public class ContractDAOImpl implements ContractDAO {
                 }
             }
 
-            return ps.executeUpdate() > 0;
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                int contractId = -1;
+                try (ResultSet rsKeys = ps.getGeneratedKeys()) {
+                    if (rsKeys.next()) {
+                        contractId = rsKeys.getInt(1);
+                    }
+                }
+                if (contractId != -1) {
+                    if (contract.getAllowanceTypeIds() != null && !contract.getAllowanceTypeIds().isEmpty()) {
+                        ensureContractAllowancesTableExists(con);
+                        String caSql = "INSERT INTO contract_allowances (contract_id, allowance_type_id) VALUES (?, ?)";
+                        try (PreparedStatement psCa = con.prepareStatement(caSql)) {
+                            for (int allowanceId : contract.getAllowanceTypeIds()) {
+                                psCa.setInt(1, contractId);
+                                psCa.setInt(2, allowanceId);
+                                psCa.addBatch();
+                            }
+                            psCa.executeBatch();
+                        }
+                        syncEmployeeAllowances(con, contract.getEmployeeId(), contract.getAllowanceTypeIds());
+                    } else {
+                        syncEmployeeAllowances(con, contract.getEmployeeId(), new ArrayList<>());
+                    }
+                }
+                return true;
+            }
+            return false;
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        return false;
+    }
+
+    @Override
+    public boolean checkContractNumberExists(String contractNumber) {
+        String sql = "SELECT COUNT(*) FROM contracts WHERE contract_number = ?";
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, contractNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -352,7 +400,8 @@ public class ContractDAOImpl implements ContractDAO {
             }
 
             // 2. Insert new contract
-            try (PreparedStatement psInsert = con.prepareStatement(insertNewSql)) {
+            int newContractId = -1;
+            try (PreparedStatement psInsert = con.prepareStatement(insertNewSql, Statement.RETURN_GENERATED_KEYS)) {
                 psInsert.setString(1, newContract.getContractNumber());
                 psInsert.setInt(2, newContract.getEmployeeId());
                 psInsert.setInt(3, newContract.getContractType());
@@ -382,6 +431,30 @@ public class ContractDAOImpl implements ContractDAO {
                 }
 
                 psInsert.executeUpdate();
+                try (ResultSet rsKeys = psInsert.getGeneratedKeys()) {
+                    if (rsKeys.next()) {
+                        newContractId = rsKeys.getInt(1);
+                    }
+                }
+            }
+
+            // 3. Insert new contract's allowances and sync
+            if (newContractId != -1) {
+                if (newContract.getAllowanceTypeIds() != null && !newContract.getAllowanceTypeIds().isEmpty()) {
+                    ensureContractAllowancesTableExists(con);
+                    String caSql = "INSERT INTO contract_allowances (contract_id, allowance_type_id) VALUES (?, ?)";
+                    try (PreparedStatement psCa = con.prepareStatement(caSql)) {
+                        for (int allowanceId : newContract.getAllowanceTypeIds()) {
+                            psCa.setInt(1, newContractId);
+                            psCa.setInt(2, allowanceId);
+                            psCa.addBatch();
+                        }
+                        psCa.executeBatch();
+                    }
+                    syncEmployeeAllowances(con, newContract.getEmployeeId(), newContract.getAllowanceTypeIds());
+                } else {
+                    syncEmployeeAllowances(con, newContract.getEmployeeId(), new ArrayList<>());
+                }
             }
 
             con.commit();
@@ -400,4 +473,110 @@ public class ContractDAOImpl implements ContractDAO {
             }
         }
     }
+
+    private List<Integer> getAllowanceTypeIdsByContractId(Connection con, int contractId) {
+        List<Integer> list = new ArrayList<>();
+        if (!checkTableExists(con, "contract_allowances")) {
+            return list;
+        }
+        String sql = "SELECT allowance_type_id FROM contract_allowances WHERE contract_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, contractId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(rs.getInt("allowance_type_id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    private boolean checkTableExists(Connection con, String tableName) {
+        String sql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES " +
+                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, tableName);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private void ensureContractAllowancesTableExists(Connection con) {
+        if (!checkTableExists(con, "contract_allowances")) {
+            String sql = "CREATE TABLE IF NOT EXISTS contract_allowances (" +
+                    "contract_id INT UNSIGNED NOT NULL," +
+                    "allowance_type_id INT UNSIGNED NOT NULL," +
+                    "PRIMARY KEY (contract_id, allowance_type_id)," +
+                    "CONSTRAINT fk_ca_contract FOREIGN KEY (contract_id) REFERENCES contracts(id) ON DELETE CASCADE," +
+                    "CONSTRAINT fk_ca_allowance FOREIGN KEY (allowance_type_id) REFERENCES allowance_types(id) ON DELETE CASCADE" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng mapping n-n giữa hợp đồng và các loại phụ cấp'";
+            try (Statement stmt = con.createStatement()) {
+                stmt.execute(sql);
+                System.out.println("[ContractDAO] Programmatically created contract_allowances table.");
+            } catch (SQLException e) {
+                System.err.println("[ContractDAO] Failed to programmatically create contract_allowances table: " + e.getMessage());
+            }
+        }
+    }
+
+    private void syncEmployeeAllowances(Connection con, int employeeId, List<Integer> allowanceTypeIds) {
+        String deleteSql = "DELETE FROM employee_allowances WHERE employee_id = ?";
+        try (PreparedStatement psDel = con.prepareStatement(deleteSql)) {
+            psDel.setInt(1, employeeId);
+            psDel.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        if (allowanceTypeIds != null && !allowanceTypeIds.isEmpty()) {
+            String insertSql = "INSERT INTO employee_allowances (employee_id, allowance_type_id) VALUES (?, ?)";
+            try (PreparedStatement psIns = con.prepareStatement(insertSql)) {
+                for (int atId : allowanceTypeIds) {
+                    psIns.setInt(1, employeeId);
+                    psIns.setInt(2, atId);
+                    psIns.addBatch();
+                }
+                psIns.executeBatch();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private List<com.hrm.project.model.AllowanceType> getAllowancesByContractId(Connection con, int contractId) {
+        List<com.hrm.project.model.AllowanceType> list = new ArrayList<>();
+        if (!checkTableExists(con, "contract_allowances")) {
+            return list;
+        }
+        String sql = "SELECT t.id, t.code, t.name, t.amount, t.description, t.is_active " +
+                "FROM contract_allowances ca " +
+                "JOIN allowance_types t ON ca.allowance_type_id = t.id " +
+                "WHERE ca.contract_id = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, contractId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new com.hrm.project.model.AllowanceType(
+                            rs.getInt("id"),
+                            rs.getString("code"),
+                            rs.getString("name"),
+                            rs.getDouble("amount"),
+                            rs.getString("description"),
+                            rs.getBoolean("is_active")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
+//Test commit, error can not see my commit

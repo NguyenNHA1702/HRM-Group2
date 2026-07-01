@@ -18,7 +18,7 @@ public class DepartmentDAOImpl implements DepartmentDAO {
                 "LEFT JOIN employees mgr ON d1.manager_id = mgr.id " +
                 "LEFT JOIN employees e ON e.department_id = d1.id " + // JOIN sang bảng nhân viên
                 "GROUP BY d1.id " +
-                "ORDER BY d1.id DESC";
+                "ORDER BY d1.id ASC";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);

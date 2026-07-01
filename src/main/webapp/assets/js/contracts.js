@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Pre-load salary scales on page init ───────────────────────────────
     loadSalaryScales();
+    loadActiveAllowances();
 });
 
 // ── Init: collect all data rows ──────────────────────────────────────────
@@ -83,6 +84,14 @@ function renderTable() {
     const totalPages = Math.ceil(totalRecords / rowsPerPage);
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex   = Math.min(startIndex + rowsPerPage, totalRecords);
+
+    // Update all matching rows' STT dynamically so they are contiguous
+    filteredRows.forEach((row, index) => {
+        const indexCell = row.querySelector(".row-index");
+        if (indexCell) {
+            indexCell.innerText = index + 1;
+        }
+    });
 
     for (let i = startIndex; i < endIndex; i++) {
         filteredRows[i].style.display = "";
@@ -272,6 +281,11 @@ function openCreateModal() {
     document.getElementById("formDescription").value = "";
     document.getElementById("formContractFile").value = "";
 
+    // Clear allowances checked checkboxes
+    document.querySelectorAll(".allowance-checkbox").forEach(cb => {
+        cb.checked = false;
+    });
+
     document.getElementById("btnSubmitContract").innerText = "Lưu hợp đồng";
     document.getElementById("btnSubmitContract").style.backgroundColor = "#6366f1";
 
@@ -324,6 +338,13 @@ function openRenewModal(btn) {
     document.getElementById("salaryScaleSelect").value = "";
     document.getElementById("formDescription").value = "";
     document.getElementById("formContractFile").value = "";
+
+    // Pre-select allowances
+    const selectedAllowances = btn.getAttribute("data-allowances") || "";
+    const selectedIds = selectedAllowances ? selectedAllowances.split(",") : [];
+    document.querySelectorAll(".allowance-checkbox").forEach(cb => {
+        cb.checked = selectedIds.includes(cb.value);
+    });
 
     document.getElementById("btnSubmitContract").innerText = "Xác nhận gia hạn";
     document.getElementById("btnSubmitContract").style.backgroundColor = "#059669";
@@ -397,6 +418,17 @@ function submitContract() {
         }
     }
 
+    // Get checked allowances
+    const checkedAllowances = [];
+    document.querySelectorAll(".allowance-checkbox:checked").forEach(cb => {
+        checkedAllowances.push(cb.value);
+    });
+
+    if (checkedAllowances.length === 0) {
+        showAlert("error", "Vui lòng chọn ít nhất 1 loại phụ cấp cho hợp đồng.");
+        return;
+    }
+
     // ── Build FormData (multipart) ─────────────────────────────────────
     const formData = new FormData();
     formData.append("action", action);
@@ -407,6 +439,10 @@ function submitContract() {
     formData.append("endDate", endDate);
     formData.append("salaryScaleId", salaryScaleId);
     formData.append("description", description);
+
+    checkedAllowances.forEach(id => {
+        formData.append("allowanceTypeIds", id);
+    });
 
     if (fileInput.files && fileInput.files.length > 0) {
         formData.append("contractFile", fileInput.files[0]);
@@ -420,18 +456,22 @@ function submitContract() {
         method: "POST",
         body: formData  // No Content-Type header — browser sets multipart boundary automatically
     })
-    .then(res => res.json())
+    .then(res => {
+        return res.json().catch(() => {
+            throw new Error("Lỗi phản hồi từ hệ thống (Mã trạng thái: " + res.status + ").");
+        });
+    })
     .then(data => {
         if (data.status === "success") {
             $('#contractModal').modal('hide');
             showAlert("success", data.message);
             setTimeout(() => location.reload(), 1200);
         } else {
-            showAlert("error", data.message || data.error || "Lỗi không xác định từ máy chủ.");
+            showAlert("error", data.message || "Lỗi không xác định từ máy chủ.");
         }
     })
     .catch(err => {
-        showAlert("error", "Lỗi kết nối mạng: " + err.message);
+        showAlert("error", err.message || "Lỗi kết nối mạng.");
     });
 }
 
@@ -542,6 +582,19 @@ function applyEndDateRule() {
             endDateEl.readOnly = true;
             break;
 
+        case "5": // Chính thức 3 năm → auto +3 years, lock field
+            if (startDate) {
+                const d = new Date(startDate);
+                d.setFullYear(d.getFullYear() + 3);
+                endDateEl.value = d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0');
+            } else {
+                endDateEl.value = "";
+            }
+            endDateEl.readOnly = true;
+            break;
+
         case "3": // Không thời hạn → clear & lock
             endDateEl.value    = "";
             endDateEl.readOnly = true;
@@ -553,4 +606,56 @@ function applyEndDateRule() {
             endDateEl.readOnly = false;
             break;
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ALLOWANCES DYNAMIC LOADING
+// ═══════════════════════════════════════════════════════════════════════════
+
+let activeAllowancesCache = [];
+
+function loadActiveAllowances() {
+    const container = document.getElementById("allowancesContainer");
+    if (!container) return;
+
+    fetch(CTX + "/hr/api/contracts?action=get_active_allowances")
+        .then(res => res.json())
+        .then(data => {
+            activeAllowancesCache = Array.isArray(data) ? data : [];
+            populateAllowancesContainer(activeAllowancesCache);
+        })
+        .catch(err => {
+            console.error("Allowance load error:", err);
+            container.innerHTML = '<span class="text-danger" style="font-size: 13px;">Không thể tải danh sách phụ cấp.</span>';
+        });
+}
+
+function populateAllowancesContainer(allowances) {
+    const container = document.getElementById("allowancesContainer");
+    if (!container) return;
+
+    if (allowances.length === 0) {
+        container.innerHTML = '<span class="text-muted" style="font-size: 13px;">Không có phụ cấp nào đang hoạt động.</span>';
+        return;
+    }
+
+    container.innerHTML = "";
+    allowances.forEach(at => {
+        const div = document.createElement("div");
+        div.className = "d-flex align-items-center";
+        div.style.cssText = "padding: 7px 10px; border-radius: 6px; transition: background 0.15s; cursor: pointer;";
+        div.onmouseenter = function() { this.style.backgroundColor = '#f0fdf4'; };
+        div.onmouseleave = function() { this.style.backgroundColor = 'transparent'; };
+        
+        const formattedAmount = Number(at.amount).toLocaleString('vi-VN');
+        
+        div.innerHTML = `
+            <input type="checkbox" class="allowance-checkbox" id="allowance_${at.id}" value="${at.id}" style="cursor: pointer; width: 15px; height: 15px; margin-right: 10px; flex-shrink: 0; accent-color: #059669;">
+            <label class="mb-0 d-flex justify-content-between w-100 align-items-center" for="allowance_${at.id}" style="font-size: 13px; cursor: pointer; user-select: none;">
+                <span><span style="font-weight: 600; color: #374151; background: #e5e7eb; padding: 1px 6px; border-radius: 4px; font-size: 11px; margin-right: 6px;">${at.code}</span><span class="text-dark">${at.name}</span></span>
+                <span style="font-weight: 600; color: #059669; font-size: 12px; white-space: nowrap;">${formattedAmount}đ</span>
+            </label>
+        `;
+        container.appendChild(div);
+    });
 }
