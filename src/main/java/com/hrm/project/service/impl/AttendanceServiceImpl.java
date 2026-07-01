@@ -3,6 +3,7 @@ package com.hrm.project.service.impl;
 import com.hrm.project.dao.AttendanceDAO;
 import com.hrm.project.dao.impl.AttendanceDAOImpl;
 import com.hrm.project.model.Attendance;
+import com.hrm.project.model.AttendanceExplanation;
 import com.hrm.project.model.AttendanceImportResult;
 import com.hrm.project.model.dtos.response.AttendanceEmployeeStatsDto;
 import com.hrm.project.model.dtos.response.AttendanceSystemStatsDto;
@@ -375,6 +376,46 @@ public class AttendanceServiceImpl implements AttendanceService {
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("Ngay giai trinh khong hop le.");
         }
+    }
+
+    @Override
+    public List<AttendanceExplanation> getExplanations(String statusFilter, int page, int pageSize) {
+        return attendanceDAO.getExplanations(statusFilter, page, pageSize);
+    }
+
+    @Override
+    public int countExplanations(String statusFilter) {
+        return attendanceDAO.countExplanations(statusFilter);
+    }
+
+    @Override
+    public boolean reviewExplanation(long id, String reviewStatus, int reviewedBy, String reviewComment) {
+        return attendanceDAO.reviewExplanation(id, reviewStatus, reviewedBy, reviewComment);
+    }
+
+    @Override
+    public AttendanceExplanation getExplanationByEmployeeDate(int employeeId, LocalDate date) {
+        return attendanceDAO.getExplanationByEmployeeDate(employeeId, date);
+    }
+
+    @Override
+    public Map<String, AttendanceExplanation> getExplanationsByMonth(int employeeId, int year, int month) {
+        return attendanceDAO.getExplanationsByMonth(employeeId, year, month);
+    }
+
+    @Override
+    public boolean isAttendanceLocked(int year, int month) {
+        return attendanceDAO.isAttendanceLocked(year, month);
+    }
+
+    @Override
+    public boolean lockAttendance(int year, int month, int lockedBy) {
+        return attendanceDAO.lockAttendance(year, month, lockedBy);
+    }
+
+    @Override
+    public boolean unlockAttendance(int year, int month) {
+        return attendanceDAO.unlockAttendance(year, month);
     }
 
     private boolean isEmptyRow(Row row, DataFormatter formatter) {

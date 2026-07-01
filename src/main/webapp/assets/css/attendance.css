@@ -466,6 +466,36 @@ input[type="file"][hidden] {
 .day-badge.absent  { background: var(--clr-absent-bd);  color: var(--clr-absent); }
 .day-badge.leave   { background: var(--clr-leave-bd);   color: var(--clr-leave); }
 
+/* Explanation badge inside cell */
+.exp-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    width: fit-content;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+.exp-badge.pending {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+}
+.exp-badge.approved {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+.exp-badge.rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
 /* Late minutes pill */
 .late-min {
     font-size: 0.65rem;

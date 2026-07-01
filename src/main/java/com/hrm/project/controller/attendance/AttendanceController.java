@@ -1,13 +1,20 @@
 package com.hrm.project.controller.attendance;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.hrm.project.model.Attendance;
 import com.hrm.project.model.AttendanceImportResult;
 import com.hrm.project.service.AttendanceService;
 import com.hrm.project.service.impl.AttendanceServiceImpl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,7 +41,20 @@ public class AttendanceController extends HttpServlet {
     private static final int MAX_IMPORT_ERRORS = 10;
 
     private final AttendanceService attendanceService = new AttendanceServiceImpl();
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class, new JsonSerializer<LocalDate>() {
+                @Override
+                public JsonElement serialize(LocalDate src, Type typeOfSrc, JsonSerializationContext context) {
+                    return new JsonPrimitive(src.toString());
+                }
+            })
+            .registerTypeAdapter(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+                @Override
+                public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
+                    return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+                }
+            })
+            .create();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -58,6 +78,21 @@ public class AttendanceController extends HttpServlet {
 
         int employeeId = (Integer) session.getAttribute("employeeId");
         List<Attendance> attendances = attendanceService.getAttendanceByMonth(year, month, employeeId);
+
+        // Tải trạng thái giải trình để hiển thị badge trên calendar
+        Map<String, com.hrm.project.model.AttendanceExplanation> explanationDetailsMap =
+                attendanceService.getExplanationsByMonth(employeeId, year, month);
+        Map<String, String> explanationStatusMap = new java.util.HashMap<>();
+        for (Map.Entry<String, com.hrm.project.model.AttendanceExplanation> entry : explanationDetailsMap.entrySet()) {
+            explanationStatusMap.put(entry.getKey(), entry.getValue().getStatus());
+        }
+        request.setAttribute("explanationStatusMap", explanationStatusMap);
+        request.setAttribute("explanationStatusJson", gson.toJson(explanationStatusMap));
+        request.setAttribute("explanationDetailsJson", gson.toJson(explanationDetailsMap));
+
+        boolean isLocked = attendanceService.isAttendanceLocked(year, month);
+        request.setAttribute("isLocked", isLocked);
+        request.setAttribute("canLockAttendance", "HR".equalsIgnoreCase((String) session.getAttribute("roleGroup")));
 
         request.setAttribute("currentMonth", month);
         request.setAttribute("currentYear", year);
@@ -94,6 +129,10 @@ public class AttendanceController extends HttpServlet {
                 commitExcel(session);
             } else if ("submitExplanation".equals(action)) {
                 submitExplanation(request, session);
+            } else if ("lockAttendance".equals(action)) {
+                lockAttendance(request, session, year, month);
+            } else if ("unlockAttendance".equals(action)) {
+                unlockAttendance(request, session, year, month);
             } else {
                 flash(session, "error", "Nguoi dung khong duoc phep dieu chinh du lieu cham cong.");
             }
@@ -162,15 +201,58 @@ public class AttendanceController extends HttpServlet {
 
     private void submitExplanation(HttpServletRequest request, HttpSession session) {
         int employeeId = (Integer) session.getAttribute("employeeId");
-        boolean submitted = attendanceService.submitExplanation(
-                employeeId,
-                request.getParameter("date"),
-                request.getParameter("reason")
-        );
+        String dateStr = request.getParameter("date");
+        String reason  = request.getParameter("reason");
+
+        if (dateStr == null || dateStr.isBlank()) {
+            flash(session, "error", "Ngày giải trình không hợp lệ.");
+            return;
+        }
+
+        try {
+            LocalDate date = LocalDate.parse(dateStr);
+            if (attendanceService.isAttendanceLocked(date.getYear(), date.getMonthValue())) {
+                flash(session, "error", "Tháng chấm công này đã bị khóa. Không thể gửi giải trình.");
+                return;
+            }
+        } catch (Exception e) {
+            flash(session, "error", "Ngày giải trình không hợp lệ.");
+            return;
+        }
+
+        if (reason == null || reason.trim().isEmpty()) {
+            flash(session, "error", "Vui lòng nhập nội dung giải trình.");
+            return;
+        }
+
+        boolean submitted = attendanceService.submitExplanation(employeeId, dateStr, reason.trim());
         flash(session, submitted ? "success" : "error",
                 submitted
-                        ? "Gui giai trinh cham cong thanh cong."
-                        : "Khong the gui giai trinh cham cong.");
+                        ? "Gửi giải trình chấm công thành công. HR sẽ xem xét và phản hồi sớm."
+                        : "Không thể gửi giải trình chấm công.");
+    }
+
+    private void lockAttendance(HttpServletRequest request, HttpSession session, int year, int month) {
+        String role = (String) session.getAttribute("roleGroup");
+        if (!"HR".equalsIgnoreCase(role)) {
+            throw new IllegalArgumentException("Chỉ HR mới có quyền khóa chấm công.");
+        }
+        int employeeId = (Integer) session.getAttribute("employeeId");
+        boolean ok = attendanceService.lockAttendance(year, month, employeeId);
+        flash(session, ok ? "success" : "error",
+                ok ? "Khóa chấm công thành công tháng " + month + "/" + year
+                   : "Không thể khóa chấm công.");
+    }
+
+    private void unlockAttendance(HttpServletRequest request, HttpSession session, int year, int month) {
+        String role = (String) session.getAttribute("roleGroup");
+        if (!"HR".equalsIgnoreCase(role)) {
+            throw new IllegalArgumentException("Chỉ HR mới có quyền mở khóa chấm công.");
+        }
+        boolean ok = attendanceService.unlockAttendance(year, month);
+        flash(session, ok ? "success" : "error",
+                ok ? "Mở khóa chấm công thành công tháng " + month + "/" + year
+                   : "Không thể mở khóa chấm công.");
     }
 
     private void requireImportPermission(HttpSession session) {
@@ -178,6 +260,10 @@ public class AttendanceController extends HttpServlet {
         if (!canImportAttendance(role)) {
             throw new IllegalArgumentException("Ban khong co quyen import du lieu cham cong.");
         }
+    }
+
+    private boolean isIncompleteStatus(String status) {
+        return "LATE".equals(status) || "EARLY_LEAVE".equals(status) || "ABSENT".equals(status);
     }
 
     private String sanitizeFileName(String fileName) {
@@ -233,12 +319,11 @@ public class AttendanceController extends HttpServlet {
     }
 
     private boolean canAccessAttendance(String role) {
-        return role != null && !"ADMIN".equalsIgnoreCase(role);
+        return "EMPLOYEE".equalsIgnoreCase(role) || "HR".equalsIgnoreCase(role);
     }
 
     private boolean canViewSystemStatistics(String role) {
-        return "HR".equalsIgnoreCase(role)
-                || "MANAGER".equalsIgnoreCase(role);
+        return "HR".equalsIgnoreCase(role);
     }
 
     private int parseIntOrDefault(String value, int defaultValue) {

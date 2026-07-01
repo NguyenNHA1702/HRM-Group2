@@ -2,6 +2,7 @@ package com.hrm.project.dao.impl;
 
 import com.hrm.project.dao.AttendanceDAO;
 import com.hrm.project.model.Attendance;
+import com.hrm.project.model.AttendanceExplanation;
 import com.hrm.project.model.dtos.response.AttendanceEmployeeStatsDto;
 import java.sql.Connection;
 import java.sql.Date;
@@ -9,7 +10,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -114,7 +117,7 @@ public class AttendanceDAOImpl implements AttendanceDAO {
     }
 
     @Override
-    public boolean submitExplanation(int employeeId, java.time.LocalDate date, String reason) {
+    public boolean submitExplanation(int employeeId, LocalDate date, String reason) {
         String sql = "INSERT INTO attendance_explanations "
                 + "(employee_id, attendance_date, reason, status) VALUES (?, ?, ?, 'PENDING') "
                 + "ON DUPLICATE KEY UPDATE reason = VALUES(reason), status = 'PENDING', "
@@ -129,6 +132,203 @@ public class AttendanceDAOImpl implements AttendanceDAO {
             throw new IllegalStateException("Khong the gui giai trinh cham cong.", e);
         }
     }
+
+    @Override
+    public List<AttendanceExplanation> getExplanations(String statusFilter, int page, int pageSize) {
+        List<AttendanceExplanation> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT ae.id, ae.employee_id, e.full_name AS employee_name, "
+                + "e.employee_code, COALESCE(d.name,'Ch\u01b0a ph\u00e2n ph\u00f2ng') AS department_name, "
+                + "ae.attendance_date, a.status AS attendance_status, "
+                + "ae.reason, ae.status, ae.reviewed_by, "
+                + "rv.full_name AS reviewed_by_name, ae.reviewed_at, "
+                + "ae.review_comment, ae.created_at "
+                + "FROM attendance_explanations ae "
+                + "JOIN employees e ON e.id = ae.employee_id "
+                + "LEFT JOIN departments d ON d.id = e.department_id "
+                + "LEFT JOIN attendance a ON a.employee_id = ae.employee_id "
+                + "  AND a.date = ae.attendance_date "
+                + "LEFT JOIN employees rv ON rv.id = ae.reviewed_by ");
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            sql.append("WHERE ae.status = ? ");
+        }
+        sql.append("ORDER BY ae.created_at DESC LIMIT ? OFFSET ?");
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            int idx = 1;
+            if (statusFilter != null && !statusFilter.isBlank()) {
+                statement.setString(idx++, statusFilter);
+            }
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapExplanation(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Kh\u00f4ng th\u1ec3 t\u1ea3i danh s\u00e1ch gi\u1ea3i tr\u00ecnh.", e);
+        }
+        return list;
+    }
+
+    @Override
+    public int countExplanations(String statusFilter) {
+        String sql = (statusFilter != null && !statusFilter.isBlank())
+                ? "SELECT COUNT(*) FROM attendance_explanations WHERE status = ?"
+                : "SELECT COUNT(*) FROM attendance_explanations";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            if (statusFilter != null && !statusFilter.isBlank()) {
+                statement.setString(1, statusFilter);
+            }
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Kh\u00f4ng th\u1ec3 \u0111\u1ebfm gi\u1ea3i tr\u00ecnh.", e);
+        }
+    }
+
+    @Override
+    public boolean reviewExplanation(long id, String reviewStatus, int reviewedBy, String reviewComment) {
+        String updateExp = "UPDATE attendance_explanations "
+                + "SET status = ?, reviewed_by = ?, reviewed_at = NOW(), review_comment = ? "
+                + "WHERE id = ?";
+        // Khi APPROVED: lẩy employee_id và attendance_date từ explanation, rồi UPSERT vào attendance
+        String selectInfo = "SELECT employee_id, attendance_date FROM attendance_explanations WHERE id = ?";
+        String updateAtt  = "INSERT INTO attendance (employee_id, date, check_in, check_out, status, note) "
+                + "VALUES (?, ?, '08:00:00', '17:30:00', 'PRESENT', 'Duyệt giải trình') "
+                + "ON DUPLICATE KEY UPDATE status = 'PRESENT', note = 'Duyệt giải trình'";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Cập nhật trạng thái giải trình
+                try (PreparedStatement expStmt = conn.prepareStatement(updateExp)) {
+                    expStmt.setString(1, reviewStatus);
+                    expStmt.setInt(2, reviewedBy);
+                    expStmt.setString(3, reviewComment);
+                    expStmt.setLong(4, id);
+                    expStmt.executeUpdate();
+                }
+                // 2. Nếu APPROVED: cập nhật attendance -> PRESENT
+                if ("APPROVED".equals(reviewStatus)) {
+                    int empId;
+                    Date attDate;
+                    try (PreparedStatement selStmt = conn.prepareStatement(selectInfo)) {
+                        selStmt.setLong(1, id);
+                        try (ResultSet rs = selStmt.executeQuery()) {
+                            if (!rs.next()) throw new SQLException("Không tìm thấy giải trình id=" + id);
+                            empId   = rs.getInt("employee_id");
+                            attDate = rs.getDate("attendance_date");
+                        }
+                    }
+                    try (PreparedStatement attStmt = conn.prepareStatement(updateAtt)) {
+                        attStmt.setInt(1, empId);
+                        attStmt.setDate(2, attDate);
+                        attStmt.executeUpdate();
+                    }
+                }
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể xử lý giải trình.", e);
+        }
+    }
+
+    @Override
+    public AttendanceExplanation getExplanationByEmployeeDate(int employeeId, LocalDate date) {
+        String sql = "SELECT ae.id, ae.employee_id, e.full_name AS employee_name, "
+                + "e.employee_code, COALESCE(d.name,'Chưa phân phòng') AS department_name, "
+                + "ae.attendance_date, a.status AS attendance_status, "
+                + "ae.reason, ae.status, ae.reviewed_by, "
+                + "rv.full_name AS reviewed_by_name, ae.reviewed_at, "
+                + "ae.review_comment, ae.created_at "
+                + "FROM attendance_explanations ae "
+                + "JOIN employees e ON e.id = ae.employee_id "
+                + "LEFT JOIN departments d ON d.id = e.department_id "
+                + "LEFT JOIN attendance a ON a.employee_id = ae.employee_id "
+                + "  AND a.date = ae.attendance_date "
+                + "LEFT JOIN employees rv ON rv.id = ae.reviewed_by "
+                + "WHERE ae.employee_id = ? AND ae.attendance_date = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, employeeId);
+            statement.setDate(2, Date.valueOf(date));
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? mapExplanation(rs) : null;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải giải trình.", e);
+        }
+    }
+
+    @Override
+    public Map<String, AttendanceExplanation> getExplanationsByMonth(int employeeId, int year, int month) {
+        Map<String, AttendanceExplanation> map = new HashMap<>();
+        String sql = "SELECT ae.id, ae.employee_id, e.full_name AS employee_name, "
+                + "e.employee_code, COALESCE(d.name,'Chưa phân phòng') AS department_name, "
+                + "ae.attendance_date, a.status AS attendance_status, "
+                + "ae.reason, ae.status, ae.reviewed_by, "
+                + "rv.full_name AS reviewed_by_name, ae.reviewed_at, "
+                + "ae.review_comment, ae.created_at "
+                + "FROM attendance_explanations ae "
+                + "JOIN employees e ON e.id = ae.employee_id "
+                + "LEFT JOIN departments d ON d.id = e.department_id "
+                + "LEFT JOIN attendance a ON a.employee_id = ae.employee_id "
+                + "  AND a.date = ae.attendance_date "
+                + "LEFT JOIN employees rv ON rv.id = ae.reviewed_by "
+                + "WHERE ae.employee_id = ? AND YEAR(ae.attendance_date) = ? AND MONTH(ae.attendance_date) = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, employeeId);
+            statement.setInt(2, year);
+            statement.setInt(3, month);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    AttendanceExplanation ex = mapExplanation(rs);
+                    if (ex.getAttendanceDate() != null) {
+                        map.put(ex.getAttendanceDate().toString(), ex);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải danh sách giải trình theo tháng.", e);
+        }
+        return map;
+    }
+
+    private AttendanceExplanation mapExplanation(ResultSet rs) throws SQLException {
+        AttendanceExplanation ex = new AttendanceExplanation();
+        ex.setId(rs.getLong("id"));
+        ex.setEmployeeId(rs.getInt("employee_id"));
+        ex.setEmployeeName(rs.getString("employee_name"));
+        ex.setEmployeeCode(rs.getString("employee_code"));
+        ex.setDepartmentName(rs.getString("department_name"));
+        ex.setAttendanceDate(rs.getDate("attendance_date").toLocalDate());
+        ex.setAttendanceStatus(rs.getString("attendance_status"));
+        ex.setReason(rs.getString("reason"));
+        ex.setStatus(rs.getString("status"));
+        int reviewedBy = rs.getInt("reviewed_by");
+        if (!rs.wasNull()) ex.setReviewedBy(reviewedBy);
+        ex.setReviewedByName(rs.getString("reviewed_by_name"));
+        Timestamp reviewedAt = rs.getTimestamp("reviewed_at");
+        if (reviewedAt != null) ex.setReviewedAt(reviewedAt.toLocalDateTime());
+        ex.setReviewComment(rs.getString("review_comment"));
+        Timestamp createdAt = rs.getTimestamp("created_at");
+        if (createdAt != null) ex.setCreatedAt(createdAt.toLocalDateTime());
+        return ex;
+    }
+
+
 
     @Override
     public List<AttendanceEmployeeStatsDto> getEmployeeStatistics(int year, int month) {
@@ -181,6 +381,54 @@ public class AttendanceDAOImpl implements AttendanceDAO {
             throw new IllegalStateException("Không thể tải thống kê chấm công hệ thống.", e);
         }
         return statistics;
+    }
+
+    @Override
+    public boolean isAttendanceLocked(int year, int month) {
+        String sql = "SELECT is_locked FROM attendance_locks WHERE year = ? AND month = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("is_locked");
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể kiểm tra trạng thái khóa chấm công.", e);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean lockAttendance(int year, int month, int lockedBy) {
+        String sql = "INSERT INTO attendance_locks (year, month, is_locked, locked_by, locked_at) "
+                + "VALUES (?, ?, true, ?, NOW()) "
+                + "ON DUPLICATE KEY UPDATE is_locked = true, locked_by = ?, locked_at = NOW()";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            stmt.setInt(3, lockedBy);
+            stmt.setInt(4, lockedBy);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể khóa chấm công.", e);
+        }
+    }
+
+    @Override
+    public boolean unlockAttendance(int year, int month) {
+        String sql = "UPDATE attendance_locks SET is_locked = false WHERE year = ? AND month = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể mở khóa chấm công.", e);
+        }
     }
 
     private int validateEmployeeId(int employeeId, String employeeCode,

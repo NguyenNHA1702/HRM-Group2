@@ -53,6 +53,27 @@
                         </c:forEach>
                     </select>
                 </form>
+                
+                <c:if test="${canLockAttendance}">
+                    <form method="post" action="${pageContext.request.contextPath}/cham-cong" style="display: inline-block; margin: 0 10px 0 0;">
+                        <input type="hidden" name="month" value="${currentMonth}"/>
+                        <input type="hidden" name="year" value="${currentYear}"/>
+                        <c:choose>
+                            <c:when test="${isLocked}">
+                                <input type="hidden" name="action" value="unlockAttendance"/>
+                                <button type="submit" class="btn btn-outline attendance-action" style="border-color: #ef4444; color: #ef4444;" onclick="return confirm('Bạn có chắc chắn muốn mở khóa chấm công tháng này không?')">
+                                    🔓 Mở khóa
+                                </button>
+                            </c:when>
+                            <c:otherwise>
+                                <input type="hidden" name="action" value="lockAttendance"/>
+                                <button type="submit" class="btn btn-primary attendance-action" style="background-color: #ef4444; border-color: #ef4444; color: white;" onclick="return confirm('Bạn có chắc chắn muốn khóa chấm công tháng này không? Sau khi khóa, nhân viên sẽ không thể gửi giải trình mới.')">
+                                    🔒 Khóa chấm công
+                                </button>
+                            </c:otherwise>
+                        </c:choose>
+                    </form>
+                </c:if>
 
                 <c:if test="${canImportAttendance}">
                     <form id="import-form"
@@ -112,6 +133,12 @@
         <c:if test="${not empty sessionScope.flash_error}">
             <div class="flash error"><c:out value="${sessionScope.flash_error}"/></div>
             <c:remove var="flash_error" scope="session"/>
+        </c:if>
+        
+        <c:if test="${isLocked}">
+            <div class="flash error" style="background:#fee2e2; border-color:#fecaca; color:#991b1b;">
+                🔒 <strong>Bảng công đã khóa:</strong> Bảng chấm công tháng ${currentMonth}/${currentYear} đã được khóa bởi HR. Nhân viên không thể gửi thêm giải trình.
+            </div>
         </c:if>
 
         <!-- ══ Stats strip ══ -->
@@ -182,15 +209,21 @@
                 <input type="hidden" name="month" value="${currentMonth}"/>
                 <input type="hidden" name="year" value="${currentYear}"/>
                 <input type="hidden" name="date" id="explanation-date"/>
-                <div class="form-group">
-                    <label for="explanation-reason">Nội dung giải trình</label>
-                    <textarea id="explanation-reason"
-                              name="reason"
-                              maxlength="1000"
-                              required
-                              placeholder="Nhập lý do thiếu hoặc sai dữ liệu chấm công..."></textarea>
+
+                <%-- Badge trạng thái giải trình (hiện bởi JS) --%>
+                <div id="explanation-status-badge" style="display:none;margin-bottom:12px;"></div>
+
+                <div id="explanation-input-block">
+                    <div class="form-group">
+                        <label for="explanation-reason">Nội dung giải trình</label>
+                        <textarea id="explanation-reason"
+                                  name="reason"
+                                  maxlength="1000"
+                                  required
+                                  placeholder="Nhập lý do thiếu hoặc sai dữ liệu chấm công..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Gửi giải trình</button>
                 </div>
-                <button type="submit" class="btn-primary">Gửi giải trình</button>
             </form>
 
         </div>
@@ -203,7 +236,7 @@
 </div>
 
 <!-- ══ Scripts: external FIRST, then inline data ══ -->
-<script src="${pageContext.request.contextPath}/assets/js/attendance.js?v=20260611-5"></script>
+<script src="${pageContext.request.contextPath}/assets/js/attendance.js?v=20260701-1"></script>
 <script>
     /*
      * attendance.js đã đăng ký DOMContentLoaded listener.
@@ -215,7 +248,7 @@
      * đã dùng `let attendanceData` ở module scope – sẽ gây SyntaxError.
      * Truyền mảng literal trực tiếp vào initCalendar().
      */
-    initCalendar(${currentMonth}, ${currentYear}, ${attendanceJson});
+    initCalendar(${currentMonth}, ${currentYear}, ${attendanceJson}, ${not empty explanationStatusJson ? explanationStatusJson : '{}'}, ${isLocked ? 'true' : 'false'}, ${not empty explanationDetailsJson ? explanationDetailsJson : '{}'});
 </script>
 </body>
 </html>
