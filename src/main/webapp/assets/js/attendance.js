@@ -14,13 +14,16 @@ window._attendanceBootData = window._attendanceBootData || null;
 
 let currentMonth, currentYear;
 let attendanceData = [];
+let explanationStatusMap = {};
+let explanationDetailsMap = {};
+let isAttendanceLocked = false;
 let activeFilter = 'all';
 
 /* ── Boot: wait for DOM then init ── */
 document.addEventListener('DOMContentLoaded', function () {
     if (window._attendanceBootData) {
         const d = window._attendanceBootData;
-        _boot(d.month, d.year, d.data);
+        _boot(d.month, d.year, d.data, d.expMap, d.locked, d.expDetailsMap);
     }
 
     /* Modal backdrop / keyboard close */
@@ -32,11 +35,14 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* Called by window._attendanceBootData setter or DOMContentLoaded, whichever is later */
-function _boot(month, year, data) {
-    currentMonth   = month;
-    currentYear    = year;
-    attendanceData = data || [];
-    activeFilter   = 'all';
+function _boot(month, year, data, expMap, locked, expDetailsMap) {
+    currentMonth        = month;
+    currentYear         = year;
+    attendanceData      = data || [];
+    explanationStatusMap = expMap || {};
+    explanationDetailsMap = expDetailsMap || {};
+    isAttendanceLocked  = locked === true || locked === 'true';
+    activeFilter        = 'all';
 
     renderStats();
     renderFilterChips();
@@ -44,11 +50,11 @@ function _boot(month, year, data) {
 }
 
 /* Public init – called from JSP inline script */
-function initCalendar(month, year, data) {
-    window._attendanceBootData = { month: month, year: year, data: data };
+function initCalendar(month, year, data, expMap, locked, expDetailsMap) {
+    window._attendanceBootData = { month: month, year: year, data: data, expMap: expMap || {}, locked: locked, expDetailsMap: expDetailsMap || {} };
     /* If DOM already ready (e.g. script deferred), boot immediately */
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        _boot(month, year, data);
+        _boot(month, year, data, expMap, locked, expDetailsMap);
     }
     /* Otherwise DOMContentLoaded listener above will call _boot */
 }
@@ -211,6 +217,20 @@ function renderCalendar() {
 
 function buildDayHTML(day, att, isWeekend, isFuture) {
     var numEl = '<div class="day-num">' + day + '</div>';
+    var dateStr = toDateStr(currentYear, currentMonth, day);
+    var expStatus = explanationStatusMap[dateStr] || null;
+    var expBadge = '';
+    
+    if (expStatus) {
+        if (expStatus === 'PENDING') {
+            expBadge = '<div class="exp-badge pending">⏳ Chờ duyệt</div>';
+        } else if (expStatus === 'APPROVED') {
+            expBadge = '<div class="exp-badge approved">✓ Đã duyệt</div>';
+        } else if (expStatus === 'REJECTED') {
+            expBadge = '<div class="exp-badge rejected">✕ Từ chối</div>';
+        }
+    }
+
     if (att) {
         var lateMin  = calcLateMinutes(att.checkIn);
         var lateNote = (att.status === 'late' && lateMin > 0)
@@ -225,14 +245,16 @@ function buildDayHTML(day, att, isWeekend, isFuture) {
             + (STATUS_LABEL[att.status] || att.status)
             + '</div>';
 
-        return numEl + timeEl + lateNote + badge;
+        return numEl + timeEl + lateNote + badge + expBadge;
     }
 
     if (isWeekend) return numEl;
     if (isFuture) {
         return numEl + '<div class="day-time" style="color:var(--clr-muted);font-size:.65rem">—</div>';
     }
-    return numEl + '<div class="day-badge absent">✕ Chưa có</div>';
+    
+    var absentBadge = '<div class="day-badge absent">✕ Chưa có</div>';
+    return numEl + absentBadge + expBadge;
 }
 
 function calcLateMinutes(checkIn) {
@@ -261,23 +283,79 @@ function openModal(dateStr, att, isFuture, dayNum) {
     if (cvIn)  cvIn.textContent  = att ? (att.checkIn  || '--:--') : '--:--';
     if (cvOut) cvOut.textContent = att ? (att.checkOut || '--:--') : '--:--';
 
-    var explanationForm = document.getElementById('explanation-form');
-    var explanationDate = document.getElementById('explanation-date');
+    var explanationDate   = document.getElementById('explanation-date');
     var explanationReason = document.getElementById('explanation-reason');
-    if (explanationDate) explanationDate.value = dateStr;
+    var explanationForm   = document.getElementById('explanation-form');
+    var statusBadge       = document.getElementById('explanation-status-badge');
+    var inputBlock        = document.getElementById('explanation-input-block');
+
+    if (explanationDate)   explanationDate.value = dateStr;
     if (explanationReason) explanationReason.value = '';
-    if (explanationForm) explanationForm.style.display = isFuture ? 'none' : 'flex';
+
+    var dow = new Date(currentYear, currentMonth - 1, dayNum).getDay();
+    var isWeekend = (dow === 0 || dow === 6);
+    // Xác định xem có cần giải trình không (ngày đi muộn, vắng mặt hoặc ngày thường trong quá khứ không có record)
+    var needsExplanation = (att && (att.status === 'late' || att.status === 'absent')) || (!att && !isWeekend && !isFuture);
+    var expStatus = explanationStatusMap[dateStr] || null;
+
+    if (explanationForm) {
+        if (isFuture || !needsExplanation) {
+            // Ngày tương lai hoặc đủ công / nghỉ phép — ẩn toàn bộ form
+            explanationForm.style.display = 'none';
+        } else {
+            explanationForm.style.display = 'flex';
+
+            // Hiển thị badge trạng thái giải trình
+            if (statusBadge) {
+                var exp = explanationDetailsMap[dateStr] || null;
+                var reviewNote = '';
+                if (exp && exp.reviewComment && exp.reviewComment.trim()) {
+                    var reviewer = exp.reviewedByName ? exp.reviewedByName : 'HR';
+                    reviewNote = '<div style="margin-top:8px; padding-top:6px; border-top:1px dashed currentColor; font-size:0.75rem; opacity:0.95;">' +
+                                 '💬 <strong>Ý kiến từ HR:</strong> "' + exp.reviewComment + '" (' + reviewer + ')' +
+                                 '</div>';
+                }
+
+                if (isAttendanceLocked) {
+                    statusBadge.style.display = 'block';
+                    if (expStatus === 'APPROVED') {
+                        statusBadge.innerHTML = '<div class="quick-action-bar" style="background:#dcfce7;border-color:#bbf7d0"><div class="qab-text" style="color:#166534"><strong>✓ Đã được duyệt</strong>Giải trình của bạn đã được chấp nhận. Ngày công đã cập nhật.' + reviewNote + '</div></div>';
+                    } else if (expStatus === 'PENDING') {
+                        statusBadge.innerHTML = '<div class="quick-action-bar"><div class="qab-text"><strong>⏳ Đang chờ duyệt</strong>Bạn đã gửi giải trình. HR đang xem xét.</div></div>';
+                    } else if (expStatus === 'REJECTED') {
+                        statusBadge.innerHTML = '<div class="quick-action-bar" style="background:#fee2e2;border-color:#fecaca"><div class="qab-text" style="color:#991b1b"><strong>✕ Bị từ chối (Bảng công đã khóa)</strong>Giải trình bị từ chối và tháng chấm công đã khóa, không thể gửi lại.' + reviewNote + '</div></div>';
+                    } else {
+                        statusBadge.innerHTML = '<div class="quick-action-bar" style="background:#fee2e2;border-color:#fecaca"><div class="qab-text" style="color:#991b1b"><strong>🔒 Bảng công đã khóa</strong>Bảng công tháng này đã khóa. Bạn không thể gửi giải trình mới.</div></div>';
+                    }
+                    if (inputBlock) inputBlock.style.display = 'none';
+                } else {
+                    if (expStatus === 'PENDING') {
+                        statusBadge.style.display = 'block';
+                        statusBadge.innerHTML = '<div class="quick-action-bar"><div class="qab-text"><strong>⏳ Đang chờ duyệt</strong>Bạn đã gửi giải trình. HR đang xem xét.</div></div>';
+                        if (inputBlock) inputBlock.style.display = 'none';
+                    } else if (expStatus === 'APPROVED') {
+                        statusBadge.style.display = 'block';
+                        statusBadge.innerHTML = '<div class="quick-action-bar" style="background:#dcfce7;border-color:#bbf7d0"><div class="qab-text" style="color:#166534"><strong>✓ Đã được duyệt</strong>Giải trình của bạn đã được chấp nhận. Ngày công đã cập nhật.' + reviewNote + '</div></div>';
+                        if (inputBlock) inputBlock.style.display = 'none';
+                    } else if (expStatus === 'REJECTED') {
+                        statusBadge.style.display = 'block';
+                        statusBadge.innerHTML = '<div class="quick-action-bar" style="background:#fee2e2;border-color:#fecaca"><div class="qab-text" style="color:#991b1b"><strong>✕ Bị từ chối</strong>Giải trình đã bị từ chối. Bạn có thể gửi lại.' + reviewNote + '</div></div>';
+                        if (inputBlock) inputBlock.style.display = 'flex';
+                    } else {
+                        statusBadge.style.display = 'block';
+                        statusBadge.innerHTML = '<div class="quick-action-bar"><div class="qab-text"><strong>Giải trình chấm công</strong>Bạn có thể gửi giải trình cho dữ liệu của chính mình.</div></div>';
+                        if (inputBlock) inputBlock.style.display = 'flex';
+                    }
+                }
+            }
+        }
+    }
 
     var qaBar = document.getElementById('quick-action-bar');
-    if (qaBar) {
-        if (isFuture) {
-            qaBar.style.display = 'none';
-        } else {
-            qaBar.style.display = 'flex';
-            qaBar.className = 'quick-action-bar';
-            qaBar.innerHTML =
-                '<div class="qab-text"><strong>Giải trình chấm công</strong>Bạn chỉ có thể gửi giải trình cho dữ liệu của chính mình.</div>';
-        }
+    if (qaBar && explanationForm && explanationForm.style.display !== 'none') {
+        qaBar.style.display = 'none'; // Badge đã được hiển trong explanation-status-badge
+    } else if (qaBar) {
+        qaBar.style.display = 'none';
     }
 
     modal.classList.add('open');

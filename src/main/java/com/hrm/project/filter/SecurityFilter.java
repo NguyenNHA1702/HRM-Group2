@@ -67,18 +67,16 @@ public class SecurityFilter implements Filter {
         String roleGroup = (String) session.getAttribute("roleGroup");
 
         boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
-                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") || path.equals("/admin/leave-types"));
-
-        if (!isHrAllowedAdminPath &&
                 (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") ||
-                        path.equals("/admin/insurance") || path.equals("/admin/insurance/action") ||
-                        path.equals("/admin/users") || path.equals("/admin/user/update") ||
-                        path.equals("/admin/payrolls") || path.equals("/admin/payroll/generate") ||
-                        path.equals("/admin/payroll/detail") || path.equals("/admin/payroll/export-excel")));
+                        path.equals("/admin/leave-types") || path.equals("/admin/insurance") ||
+                        path.equals("/admin/insurance/action") || path.equals("/admin/payrolls") ||
+                        path.equals("/admin/payroll/generate") || path.equals("/admin/payroll/detail") ||
+                        path.equals("/admin/payroll/export-excel"));
 
+        // MANAGER chỉ được GET /admin/insurance (view-only), không được POST /action
         boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&
-                (path.equals("/admin/insurance") ||
-                        path.equals("/admin/insurance/action"));
+                "GET".equalsIgnoreCase(req.getMethod()) &&
+                path.equals("/admin/insurance");
 
         boolean isEmployeeAllowedAdminPath = "EMPLOYEE".equals(roleGroup) &&
                 "GET".equalsIgnoreCase(req.getMethod()) &&

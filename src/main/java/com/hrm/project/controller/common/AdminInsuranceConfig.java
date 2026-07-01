@@ -4,7 +4,6 @@ import com.hrm.project.dao.InsuranceDAO;
 import com.hrm.project.dao.UserDAO;
 import com.hrm.project.dao.impl.InsuranceDAOImpl;
 import com.hrm.project.dao.impl.UserDAOImpl;
-import com.hrm.project.model.InsuranceConfig;
 import com.hrm.project.model.InsuranceConfigDTO;
 import com.hrm.project.model.UserAccount;
 
@@ -235,8 +234,8 @@ public class AdminInsuranceConfig extends HttpServlet {
                 return;
             }
 
-            double employeeRate = 0.0;
-            double employerRate = 0.0;
+            double employeeRate;
+            double employerRate;
             try {
                 employeeRate = Double.parseDouble(employeeRateStr != null ? employeeRateStr : "0");
                 employerRate = Double.parseDouble(employerRateStr != null ? employerRateStr : "0");
@@ -531,11 +530,4 @@ public class AdminInsuranceConfig extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/insurance");
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Validation
-    // ═══════════════════════════════════════════════════════════════
-
-    private boolean validateInsuranceInput(HttpServletRequest req, int insuranceId) {
-        return true;
-    }
 }

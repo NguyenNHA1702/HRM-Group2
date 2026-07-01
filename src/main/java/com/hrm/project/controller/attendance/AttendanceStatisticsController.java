@@ -67,7 +67,6 @@ public class AttendanceStatisticsController extends HttpServlet {
     }
 
     private boolean canViewSystemStatistics(String role) {
-        return "HR".equalsIgnoreCase(role)
-                || "MANAGER".equalsIgnoreCase(role);
+        return "HR".equalsIgnoreCase(role);
     }
 }
