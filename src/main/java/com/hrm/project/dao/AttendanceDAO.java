@@ -29,9 +29,27 @@ public interface AttendanceDAO {
 
     Map<String, AttendanceExplanation> getExplanationsByMonth(int employeeId, int year, int month);
 
+    // ── Attendance lock (global - backward compatible) ──
     boolean isAttendanceLocked(int year, int month);
 
     boolean lockAttendance(int year, int month, int lockedBy);
 
     boolean unlockAttendance(int year, int month);
+
+    // ── Attendance lock by department (new) ──
+    boolean isAttendanceLockedByDepartment(int year, int month, int departmentId);
+
+    boolean lockAttendanceByDepartment(int year, int month, int departmentId, int lockedBy);
+
+    boolean unlockAttendanceByDepartment(int year, int month, int departmentId);
+
+    /**
+     * Lấy danh sách department_id đã chốt công trong tháng/năm.
+     */
+    List<Integer> getLockedDepartmentIds(int year, int month);
+
+    /**
+     * Kiểm tra tất cả phòng ban đã chốt công chưa.
+     */
+    boolean areAllDepartmentsLocked(int year, int month);
 }

@@ -403,18 +403,39 @@ public class AttendanceDAOImpl implements AttendanceDAO {
 
     @Override
     public boolean lockAttendance(int year, int month, int lockedBy) {
-        String sql = "INSERT INTO attendance_locks (year, month, is_locked, locked_by, locked_at) "
-                + "VALUES (?, ?, true, ?, NOW()) "
-                + "ON DUPLICATE KEY UPDATE is_locked = true, locked_by = ?, locked_at = NOW()";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, year);
-            stmt.setInt(2, month);
-            stmt.setInt(3, lockedBy);
-            stmt.setInt(4, lockedBy);
-            return stmt.executeUpdate() > 0;
+        String checkSql = "SELECT id FROM attendance_locks WHERE year = ? AND month = ? AND department_id IS NULL";
+        String updateSql = "UPDATE attendance_locks SET is_locked = true, locked_by = ?, locked_at = NOW() WHERE id = ?";
+        String insertSql = "INSERT INTO attendance_locks (year, month, is_locked, locked_by, locked_at) VALUES (?, ?, true, ?, NOW())";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            Integer existingId = null;
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, year);
+                checkStmt.setInt(2, month);
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next()) {
+                        existingId = rs.getInt("id");
+                    }
+                }
+            }
+
+            if (existingId != null) {
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                    updateStmt.setInt(1, lockedBy);
+                    updateStmt.setInt(2, existingId);
+                    return updateStmt.executeUpdate() > 0;
+                }
+            } else {
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, year);
+                    insertStmt.setInt(2, month);
+                    insertStmt.setInt(3, lockedBy);
+                    return insertStmt.executeUpdate() > 0;
+                }
+            }
         } catch (SQLException e) {
-            throw new IllegalStateException("Không thể khóa chấm công.", e);
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -429,6 +450,120 @@ public class AttendanceDAOImpl implements AttendanceDAO {
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể mở khóa chấm công.", e);
         }
+    }
+
+    // ── Department-based attendance locking ──
+
+    @Override
+    public boolean isAttendanceLockedByDepartment(int year, int month, int departmentId) {
+        String sql = "SELECT is_locked FROM attendance_locks WHERE year = ? AND month = ? AND department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            stmt.setInt(3, departmentId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getBoolean("is_locked");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean lockAttendanceByDepartment(int year, int month, int departmentId, int lockedBy) {
+        String checkSql = "SELECT id FROM attendance_locks WHERE year = ? AND month = ? AND department_id = ?";
+        String updateSql = "UPDATE attendance_locks SET is_locked = true, locked_by = ?, locked_at = NOW() WHERE id = ?";
+        String insertSql = "INSERT INTO attendance_locks (year, month, department_id, is_locked, locked_by, locked_at) VALUES (?, ?, ?, true, ?, NOW())";
+
+        try (Connection conn = DBConnection.getConnection()) {
+            Integer existingId = null;
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                checkStmt.setInt(1, year);
+                checkStmt.setInt(2, month);
+                checkStmt.setInt(3, departmentId);
+                try (ResultSet rs = checkStmt.executeQuery()) {
+                    if (rs.next()) {
+                        existingId = rs.getInt("id");
+                    }
+                }
+            }
+
+            if (existingId != null) {
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                    updateStmt.setInt(1, lockedBy);
+                    updateStmt.setInt(2, existingId);
+                    return updateStmt.executeUpdate() > 0;
+                }
+            } else {
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, year);
+                    insertStmt.setInt(2, month);
+                    insertStmt.setInt(3, departmentId);
+                    insertStmt.setInt(4, lockedBy);
+                    return insertStmt.executeUpdate() > 0;
+                }
+            }
+        } catch (SQLException e) {
+            // Log it but we can just throw
+            throw new IllegalStateException("Không thể chốt công phòng ban.", e);
+        }
+    }
+
+    @Override
+    public boolean unlockAttendanceByDepartment(int year, int month, int departmentId) {
+        String sql = "UPDATE attendance_locks SET is_locked = false WHERE year = ? AND month = ? AND department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            stmt.setInt(3, departmentId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể mở khóa chấm công phòng ban.", e);
+        }
+    }
+
+    @Override
+    public List<Integer> getLockedDepartmentIds(int year, int month) {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "SELECT department_id FROM attendance_locks WHERE year = ? AND month = ? AND is_locked = true AND department_id IS NOT NULL";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("department_id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ids;
+    }
+
+    @Override
+    public boolean areAllDepartmentsLocked(int year, int month) {
+        // Đếm số phòng ban active chưa chốt công
+        String sql = "SELECT COUNT(*) FROM departments d " +
+                     "WHERE d.is_active = 1 " +
+                     "AND NOT EXISTS (" +
+                     "  SELECT 1 FROM attendance_locks al " +
+                     "  WHERE al.year = ? AND al.month = ? AND al.department_id = d.id AND al.is_locked = true" +
+                     ")";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) == 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private int validateEmployeeId(int employeeId, String employeeCode,
