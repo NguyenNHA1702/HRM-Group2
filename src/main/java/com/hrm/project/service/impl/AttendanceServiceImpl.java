@@ -8,6 +8,7 @@ import com.hrm.project.model.AttendanceImportResult;
 import com.hrm.project.model.dtos.response.AttendanceEmployeeStatsDto;
 import com.hrm.project.model.dtos.response.AttendanceSystemStatsDto;
 import com.hrm.project.service.AttendanceService;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -164,6 +165,41 @@ public class AttendanceServiceImpl implements AttendanceService {
             result.addError("Không thể đọc file .xlsx. Vui lòng kiểm tra lại định dạng file.");
         }
         return result;
+    }
+
+    @Override
+    public int[] detectImportMonthYear(byte[] fileData) {
+        DataFormatter formatter = new DataFormatter(Locale.US);
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData))) {
+            Sheet sheet = workbook.getNumberOfSheets() == 0 ? null : workbook.getSheetAt(0);
+            if (sheet == null) {
+                return null;
+            }
+            Row headerRow = findHeaderRow(sheet, formatter);
+            if (headerRow == null) {
+                return null;
+            }
+            Map<String, Integer> columns = readHeader(headerRow, formatter);
+            Integer dateCol = columns.get("date");
+            if (dateCol == null) {
+                return null;
+            }
+            for (int rowIndex = headerRow.getRowNum() + 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null || isEmptyRow(row, formatter)) {
+                    continue;
+                }
+                try {
+                    LocalDate date = readDate(row, dateCol, formatter);
+                    return new int[]{date.getYear(), date.getMonthValue()};
+                } catch (IllegalArgumentException ignored) {
+                    // thử dòng tiếp theo
+                }
+            }
+        } catch (Exception ignored) {
+            // không thể đọc file
+        }
+        return null;
     }
 
     private Row findHeaderRow(Sheet sheet, DataFormatter formatter) {

@@ -124,7 +124,7 @@ public class AttendanceController extends HttpServlet {
 
         try {
             if ("stageImport".equals(action)) {
-                stageExcel(request, session);
+                stageExcel(request, session, month, year);
             } else if ("commitImport".equals(action)) {
                 commitExcel(session);
             } else if ("submitExplanation".equals(action)) {
@@ -146,7 +146,7 @@ public class AttendanceController extends HttpServlet {
                 + "/cham-cong?month=" + month + "&year=" + year);
     }
 
-    private void stageExcel(HttpServletRequest request, HttpSession session)
+    private void stageExcel(HttpServletRequest request, HttpSession session, int month, int year)
             throws IOException, ServletException {
         requireImportPermission(session);
 
@@ -163,6 +163,20 @@ public class AttendanceController extends HttpServlet {
         try (java.io.InputStream inputStream = filePart.getInputStream()) {
             fileData = inputStream.readAllBytes();
         }
+
+        // Validate tháng/năm của file Excel phải khớp với tháng/năm đang xem
+        int[] detected = attendanceService.detectImportMonthYear(fileData);
+        if (detected != null) {
+            int fileYear  = detected[0];
+            int fileMonth = detected[1];
+            if (fileYear != year || fileMonth != month) {
+                throw new IllegalArgumentException(
+                        "File Excel chứa dữ liệu tháng " + fileMonth + "/" + fileYear
+                        + ", không khớp với tháng đang xem ("
+                        + month + "/" + year + "). Vui lòng kiểm tra lại file.");
+            }
+        }
+
         session.setAttribute("pendingAttendanceFile", fileData);
         session.setAttribute("pendingAttendanceFileName", sanitizeFileName(fileName));
         flash(session, "success",
