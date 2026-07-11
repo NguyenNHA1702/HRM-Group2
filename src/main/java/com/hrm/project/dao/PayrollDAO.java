@@ -10,17 +10,23 @@ public interface PayrollDAO {
     Payroll getPayrollById(int id);
     Payroll getPayrollByMonthYear(int month, int year);
     List<PayrollDetail> getPayrollDetails(int payrollId);
+    List<PayrollDetail> getPayrollDetailsByDepartment(int payrollId, int departmentId);
     List<PayrollDetail> getEmployeeSalaryHistory(int employeeId);
     PayrollDetail getPayrollDetailById(int detailId);
     
-    // Core function to calculate and save payroll for a given month and year
+    /**
+     * Generate payroll: lấy lương từ hợp đồng, phụ cấp từ position, tính thuế TNCN 7 bậc.
+     */
     boolean generatePayroll(int month, int year, int createdBy) throws Exception;
     
-    /**
-     * Kiểm tra số lượng nhân viên đang active chưa có dữ liệu chấm công trong tháng/năm.
-     */
     int countEmployeesMissingAttendanceSummary(int month, int year);
-    boolean updatePayrollStatus(int id, String status, int userId);
+    
+    /**
+     * Update payroll status theo flow mới:
+     * DRAFT → MANAGER_CONFIRMED (by Manager)
+     * MANAGER_CONFIRMED → HR_FINALIZED (by HR)
+     */
+    boolean updatePayrollStatus(int id, String newStatus, int userId);
     
     List<Payroll> getPayrolls(Integer year, String searchKeyword, int offset, int limit);
     int getTotalPayrollsCount(Integer year, String searchKeyword);

@@ -71,12 +71,16 @@ public class SecurityFilter implements Filter {
                         path.equals("/admin/leave-types") || path.equals("/admin/insurance") ||
                         path.equals("/admin/insurance/action") || path.equals("/admin/payrolls") ||
                         path.equals("/admin/payroll/generate") || path.equals("/admin/payroll/detail") ||
-                        path.equals("/admin/payroll/export-excel"));
+                        path.equals("/admin/payroll/approve") ||
+                        path.equals("/admin/payroll/export-excel") ||
+                        path.equals("/admin/attendance/lock") ||
+                        path.equals("/admin/position-allowances"));
 
-        // MANAGER chỉ được GET /admin/insurance (view-only), không được POST /action
+        // MANAGER: xem/duyệt bảng lương dept mình + chốt công
         boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&
-                "GET".equalsIgnoreCase(req.getMethod()) &&
-                path.equals("/admin/insurance");
+                (path.equals("/admin/payrolls") || path.equals("/admin/payroll/detail") ||
+                 path.equals("/admin/payroll/approve") || path.equals("/admin/attendance/lock") ||
+                 (path.equals("/admin/insurance") && "GET".equalsIgnoreCase(req.getMethod())));
 
         boolean isEmployeeAllowedAdminPath = "EMPLOYEE".equals(roleGroup) &&
                 "GET".equalsIgnoreCase(req.getMethod()) &&
