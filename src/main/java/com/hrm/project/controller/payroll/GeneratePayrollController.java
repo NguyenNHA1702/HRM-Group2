@@ -1,8 +1,9 @@
 package com.hrm.project.controller.payroll;
 
+import com.hrm.project.dao.AttendanceDAO;
 import com.hrm.project.dao.PayrollDAO;
+import com.hrm.project.dao.impl.AttendanceDAOImpl;
 import com.hrm.project.dao.impl.PayrollDAOImpl;
-import com.hrm.project.model.UserAccount;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,10 +16,12 @@ import java.io.IOException;
 @WebServlet(name = "GeneratePayrollController", urlPatterns = {"/admin/payroll/generate"})
 public class GeneratePayrollController extends HttpServlet {
     private PayrollDAO payrollDAO;
+    private AttendanceDAO attendanceDAO;
 
     @Override
     public void init() throws ServletException {
         payrollDAO = new PayrollDAOImpl();
+        attendanceDAO = new AttendanceDAOImpl();
     }
 
     @Override
@@ -31,24 +34,29 @@ public class GeneratePayrollController extends HttpServlet {
         }
 
         String roleGroup = (String) session.getAttribute("roleGroup");
-        if (!"ADMIN".equals(roleGroup) && !"HR".equals(roleGroup)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only ADMIN or HR can generate payroll.");
+        if (!"HR".equals(roleGroup) && !"ADMIN".equals(roleGroup)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ HR mới có quyền tạo bảng lương.");
             return;
         }
 
         try {
             int month = Integer.parseInt(request.getParameter("month"));
             int year = Integer.parseInt(request.getParameter("year"));
-            int createdBy = employeeId;
 
-            // Check if there is an existing payroll for this month and year that is already approved or paid
+            // Kiểm tra tất cả phòng ban đã chốt công chưa
+            if (!attendanceDAO.areAllDepartmentsLocked(year, month)) {
+                response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=not_all_locked");
+                return;
+            }
+
+            // Check existing payroll
             com.hrm.project.model.Payroll existing = payrollDAO.getPayrollByMonthYear(month, year);
-            if (existing != null && ("APPROVED".equals(existing.getStatus()) || "PAID".equals(existing.getStatus()))) {
+            if (existing != null && ("HR_FINALIZED".equals(existing.getStatus()) || "APPROVED".equals(existing.getStatus()) || "PAID".equals(existing.getStatus()))) {
                 response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=already_approved");
                 return;
             }
 
-            boolean success = payrollDAO.generatePayroll(month, year, createdBy);
+            boolean success = payrollDAO.generatePayroll(month, year, employeeId);
 
             if (success) {
                 response.sendRedirect(request.getContextPath() + "/admin/payrolls?success=generated");

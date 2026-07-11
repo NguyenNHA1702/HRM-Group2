@@ -2,7 +2,6 @@ package com.hrm.project.controller.payroll;
 
 import com.hrm.project.dao.PayrollDAO;
 import com.hrm.project.dao.impl.PayrollDAOImpl;
-import com.hrm.project.model.UserAccount;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,6 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
+/**
+ * Duyệt bảng lương theo flow mới:
+ * - MANAGER: DRAFT → MANAGER_CONFIRMED (cho dept mình)
+ * - HR: MANAGER_CONFIRMED → HR_FINALIZED (chốt lương cuối cùng)
+ */
 @WebServlet(name = "ApprovePayrollController", urlPatterns = {"/admin/payroll/approve"})
 public class ApprovePayrollController extends HttpServlet {
     private PayrollDAO payrollDAO;
@@ -25,24 +29,40 @@ public class ApprovePayrollController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();
         Integer employeeId = (Integer) session.getAttribute("employeeId");
-        if (employeeId == null || !"ADMIN".equals(session.getAttribute("roleGroup"))) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only ADMIN can approve payroll.");
+        String roleGroup = (String) session.getAttribute("roleGroup");
+
+        if (employeeId == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String status = request.getParameter("status");
-            int approvedBy = employeeId;
-            
-            if (status == null || status.trim().isEmpty()) {
-                status = "APPROVED";
+
+            // Validate role-status combination
+            boolean allowed = false;
+            if ("MANAGER_CONFIRMED".equals(status) && "MANAGER".equals(roleGroup)) {
+                allowed = true;
+            } else if ("HR_FINALIZED".equals(status) && "HR".equals(roleGroup)) {
+                allowed = true;
+            }
+            // Legacy support for old flow
+            if ("APPROVED".equals(status) && "ADMIN".equals(roleGroup)) {
+                allowed = true;
             }
 
-            boolean success = payrollDAO.updatePayrollStatus(id, status, approvedBy);
+            if (!allowed) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, 
+                    "Bạn không có quyền thực hiện thao tác này. Role: " + roleGroup + ", Status: " + status);
+                return;
+            }
+
+            boolean success = payrollDAO.updatePayrollStatus(id, status, employeeId);
 
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/admin/payroll/detail?id=" + id + "&success=approved");
+                String msg = "HR_FINALIZED".equals(status) ? "finalized" : "confirmed";
+                response.sendRedirect(request.getContextPath() + "/admin/payroll/detail?id=" + id + "&success=" + msg);
             } else {
                 response.sendRedirect(request.getContextPath() + "/admin/payroll/detail?id=" + id + "&error=approve_failed");
             }
