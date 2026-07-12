@@ -84,8 +84,7 @@ public class ContractDAOImpl implements ContractDAO {
 
                     dto.setDescription(rs.getString("description"));
                     dto.setFileUrl(hasFileUrl ? rs.getString("file_url") : null);
-                    dto.setAllowanceTypeIds(getAllowanceTypeIdsByContractId(con, dto.getId()));
-                    dto.setAllowances(getAllowancesByContractId(con, dto.getId()));
+
 
                     list.add(dto);
 
@@ -180,29 +179,6 @@ public class ContractDAOImpl implements ContractDAO {
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
-                int contractId = -1;
-                try (ResultSet rsKeys = ps.getGeneratedKeys()) {
-                    if (rsKeys.next()) {
-                        contractId = rsKeys.getInt(1);
-                    }
-                }
-                if (contractId != -1) {
-                    if (contract.getAllowanceTypeIds() != null && !contract.getAllowanceTypeIds().isEmpty()) {
-                        ensureContractAllowancesTableExists(con);
-                        String caSql = "INSERT INTO contract_allowances (contract_id, allowance_type_id) VALUES (?, ?)";
-                        try (PreparedStatement psCa = con.prepareStatement(caSql)) {
-                            for (int allowanceId : contract.getAllowanceTypeIds()) {
-                                psCa.setInt(1, contractId);
-                                psCa.setInt(2, allowanceId);
-                                psCa.addBatch();
-                            }
-                            psCa.executeBatch();
-                        }
-                        syncEmployeeAllowances(con, contract.getEmployeeId(), contract.getAllowanceTypeIds());
-                    } else {
-                        syncEmployeeAllowances(con, contract.getEmployeeId(), new ArrayList<>());
-                    }
-                }
                 return true;
             }
             return false;
@@ -438,24 +414,7 @@ public class ContractDAOImpl implements ContractDAO {
                 }
             }
 
-            // 3. Insert new contract's allowances and sync
-            if (newContractId != -1) {
-                if (newContract.getAllowanceTypeIds() != null && !newContract.getAllowanceTypeIds().isEmpty()) {
-                    ensureContractAllowancesTableExists(con);
-                    String caSql = "INSERT INTO contract_allowances (contract_id, allowance_type_id) VALUES (?, ?)";
-                    try (PreparedStatement psCa = con.prepareStatement(caSql)) {
-                        for (int allowanceId : newContract.getAllowanceTypeIds()) {
-                            psCa.setInt(1, newContractId);
-                            psCa.setInt(2, allowanceId);
-                            psCa.addBatch();
-                        }
-                        psCa.executeBatch();
-                    }
-                    syncEmployeeAllowances(con, newContract.getEmployeeId(), newContract.getAllowanceTypeIds());
-                } else {
-                    syncEmployeeAllowances(con, newContract.getEmployeeId(), new ArrayList<>());
-                }
-            }
+
 
             con.commit();
             return true;
