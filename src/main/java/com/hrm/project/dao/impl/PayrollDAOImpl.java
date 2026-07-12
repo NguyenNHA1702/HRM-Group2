@@ -585,9 +585,31 @@ public class PayrollDAOImpl implements PayrollDAO {
             params.add(year);
         }
         if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
-            sql.append("AND (p.month LIKE ? OR p.year LIKE ? OR p.status LIKE ?) ");
-            String kw = "%" + searchKeyword.trim() + "%";
-            params.add(kw); params.add(kw); params.add(kw);
+            String kw = searchKeyword.trim().toLowerCase();
+            String numKw = kw.replace("tháng", "").trim();
+            
+            sql.append("AND (p.month LIKE ? OR p.year LIKE ? ");
+            params.add("%" + numKw + "%");
+            params.add("%" + kw + "%");
+            
+            List<String> statuses = new ArrayList<>();
+            if ("bản nháp".contains(kw) || "nháp".contains(kw) || "draft".equals(kw)) statuses.add("DRAFT");
+            if ("manager đã xác nhận".contains(kw) || "manager".contains(kw)) statuses.add("MANAGER_CONFIRMED");
+            if ("đã chốt lương".contains(kw) || "chốt".contains(kw) || "hr_finalized".equals(kw)) statuses.add("HR_FINALIZED");
+            if ("đã duyệt".contains(kw) || "duyệt".contains(kw) || "approved".equals(kw)) statuses.add("APPROVED");
+            if ("đã thanh toán".contains(kw) || "thanh toán".contains(kw) || "paid".equals(kw)) statuses.add("PAID");
+            
+            if (!statuses.isEmpty()) {
+                sql.append("OR p.status IN (");
+                for (int i = 0; i < statuses.size(); i++) {
+                    sql.append(i == 0 ? "?" : ", ?");
+                    params.add(statuses.get(i));
+                }
+                sql.append(") ");
+            }
+            
+            sql.append("OR LOWER(p.status) LIKE ?) ");
+            params.add("%" + kw + "%");
         }
         sql.append("ORDER BY p.year DESC, p.month DESC LIMIT ? OFFSET ?");
         params.add(limit); params.add(offset);
@@ -617,9 +639,31 @@ public class PayrollDAOImpl implements PayrollDAO {
             params.add(year);
         }
         if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
-            sql.append("AND (p.month LIKE ? OR p.year LIKE ? OR p.status LIKE ?) ");
-            String kw = "%" + searchKeyword.trim() + "%";
-            params.add(kw); params.add(kw); params.add(kw);
+            String kw = searchKeyword.trim().toLowerCase();
+            String numKw = kw.replace("tháng", "").trim();
+            
+            sql.append("AND (p.month LIKE ? OR p.year LIKE ? ");
+            params.add("%" + numKw + "%");
+            params.add("%" + kw + "%");
+            
+            List<String> statuses = new ArrayList<>();
+            if ("bản nháp".contains(kw) || "nháp".contains(kw) || "draft".equals(kw)) statuses.add("DRAFT");
+            if ("manager đã xác nhận".contains(kw) || "manager".contains(kw)) statuses.add("MANAGER_CONFIRMED");
+            if ("đã chốt lương".contains(kw) || "chốt".contains(kw) || "hr_finalized".equals(kw)) statuses.add("HR_FINALIZED");
+            if ("đã duyệt".contains(kw) || "duyệt".contains(kw) || "approved".equals(kw)) statuses.add("APPROVED");
+            if ("đã thanh toán".contains(kw) || "thanh toán".contains(kw) || "paid".equals(kw)) statuses.add("PAID");
+            
+            if (!statuses.isEmpty()) {
+                sql.append("OR p.status IN (");
+                for (int i = 0; i < statuses.size(); i++) {
+                    sql.append(i == 0 ? "?" : ", ?");
+                    params.add(statuses.get(i));
+                }
+                sql.append(") ");
+            }
+            
+            sql.append("OR LOWER(p.status) LIKE ?) ");
+            params.add("%" + kw + "%");
         }
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
