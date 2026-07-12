@@ -187,7 +187,7 @@
             </div>
 
             <!-- Pagination -->
-            <c:if test="${totalPages > 1}">
+            <c:if test="${totalPages > 0}">
                 <div class="pagination">
                     <c:forEach var="i" begin="1" end="${totalPages}">
                         <a href="${pageContext.request.contextPath}/admin/payrolls?year=${selectedYear}&search=${searchKeyword}&page=${i}"
