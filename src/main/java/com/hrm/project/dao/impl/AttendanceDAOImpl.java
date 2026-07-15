@@ -134,11 +134,11 @@ public class AttendanceDAOImpl implements AttendanceDAO {
     }
 
     @Override
-    public List<AttendanceExplanation> getExplanations(String statusFilter, int page, int pageSize) {
+    public List<AttendanceExplanation> getExplanations(Integer departmentId, String statusFilter, int page, int pageSize) {
         List<AttendanceExplanation> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT ae.id, ae.employee_id, e.full_name AS employee_name, "
-                + "e.employee_code, COALESCE(d.name,'Ch\u01b0a ph\u00e2n ph\u00f2ng') AS department_name, "
+                + "e.employee_code, COALESCE(d.name,'Chưa phân phòng') AS department_name, "
                 + "ae.attendance_date, a.status AS attendance_status, "
                 + "ae.reason, ae.status, ae.reviewed_by, "
                 + "rv.full_name AS reviewed_by_name, ae.reviewed_at, "
@@ -148,15 +148,23 @@ public class AttendanceDAOImpl implements AttendanceDAO {
                 + "LEFT JOIN departments d ON d.id = e.department_id "
                 + "LEFT JOIN attendance a ON a.employee_id = ae.employee_id "
                 + "  AND a.date = ae.attendance_date "
-                + "LEFT JOIN employees rv ON rv.id = ae.reviewed_by ");
+                + "LEFT JOIN employees rv ON rv.id = ae.reviewed_by "
+                + "WHERE 1=1 ");
+        
+        if (departmentId != null) {
+            sql.append("AND e.department_id = ? ");
+        }
         if (statusFilter != null && !statusFilter.isBlank()) {
-            sql.append("WHERE ae.status = ? ");
+            sql.append("AND ae.status = ? ");
         }
         sql.append("ORDER BY ae.created_at DESC LIMIT ? OFFSET ?");
 
         try (Connection connection = DBConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             int idx = 1;
+            if (departmentId != null) {
+                statement.setInt(idx++, departmentId);
+            }
             if (statusFilter != null && !statusFilter.isBlank()) {
                 statement.setString(idx++, statusFilter);
             }
@@ -168,26 +176,39 @@ public class AttendanceDAOImpl implements AttendanceDAO {
                 }
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Kh\u00f4ng th\u1ec3 t\u1ea3i danh s\u00e1ch gi\u1ea3i tr\u00ecnh.", e);
+            throw new IllegalStateException("Không thể tải danh sách giải trình.", e);
         }
         return list;
     }
 
     @Override
-    public int countExplanations(String statusFilter) {
-        String sql = (statusFilter != null && !statusFilter.isBlank())
-                ? "SELECT COUNT(*) FROM attendance_explanations WHERE status = ?"
-                : "SELECT COUNT(*) FROM attendance_explanations";
+    public int countExplanations(Integer departmentId, String statusFilter) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM attendance_explanations ae ");
+        if (departmentId != null) {
+            sql.append("JOIN employees e ON e.id = ae.employee_id ");
+        }
+        sql.append("WHERE 1=1 ");
+        if (departmentId != null) {
+            sql.append("AND e.department_id = ? ");
+        }
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            sql.append("AND ae.status = ? ");
+        }
+
         try (Connection connection = DBConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            int idx = 1;
+            if (departmentId != null) {
+                statement.setInt(idx++, departmentId);
+            }
             if (statusFilter != null && !statusFilter.isBlank()) {
-                statement.setString(1, statusFilter);
+                statement.setString(idx++, statusFilter);
             }
             try (ResultSet rs = statement.executeQuery()) {
                 return rs.next() ? rs.getInt(1) : 0;
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("Kh\u00f4ng th\u1ec3 \u0111\u1ebfm gi\u1ea3i tr\u00ecnh.", e);
+            throw new IllegalStateException("Không thể đếm giải trình.", e);
         }
     }
 
@@ -431,6 +452,83 @@ public class AttendanceDAOImpl implements AttendanceDAO {
         }
     }
 
+    @Override
+    public AttendanceExplanation getExplanationById(long id) {
+        String sql = "SELECT ae.id, ae.employee_id, e.full_name AS employee_name, "
+                + "e.employee_code, COALESCE(d.name,'Chưa phân phòng') AS department_name, "
+                + "ae.attendance_date, a.status AS attendance_status, "
+                + "ae.reason, ae.status, ae.reviewed_by, "
+                + "rv.full_name AS reviewed_by_name, ae.reviewed_at, "
+                + "ae.review_comment, ae.created_at "
+                + "FROM attendance_explanations ae "
+                + "JOIN employees e ON e.id = ae.employee_id "
+                + "LEFT JOIN departments d ON d.id = e.department_id "
+                + "LEFT JOIN attendance a ON a.employee_id = ae.employee_id "
+                + "  AND a.date = ae.attendance_date "
+                + "LEFT JOIN employees rv ON rv.id = ae.reviewed_by "
+                + "WHERE ae.id = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, id);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? mapExplanation(rs) : null;
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải giải trình theo ID.", e);
+        }
+    }
+
+    @Override
+    public boolean isDepartmentAttendanceLocked(int departmentId, int year, int month) {
+        String sql = "SELECT is_locked FROM department_attendance_locks WHERE department_id = ? AND year = ? AND month = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, departmentId);
+            stmt.setInt(2, year);
+            stmt.setInt(3, month);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("is_locked");
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể kiểm tra trạng thái khóa chấm công bộ phận.", e);
+        }
+        return false;
+    }
+
+    @Override
+    public boolean lockDepartmentAttendance(int departmentId, int year, int month, int lockedBy) {
+        String sql = "INSERT INTO department_attendance_locks (department_id, year, month, is_locked, locked_by, locked_at) "
+                + "VALUES (?, ?, ?, true, ?, NOW()) "
+                + "ON DUPLICATE KEY UPDATE is_locked = true, locked_by = ?, locked_at = NOW()";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, departmentId);
+            stmt.setInt(2, year);
+            stmt.setInt(3, month);
+            stmt.setInt(4, lockedBy);
+            stmt.setInt(5, lockedBy);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể khóa chấm công bộ phận.", e);
+        }
+    }
+
+    @Override
+    public boolean unlockDepartmentAttendance(int departmentId, int year, int month) {
+        String sql = "UPDATE department_attendance_locks SET is_locked = false WHERE department_id = ? AND year = ? AND month = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, departmentId);
+            stmt.setInt(2, year);
+            stmt.setInt(3, month);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể mở khóa chấm công bộ phận.", e);
+        }
+    }
+
     private int validateEmployeeId(int employeeId, String employeeCode,
                                    PreparedStatement statement) throws SQLException {
         statement.setInt(1, employeeId);
@@ -472,5 +570,117 @@ public class AttendanceDAOImpl implements AttendanceDAO {
         } else {
             statement.setTime(index, Time.valueOf(value));
         }
+    }
+
+    @Override
+    public boolean isAttendanceLockedForEmployee(int employeeId, int year, int month) {
+        if (isAttendanceLocked(year, month)) {
+            return true;
+        }
+        Integer deptId = getDepartmentIdByEmployeeId(employeeId);
+        if (deptId != null) {
+            return isDepartmentAttendanceLocked(deptId, year, month);
+        }
+        return false;
+    }
+
+    private Integer getDepartmentIdByEmployeeId(int employeeId) {
+        String sql = "SELECT department_id FROM employees WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, employeeId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getObject("department_id") != null ? rs.getInt("department_id") : null;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public java.util.List<java.util.Map<String, Object>> getDepartmentLockStatuses(int year, int month) {
+        java.util.List<java.util.Map<String, Object>> list = new java.util.ArrayList<>();
+        String sql = "SELECT d.id AS department_id, d.name AS department_name, e.full_name AS manager_name, " +
+                     "CASE WHEN dal.id IS NOT NULL THEN 1 ELSE 0 END AS is_locked " +
+                     "FROM departments d " +
+                     "LEFT JOIN employees e ON d.manager_id = e.id " +
+                     "LEFT JOIN department_attendance_locks dal ON d.id = dal.department_id AND dal.year = ? AND dal.month = ? " +
+                     "WHERE d.is_active = 1 " +
+                     "ORDER BY d.name";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    java.util.Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("departmentId", rs.getInt("department_id"));
+                    map.put("departmentName", rs.getString("department_name"));
+                    map.put("managerName", rs.getString("manager_name"));
+                    map.put("isLocked", rs.getInt("is_locked") == 1);
+                    list.add(map);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public List<AttendanceEmployeeStatsDto> getDepartmentEmployeeStatistics(int departmentId, int year, int month) {
+        List<AttendanceEmployeeStatsDto> statistics = new ArrayList<>();
+        String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, "
+                + "COALESCE(d.name, 'Chưa phân phòng') AS department_name, "
+                + "COALESCE(SUM(CASE WHEN a.status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') "
+                + "THEN 1 ELSE 0 END), 0) AS work_days, "
+                + "COALESCE(SUM(CASE WHEN a.status = 'LATE' THEN 1 ELSE 0 END), 0) "
+                + "AS late_count, "
+                + "COALESCE(SUM(CASE WHEN a.status = 'EARLY_LEAVE' THEN 1 ELSE 0 END), 0) "
+                + "AS early_leave_count, "
+                + "COALESCE(SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END), 0) "
+                + "AS absent_count, "
+                + "COALESCE(SUM(CASE WHEN a.status = 'LEAVE' THEN 1 ELSE 0 END), 0) "
+                + "AS leave_count, "
+                + "COALESCE(SUM(CASE WHEN a.check_out > '17:30:00' "
+                + "THEN FLOOR(TIME_TO_SEC(TIMEDIFF(a.check_out, '17:30:00')) / 60) "
+                + "ELSE 0 END), 0) AS overtime_minutes "
+                + "FROM employees e "
+                + "LEFT JOIN departments d ON d.id = e.department_id "
+                + "LEFT JOIN attendance a ON a.employee_id = e.id "
+                + "AND YEAR(a.date) = ? AND MONTH(a.date) = ? "
+                + "WHERE COALESCE(e.status, '') <> 'TERMINATED' AND e.department_id = ? "
+                + "GROUP BY e.id, e.employee_code, e.full_name, d.name "
+                + "ORDER BY e.employee_code, e.full_name";
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, year);
+            statement.setInt(2, month);
+            statement.setInt(3, departmentId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    AttendanceEmployeeStatsDto employee = new AttendanceEmployeeStatsDto();
+                    employee.setEmployeeId(resultSet.getInt("employee_id"));
+                    employee.setEmployeeCode(resultSet.getString("employee_code"));
+                    employee.setFullName(resultSet.getString("full_name"));
+                    employee.setDepartmentName(resultSet.getString("department_name"));
+                    employee.setWorkDays(resultSet.getInt("work_days"));
+                    employee.setLateCount(resultSet.getInt("late_count"));
+                    employee.setEarlyLeaveCount(resultSet.getInt("early_leave_count"));
+                    employee.setAbsentCount(resultSet.getInt("absent_count"));
+                    employee.setLeaveCount(resultSet.getInt("leave_count"));
+                    employee.setOvertimeMinutes(resultSet.getInt("overtime_minutes"));
+                    statistics.add(employee);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể tải thống kê chấm công bộ phận.", e);
+        }
+        return statistics;
     }
 }

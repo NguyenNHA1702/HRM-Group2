@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Thống kê chấm công – HRMS</title>
+    <title>Trạng thái khóa chấm công phòng ban – HRMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance.css"/>
@@ -16,12 +16,11 @@
     <%@ include file="../../common/sidebar.jsp" %>
 
     <main class="content-area">
-        <div class="page-header statistics-page-header">
+        <div class="page-header statistics-page-header" style="margin-bottom:24px;">
             <div>
-                <h1>Thống kê chấm công toàn hệ thống</h1>
+                <h1>Trạng thái khóa chấm công phòng ban</h1>
                 <p class="subtitle">
-                    Tổng hợp dữ liệu của <c:out value="${statistics.totalEmployees}"/> nhân viên
-                    trong tháng <c:out value="${currentMonth}"/>/<c:out value="${currentYear}"/>
+                    Xem danh sách các phòng ban đã khóa hay chưa khóa chấm công trong tháng <c:out value="${currentMonth}"/>/<c:out value="${currentYear}"/>
                 </p>
             </div>
 
@@ -52,93 +51,20 @@
             </div>
         </div>
 
-        <div class="stats-strip system-stats-strip">
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Ngày công</div>
-                    <div class="stat-value">
-                        <c:out value="${statistics.workDays}"/>
-                        <span class="stat-total">/ <c:out value="${statistics.expectedWorkDays}"/></span>
-                    </div>
-                    <div class="stat-sub">tổng ngày có mặt</div>
-                </div>
-                <div class="stat-icon present">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="5" y="4" width="14" height="17" rx="2"></rect>
-                        <path d="M9 4V2h6v2"></path>
-                        <path d="M8 9h8M8 13h8M8 17h5"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Đi muộn</div>
-                    <div class="stat-value"><c:out value="${statistics.lateCount}"/></div>
-                    <div class="stat-sub">lần trong tháng</div>
-                </div>
-                <div class="stat-icon late">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="13" r="8"></circle>
-                        <path d="M12 9v5l3 2M9 2h6M12 5V2"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Vắng mặt</div>
-                    <div class="stat-value"><c:out value="${statistics.absentCount}"/></div>
-                    <div class="stat-sub">ngày không lý do</div>
-                </div>
-                <div class="stat-icon absent">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <path d="M6 6l12 12"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Nghỉ phép</div>
-                    <div class="stat-value"><c:out value="${statistics.leaveCount}"/></div>
-                    <div class="stat-sub">ngày đã ghi nhận</div>
-                </div>
-                <div class="stat-icon leave">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="3" y="5" width="18" height="16" rx="2"></rect>
-                        <path d="M16 3v4M8 3v4M3 10h18M8 15l2 2 5-5"></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div>
-                    <div class="stat-label">Tăng ca (OT)</div>
-                    <div class="stat-value">
-                        <c:out value="${statistics.overtimeHoursFormatted}"/>
-                    </div>
-                    <div class="stat-sub">tổng giờ tháng này</div>
-                </div>
-                <div class="stat-icon ot">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M13 2L5 14h7l-1 8 8-12h-7l1-8z"></path>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
         <section class="statistics-table-card">
             <div class="statistics-table-header">
                 <div>
-                    <h2>Chi tiết theo nhân viên</h2>
-                    <p>Dữ liệu được tổng hợp từ bảng chấm công đã import.</p>
+                    <h2>Chi tiết theo phòng ban</h2>
+                    <p>Trạng thái khóa chấm công của từng bộ phận.</p>
                 </div>
                 <label class="statistics-search">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="M20 20l-4-4"></path>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px; height:16px; opacity:0.6; margin-right:6px;">
+                        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"></circle>
+                        <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="2"></line>
                     </svg>
                     <input id="statistics-search-input"
                            type="search"
-                           placeholder="Tìm mã, tên hoặc phòng ban..."/>
+                           placeholder="Tìm tên phòng ban hoặc trưởng phòng..."/>
                 </label>
             </div>
 
@@ -146,66 +72,78 @@
                 <table class="statistics-table" id="attendance-statistics-table">
                     <thead>
                     <tr>
-                        <th>STT</th>
-                        <th>Mã nhân viên</th>
-                        <th>Họ và tên</th>
-                        <th>Phòng ban</th>
-                        <th class="number-column">Ngày công</th>
-                        <th class="number-column">Đi muộn</th>
-                        <th class="number-column">Về sớm</th>
-                        <th class="number-column">Vắng mặt</th>
-                        <th class="number-column">Nghỉ phép</th>
-                        <th class="number-column">Tăng ca</th>
+                        <th style="width: 80px;">STT</th>
+                        <th>Tên phòng ban</th>
+                        <th>Trưởng phòng</th>
+                        <th class="number-column" style="text-align: right; width: 220px; padding-right: 24px;">Trạng thái khóa bộ phận</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <c:forEach var="employee" items="${statistics.employees}" varStatus="loop">
+                    <c:forEach var="dept" items="${departmentLockStatuses}" varStatus="loop">
                         <tr class="statistics-row">
                             <td><c:out value="${loop.index + 1}"/></td>
+                            <td class="employee-name">
+                                <strong><c:out value="${dept.departmentName}"/></strong>
+                            </td>
                             <td>
-                                <span class="employee-code">
-                                    <c:out value="${employee.employeeCode}"/>
-                                </span>
+                                <c:choose>
+                                    <c:when test="${not empty dept.managerName}">
+                                        <c:out value="${dept.managerName}"/>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color:var(--muted); font-style:italic;">Chưa chỉ định trưởng phòng</span>
+                                    </c:otherwise>
+                                </c:choose>
                             </td>
-                            <td class="employee-name"><c:out value="${employee.fullName}"/></td>
-                            <td><c:out value="${employee.departmentName}"/></td>
-                            <td class="number-column work-days">
-                                <c:out value="${employee.workDays}"/>
-                            </td>
-                            <td class="number-column status-late">
-                                <c:out value="${employee.lateCount}"/>
-                            </td>
-                            <td class="number-column status-early">
-                                <c:out value="${employee.earlyLeaveCount}"/>
-                            </td>
-                            <td class="number-column status-absent">
-                                <c:out value="${employee.absentCount}"/>
-                            </td>
-                            <td class="number-column status-leave">
-                                <c:out value="${employee.leaveCount}"/>
-                            </td>
-                            <td class="number-column overtime-value">
-                                <c:out value="${employee.overtimeHoursFormatted}"/>
+                            <td class="number-column" style="text-align: right; padding-right: 24px;">
+                                <c:choose>
+                                    <c:when test="${dept.isLocked}">
+                                        <span style="color: #991b1b; background: #fee2e2; padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                            🔒 Đã khóa
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span style="color: #166534; background: #dcfce7; padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                            🔓 Chưa khóa
+                                        </span>
+                                    </c:otherwise>
+                                </c:choose>
                             </td>
                         </tr>
                     </c:forEach>
-                    <c:if test="${empty statistics.employees}">
+                    <c:if test="${empty departmentLockStatuses}">
                         <tr>
-                            <td colspan="10" class="statistics-empty">
-                                Chưa có nhân viên để thống kê.
+                            <td colspan="4" class="statistics-empty" style="text-align:center; padding:40px 0; color:var(--muted);">
+                                Chưa có phòng ban nào hoạt động.
                             </td>
                         </tr>
                     </c:if>
                     </tbody>
                 </table>
             </div>
-            <div id="statistics-no-result" class="statistics-empty" hidden>
-                Không tìm thấy nhân viên phù hợp.
+            <div id="statistics-no-result" class="statistics-empty" style="text-align:center; padding:40px 0; color:var(--muted);" hidden>
+                Không tìm thấy phòng ban phù hợp.
             </div>
         </section>
     </main>
 </div>
 
-<script src="${pageContext.request.contextPath}/assets/js/attendance-statistics.js?v=20260612-1"></script>
+<script>
+    document.getElementById('statistics-search-input').addEventListener('input', function(e) {
+        const q = e.target.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.statistics-row');
+        let hasResult = false;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(q)) {
+                row.style.display = '';
+                hasResult = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        document.getElementById('statistics-no-result').hidden = hasResult;
+    });
+</script>
 </body>
 </html>

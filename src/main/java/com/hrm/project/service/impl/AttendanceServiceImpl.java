@@ -415,18 +415,23 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public List<AttendanceExplanation> getExplanations(String statusFilter, int page, int pageSize) {
-        return attendanceDAO.getExplanations(statusFilter, page, pageSize);
+    public List<AttendanceExplanation> getExplanations(Integer departmentId, String statusFilter, int page, int pageSize) {
+        return attendanceDAO.getExplanations(departmentId, statusFilter, page, pageSize);
     }
 
     @Override
-    public int countExplanations(String statusFilter) {
-        return attendanceDAO.countExplanations(statusFilter);
+    public int countExplanations(Integer departmentId, String statusFilter) {
+        return attendanceDAO.countExplanations(departmentId, statusFilter);
     }
 
     @Override
     public boolean reviewExplanation(long id, String reviewStatus, int reviewedBy, String reviewComment) {
         return attendanceDAO.reviewExplanation(id, reviewStatus, reviewedBy, reviewComment);
+    }
+
+    @Override
+    public AttendanceExplanation getExplanationById(long id) {
+        return attendanceDAO.getExplanationById(id);
     }
 
     @Override
@@ -452,6 +457,61 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public boolean unlockAttendance(int year, int month) {
         return attendanceDAO.unlockAttendance(year, month);
+    }
+
+    @Override
+    public boolean isDepartmentAttendanceLocked(int departmentId, int year, int month) {
+        return attendanceDAO.isDepartmentAttendanceLocked(departmentId, year, month);
+    }
+
+    @Override
+    public boolean lockDepartmentAttendance(int departmentId, int year, int month, int lockedBy) {
+        return attendanceDAO.lockDepartmentAttendance(departmentId, year, month, lockedBy);
+    }
+
+    @Override
+    public boolean unlockDepartmentAttendance(int departmentId, int year, int month) {
+        return attendanceDAO.unlockDepartmentAttendance(departmentId, year, month);
+    }
+
+    @Override
+    public boolean isAttendanceLockedForEmployee(int employeeId, int year, int month) {
+        return attendanceDAO.isAttendanceLockedForEmployee(employeeId, year, month);
+    }
+
+    @Override
+    public java.util.List<java.util.Map<String, Object>> getDepartmentLockStatuses(int year, int month) {
+        return attendanceDAO.getDepartmentLockStatuses(year, month);
+    }
+
+    @Override
+    public AttendanceSystemStatsDto getDepartmentStatistics(int departmentId, int year, int month) {
+        List<AttendanceEmployeeStatsDto> employees =
+                attendanceDAO.getDepartmentEmployeeStatistics(departmentId, year, month);
+        AttendanceSystemStatsDto statistics = new AttendanceSystemStatsDto();
+        statistics.setEmployees(employees);
+        statistics.setTotalEmployees(employees.size());
+        statistics.setExpectedWorkDays(countWorkingDays(year, month) * employees.size());
+
+        int workDays = 0;
+        int lateCount = 0;
+        int absentCount = 0;
+        int leaveCount = 0;
+        int overtimeMinutes = 0;
+        for (AttendanceEmployeeStatsDto employee : employees) {
+            workDays += employee.getWorkDays();
+            lateCount += employee.getLateCount();
+            absentCount += employee.getAbsentCount();
+            leaveCount += employee.getLeaveCount();
+            overtimeMinutes += employee.getOvertimeMinutes();
+        }
+
+        statistics.setWorkDays(workDays);
+        statistics.setLateCount(lateCount);
+        statistics.setAbsentCount(absentCount);
+        statistics.setLeaveCount(leaveCount);
+        statistics.setOvertimeMinutes(overtimeMinutes);
+        return statistics;
     }
 
     private boolean isEmptyRow(Row row, DataFormatter formatter) {

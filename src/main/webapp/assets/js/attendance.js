@@ -240,9 +240,14 @@ function buildDayHTML(day, att, isWeekend, isFuture) {
             ? '<div class="day-time">▶ ' + att.checkIn + '<br>◀ ' + (att.checkOut || '--:--') + '</div>'
             : '';
 
+        var labelText = STATUS_LABEL[att.status] || att.status;
+        if (att.status === 'leave' && att.note && att.note.trim() !== '') {
+            labelText = att.note;
+        }
+
         var badge = '<div class="day-badge ' + att.status + '">'
             + (STATUS_ICON[att.status] || '') + ' '
-            + (STATUS_LABEL[att.status] || att.status)
+            + labelText
             + '</div>';
 
         return numEl + timeEl + lateNote + badge + expBadge;

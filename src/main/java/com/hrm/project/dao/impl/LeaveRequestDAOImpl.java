@@ -5,6 +5,7 @@ import com.hrm.project.model.LeaveRequest;
 import com.hrm.project.model.dtos.response.LeaveSummaryDto;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -152,28 +153,85 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
 
     @Override
     public boolean approve(int requestId, int approverId) {
-
-        String sql =
+        String updateRequestSql =
                 "UPDATE leave_requests " +
                         "SET status='APPROVED', " +
                         "reviewed_by=?, " +
                         "reviewed_at=NOW() " +
                         "WHERE id=?";
 
-        try (
-                Connection con = DBConnection.getConnection();
-                PreparedStatement ps = con.prepareStatement(sql)
-        ) {
+        String selectRequestSql =
+                "SELECT lr.employee_id, lr.start_date, lr.end_date, lt.name AS leave_type_name " +
+                        "FROM leave_requests lr " +
+                        "JOIN leave_types lt ON lr.leave_type_id = lt.id " +
+                        "WHERE lr.id = ?";
 
-            ps.setInt(1, approverId);
-            ps.setInt(2, requestId);
+        String upsertAttendanceSql =
+                "INSERT INTO attendance (employee_id, date, check_in, check_out, status, note) " +
+                        "VALUES (?, ?, NULL, NULL, 'LEAVE', ?) " +
+                        "ON DUPLICATE KEY UPDATE status = 'LEAVE', check_in = NULL, check_out = NULL, note = ?";
 
-            return ps.executeUpdate() > 0;
+        try (Connection con = DBConnection.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                // 1. Update leave request status
+                try (PreparedStatement psUpdate = con.prepareStatement(updateRequestSql)) {
+                    psUpdate.setInt(1, approverId);
+                    psUpdate.setInt(2, requestId);
+                    int updatedRows = psUpdate.executeUpdate();
+                    if (updatedRows == 0) {
+                        con.rollback();
+                        return false;
+                    }
+                }
 
+                // 2. Fetch leave request details to sync with attendance
+                int employeeId = 0;
+                Date startDate = null;
+                Date endDate = null;
+                String leaveTypeName = null;
+                try (PreparedStatement psSelect = con.prepareStatement(selectRequestSql)) {
+                    psSelect.setInt(1, requestId);
+                    try (ResultSet rs = psSelect.executeQuery()) {
+                        if (rs.next()) {
+                            employeeId = rs.getInt("employee_id");
+                            startDate = rs.getDate("start_date");
+                            endDate = rs.getDate("end_date");
+                            leaveTypeName = rs.getString("leave_type_name");
+                        } else {
+                            con.rollback();
+                            return false;
+                        }
+                    }
+                }
+
+                // 3. Upsert attendance records for each day of the leave request
+                if (startDate != null && endDate != null) {
+                    LocalDate start = startDate.toLocalDate();
+                    LocalDate end = endDate.toLocalDate();
+                    try (PreparedStatement psUpsert = con.prepareStatement(upsertAttendanceSql)) {
+                        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+                            psUpsert.setInt(1, employeeId);
+                            psUpsert.setDate(2, Date.valueOf(date));
+                            psUpsert.setString(3, leaveTypeName);
+                            psUpsert.setString(4, leaveTypeName);
+                            psUpsert.addBatch();
+                        }
+                        psUpsert.executeBatch();
+                    }
+                }
+
+                con.commit();
+                return true;
+            } catch (Exception e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return false;
     }
 
