@@ -608,7 +608,6 @@ public class AttendanceDAOImpl implements AttendanceDAO {
                      "FROM departments d " +
                      "LEFT JOIN employees e ON d.manager_id = e.id " +
                      "LEFT JOIN department_attendance_locks dal ON d.id = dal.department_id AND dal.year = ? AND dal.month = ? " +
-                     "WHERE d.is_active = 1 " +
                      "ORDER BY d.name";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
