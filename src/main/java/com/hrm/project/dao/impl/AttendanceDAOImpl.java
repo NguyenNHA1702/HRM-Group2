@@ -498,6 +498,27 @@ public class AttendanceDAOImpl implements AttendanceDAO {
     }
 
     @Override
+    public boolean areAllDepartmentsLocked(int year, int month) {
+        String sql = "SELECT (SELECT COUNT(*) FROM departments) AS total_depts, " +
+                     "(SELECT COUNT(*) FROM department_attendance_locks WHERE year = ? AND month = ? AND is_locked = true) AS locked_depts";
+        try (java.sql.Connection conn = com.hrm.project.util.DBUtil.getConnection();
+             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            stmt.setInt(2, month);
+            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int total = rs.getInt("total_depts");
+                    int locked = rs.getInt("locked_depts");
+                    return total > 0 && total == locked;
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
     public boolean lockDepartmentAttendance(int departmentId, int year, int month, int lockedBy) {
         String sql = "INSERT INTO department_attendance_locks (department_id, year, month, is_locked, locked_by, locked_at) "
                 + "VALUES (?, ?, ?, true, ?, NOW()) "

@@ -75,6 +75,9 @@
             <c:if test="${param.error == 'already_approved'}">
                 <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Bảng lương đã được duyệt, không thể tạo lại.</div>
             </c:if>
+            <c:if test="${param.error == 'not_all_locked'}">
+                <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Cần khóa chấm công tất cả phòng ban trước khi tạo bảng lương.</div>
+            </c:if>
             <c:if test="${param.error == 'no_attendance'}">
                 <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Thiếu bảng công nhân viên. Vui lòng kiểm tra chấm công.</div>
             </c:if>

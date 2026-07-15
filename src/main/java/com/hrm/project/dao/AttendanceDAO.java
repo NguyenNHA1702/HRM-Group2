@@ -38,6 +38,8 @@ public interface AttendanceDAO {
     boolean unlockAttendance(int year, int month);
 
     boolean isDepartmentAttendanceLocked(int departmentId, int year, int month);
+    
+    boolean areAllDepartmentsLocked(int year, int month);
 
     boolean lockDepartmentAttendance(int departmentId, int year, int month, int lockedBy);
 
