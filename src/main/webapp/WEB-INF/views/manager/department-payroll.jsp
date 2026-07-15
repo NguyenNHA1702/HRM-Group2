@@ -7,8 +7,8 @@
     <meta charset="UTF-8" />
     <title>Lương Phòng Ban | HRMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/layout.css" />
-    <link rel="stylesheet" href="/assets/css/sidebar.css" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css" />
     <style>
         .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid #e2e8f0; padding-bottom:16px; }
         .page-title-group .page-title { font-size:22px; font-weight:700; color:var(--text); margin:0; }
@@ -91,22 +91,22 @@
                 <p class="page-subtitle">Tổng quan ngân sách và chi tiết lương từng nhân sự trong phòng ban</p>
             </div>
             
-            <c:if test="\">
+            <c:if test="${not empty selectedPayroll}">
                 <div class="header-actions">
                     <c:choose>
-                        <c:when test="\">
+                        <c:when test="${selectedPayroll.status eq 'DRAFT'}">
                             <span class="badge badge-yellow"><i class="fas fa-edit"></i> Bản nháp - Chờ duyệt</span>
-                            <form action="\/manager/department-payroll/approve" method="post" style="margin:0;">
-                                <input type="hidden" name="payrollId" value="\">
-                                <button type="submit" class="btn-approve" onclick="return confirm('Bạn xác nhận duyệt bảng lương tháng \/\ của phòng ban? Sau khi duyệt sẽ chuyển sang HR xử lý.')">
+                            <form action="${pageContext.request.contextPath}/manager/department-payroll/approve" method="post" style="margin:0;">
+                                <input type="hidden" name="payrollId" value="${selectedPayroll.id}">
+                                <button type="submit" class="btn-approve" onclick="return confirm('Bạn xác nhận duyệt bảng lương tháng ${selectedPayroll.month}/${selectedPayroll.year} của phòng ban? Sau khi duyệt sẽ chuyển sang HR xử lý.')">
                                     <i class="fas fa-check-circle"></i> Duyệt Bảng Lương
                                 </button>
                             </form>
                         </c:when>
-                        <c:when test="\">
+                        <c:when test="${selectedPayroll.status eq 'MANAGER_CONFIRMED'}">
                             <span class="badge badge-blue"><i class="fas fa-user-check"></i> Đã duyệt (Chờ HR chốt)</span>
                         </c:when>
-                        <c:when test="\">
+                        <c:when test="${selectedPayroll.status eq 'HR_FINALIZED'}">
                             <span class="badge badge-green"><i class="fas fa-check-double"></i> Đã chốt</span>
                         </c:when>
                     </c:choose>
@@ -114,19 +114,19 @@
             </c:if>
         </div>
 
-        <c:if test="\">
+        <c:if test="${param.success eq 'approved'}">
             <div style="background:#d1fae5; color:#065f46; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:500;">
                 <i class="fas fa-check-circle" style="margin-right:8px;"></i> Duyệt bảng lương thành công!
             </div>
         </c:if>
-        <c:if test="\">
+        <c:if test="${not empty param.error}">
             <div style="background:#fee2e2; color:#991b1b; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:500;">
-                <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Có lỗi xảy ra: \
+                <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Có lỗi xảy ra: ${param.error}
             </div>
         </c:if>
 
         <c:choose>
-            <c:when test="\">
+            <c:when test="${empty payrolls}">
                 <div class="table-container empty-state">
                     <i class="fas fa-folder-open"></i>
                     <h3>Chưa có dữ liệu bảng lương</h3>
@@ -135,11 +135,11 @@
             </c:when>
             <c:otherwise>
                 <div class="filter-bar">
-                    <form action="\/manager/department-payroll" method="get" style="display:flex; width:100%; gap:16px;">
+                    <form action="${pageContext.request.contextPath}/manager/department-payroll" method="get" style="display:flex; width:100%; gap:16px;">
                         <select name="payrollId" onchange="this.form.submit()">
-                            <c:forEach var="p" items="\">
-                                <option value="\" \>
-                                    Tháng \/\ - \
+                            <c:forEach var="p" items="${payrolls}">
+                                <option value="${p.id}" ${selectedPayroll != null && p.id == selectedPayroll.id ? 'selected' : ''}>
+                                    Tháng ${p.month}/${p.year} - ${p.status eq 'DRAFT' ? 'Bản Nháp' : (p.status eq 'MANAGER_CONFIRMED' ? 'Đã duyệt' : 'Đã chốt')}
                                 </option>
                             </c:forEach>
                         </select>
@@ -147,22 +147,22 @@
                     </form>
                 </div>
 
-                <c:if test="\">
+                <c:if test="${not empty details}">
                     <div class="summary-cards">
                         <div class="card card-fund">
                             <i class="fas fa-coins card-icon"></i>
                             <div class="card-title">Tổng Quỹ Lương (Thực nhận)</div>
-                            <div class="card-value"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/> đ</div>
+                            <div class="card-value"><fmt:formatNumber value="${totalNetSalary}" type="number" maxFractionDigits="0"/> đ</div>
                         </div>
                         <div class="card card-headcount">
                             <i class="fas fa-users card-icon"></i>
                             <div class="card-title">Số Lượng Nhân Sự</div>
-                            <div class="card-value">\ người</div>
+                            <div class="card-value">${details.size()} người</div>
                         </div>
                         <div class="card card-average">
                             <i class="fas fa-chart-pie card-icon"></i>
                             <div class="card-title">Lương Trung Bình / Người</div>
-                            <div class="card-value"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/> đ</div>
+                            <div class="card-value"><fmt:formatNumber value="${averageNetSalary}" type="number" maxFractionDigits="0"/> đ</div>
                         </div>
                     </div>
 
@@ -181,30 +181,30 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:forEach var="d" items="\">
+                                <c:forEach var="d" items="${details}">
                                     <tr>
-                                        <td style="font-weight:600; color:#4f46e5;">EMP\</td>
+                                        <td style="font-weight:600; color:#4f46e5;">EMP${d.employeeId}</td>
                                         <td>
-                                            <div style="font-weight:600;">\</div>
-                                            <div style="font-size:12px; color:#64748b;">\</div>
+                                            <div style="font-weight:600;">${d.employeeName}</div>
+                                            <div style="font-size:12px; color:#64748b;">${d.positionName}</div>
                                         </td>
-                                        <td>\ ngày</td>
-                                        <td style="text-align:right" class="currency"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/></td>
-                                        <td style="text-align:right" class="currency positive">+<fmt:formatNumber value="\" type="number" maxFractionDigits="0"/></td>
-                                        <td style="text-align:right" class="currency negative">-<fmt:formatNumber value="\" type="number" maxFractionDigits="0"/></td>
-                                        <td style="text-align:right; font-size:16px;" class="currency positive"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/> đ</td>
+                                        <td>${d.actualWorkedDays} ngày</td>
+                                        <td style="text-align:right" class="currency"><fmt:formatNumber value="${d.basicSalary}" type="number" maxFractionDigits="0"/></td>
+                                        <td style="text-align:right" class="currency positive">+<fmt:formatNumber value="${d.allowanceAmount}" type="number" maxFractionDigits="0"/></td>
+                                        <td style="text-align:right" class="currency negative">-<fmt:formatNumber value="${d.insuranceDeduction}" type="number" maxFractionDigits="0"/></td>
+                                        <td style="text-align:right; font-size:16px;" class="currency positive"><fmt:formatNumber value="${d.netSalary}" type="number" maxFractionDigits="0"/> đ</td>
                                         <td style="text-align:center">
                                             <button class="btn-icon" onclick="viewSalaryDetail(this)"
-                                                data-emp-id="EMP\"
-                                                data-emp-name="\"
-                                                data-position="\"
-                                                data-dept="\/\"
-                                                data-working-days="\"
-                                                data-basic="\"
-                                                data-total-allowance="\"
-                                                data-overtime="\"
-                                                data-total-deduction="\"
-                                                data-net="\">
+                                                data-emp-id="EMP${d.employeeId}"
+                                                data-emp-name="${d.employeeName}"
+                                                data-position="${d.positionName}"
+                                                data-dept="${selectedPayroll.month}/${selectedPayroll.year}"
+                                                data-working-days="${d.actualWorkedDays}"
+                                                data-basic="${d.basicSalary}"
+                                                data-total-allowance="${d.allowanceAmount}"
+                                                data-overtime="${d.overtimePay}"
+                                                data-total-deduction="${d.insuranceDeduction}"
+                                                data-net="${d.netSalary}">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                         </td>
