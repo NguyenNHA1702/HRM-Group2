@@ -45,7 +45,12 @@ public class AttendanceLockController extends HttpServlet {
         int year = yearParam != null ? Integer.parseInt(yearParam) : currentYear;
 
         List<Department> departments = departmentDAO.getAllDepartments();
-        List<Integer> lockedDeptIds = attendanceDAO.getLockedDepartmentIds(year, month);
+        List<Integer> lockedDeptIds = new java.util.ArrayList<>();
+        for (java.util.Map<String, Object> status : attendanceDAO.getDepartmentLockStatuses(year, month)) {
+            if (Boolean.TRUE.equals(status.get("is_locked"))) {
+                lockedDeptIds.add((Integer) status.get("department_id"));
+            }
+        }
 
         request.setAttribute("departments", departments);
         request.setAttribute("lockedDeptIds", lockedDeptIds);
@@ -81,9 +86,9 @@ public class AttendanceLockController extends HttpServlet {
 
             boolean success;
             if ("lock".equals(action)) {
-                success = attendanceDAO.lockAttendanceByDepartment(year, month, departmentId, employeeId);
+                success = attendanceDAO.lockDepartmentAttendance(departmentId, year, month, employeeId);
             } else {
-                success = attendanceDAO.unlockAttendanceByDepartment(year, month, departmentId);
+                success = attendanceDAO.unlockDepartmentAttendance(departmentId, year, month);
             }
 
             String status = success ? "success" : "error";
