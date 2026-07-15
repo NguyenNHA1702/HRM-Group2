@@ -39,17 +39,35 @@ public class DepartmentPayrollController extends HttpServlet {
         }
 
         try {
-            // Get department ID managed by this employee
-            Integer departmentId = departmentDAO.getDepartmentIdByManagerId(employeeId);
-            if (departmentId == null) {
-                request.setAttribute("errorMessage", "Bạn không phải là quản lý của phòng ban nào.");
-                request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
-                return;
+            String roleGroup = (String) session.getAttribute("roleGroup");
+            boolean isHrOrAdmin = "HR".equals(roleGroup) || "ADMIN".equals(roleGroup);
+            Integer departmentId = null;
+
+            if (isHrOrAdmin) {
+                List<com.hrm.project.model.Department> allDepartments = departmentDAO.getAllDepartments();
+                request.setAttribute("departments", allDepartments);
+                
+                String deptIdParam = request.getParameter("deptId");
+                if (deptIdParam != null && !deptIdParam.trim().isEmpty()) {
+                    departmentId = Integer.parseInt(deptIdParam);
+                } else if (!allDepartments.isEmpty()) {
+                    departmentId = allDepartments.get(0).getId();
+                }
+                request.setAttribute("selectedDeptId", departmentId);
+            } else {
+                // Get department ID managed by this employee
+                departmentId = departmentDAO.getDepartmentIdByManagerId(employeeId);
+                if (departmentId == null) {
+                    request.setAttribute("errorMessage", "Bạn không phải là quản lý của phòng ban nào.");
+                    request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+                    return;
+                }
             }
 
-            // Get all payrolls for the dropdown
-            List<Payroll> payrolls = payrollDAO.getPayrollsByDepartment(departmentId);
-            request.setAttribute("payrolls", payrolls);
+            if (departmentId != null) {
+                // Get all payrolls for the dropdown
+                List<Payroll> payrolls = payrollDAO.getPayrollsByDepartment(departmentId);
+                request.setAttribute("payrolls", payrolls);
 
             if (!payrolls.isEmpty()) {
                 int selectedPayrollId = -1;
@@ -90,6 +108,7 @@ public class DepartmentPayrollController extends HttpServlet {
                 request.setAttribute("totalFund", totalFund);
                 request.setAttribute("headcount", headcount);
                 request.setAttribute("averageSalary", averageSalary);
+            }
             }
 
             request.getRequestDispatcher("/WEB-INF/views/manager/department-payroll.jsp").forward(request, response);
