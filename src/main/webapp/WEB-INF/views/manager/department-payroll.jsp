@@ -152,17 +152,17 @@
                         <div class="card card-fund">
                             <i class="fas fa-coins card-icon"></i>
                             <div class="card-title">Tổng Quỹ Lương (Thực nhận)</div>
-                            <div class="card-value"><fmt:formatNumber value="${totalNetSalary}" type="number" maxFractionDigits="0"/> đ</div>
+                            <div class="card-value"><fmt:formatNumber value="${totalFund}" type="number" maxFractionDigits="0"/> đ</div>
                         </div>
                         <div class="card card-headcount">
                             <i class="fas fa-users card-icon"></i>
                             <div class="card-title">Số Lượng Nhân Sự</div>
-                            <div class="card-value">${details.size()} người</div>
+                            <div class="card-value">${headcount} người</div>
                         </div>
                         <div class="card card-average">
                             <i class="fas fa-chart-pie card-icon"></i>
                             <div class="card-title">Lương Trung Bình / Người</div>
-                            <div class="card-value"><fmt:formatNumber value="${averageNetSalary}" type="number" maxFractionDigits="0"/> đ</div>
+                            <div class="card-value"><fmt:formatNumber value="${averageSalary}" type="number" maxFractionDigits="0"/> đ</div>
                         </div>
                     </div>
 
