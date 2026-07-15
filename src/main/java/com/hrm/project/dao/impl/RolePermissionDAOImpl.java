@@ -16,7 +16,7 @@ public class RolePermissionDAOImpl implements RolePermissionDAO {
     public List<ModulePermissionDTO> getPermissionsByRoleId(int roleId) {
         List<ModulePermissionDTO> list = new ArrayList<>();
 
-        String sql = "SELECT m.id AS module_id, m.name AS module_name, " +
+        String sql = "SELECT m.id AS module_id, m.code AS module_code, m.name AS module_name, " +
                 "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_view, 0) ELSE 0 END) AS can_view, " +
                 "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_create, 0) ELSE 0 END) AS can_create, " +
                 "       (CASE WHEN r.is_active = 1 THEN COALESCE(rp.can_edit, 0) ELSE 0 END) AS can_edit, " +
@@ -36,6 +36,7 @@ public class RolePermissionDAOImpl implements RolePermissionDAO {
                 while (rs.next()) {
                     ModulePermissionDTO dto = new ModulePermissionDTO();
                     dto.setModuleId(rs.getInt("module_id"));
+                    dto.setModuleCode(rs.getString("module_code")); // Nạp thêm mã định danh module
                     dto.setModuleName(rs.getString("module_name"));
 
                     dto.setView(rs.getBoolean("can_view"));

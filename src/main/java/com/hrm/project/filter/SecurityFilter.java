@@ -2,6 +2,8 @@ package com.hrm.project.filter;
 
 import com.hrm.project.dao.UserDAO;
 import com.hrm.project.dao.impl.UserDAOImpl;
+import com.hrm.project.model.dtos.response.ModulePermissionDTO;
+import com.hrm.project.util.PermissionUtils;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
@@ -9,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Map;
 
 @WebFilter("/*")
 public class SecurityFilter implements Filter {
@@ -21,6 +24,7 @@ public class SecurityFilter implements Filter {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
@@ -29,15 +33,15 @@ public class SecurityFilter implements Filter {
         HttpSession session = req.getSession(false);
 
         String path = req.getServletPath();
+        String method = req.getMethod();
 
-        // In log ra Terminal để Tiến theo dõi luồng chạy thực tế
         System.out.println("[BẢO VỆ FILTER] Đang quét qua URL: " + path);
 
-        // 1. Loại bỏ hoàn toàn các trang mặc định, tài nguyên tĩnh (css, js, ảnh) khỏi
-        // bộ lọc chặn
+        // 1. Bỏ qua tài nguyên tĩnh, trang public (login, assets, v.v.)
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
                 path.startsWith("/login") || path.startsWith("/logout") ||
                 path.startsWith("/forgot-password") || path.startsWith("/assets") ||
+                path.startsWith("/uploads") || path.equals("/check-db")) {
                 path.startsWith("/uploads") || path.equals("/check-db") ||
                 path.startsWith("/api/notifications")) {   // SSE stream & notification API - mọi role đã login đều dùng
 
@@ -45,20 +49,19 @@ public class SecurityFilter implements Filter {
             return;
         }
 
-        // 2. KIỂM TRA ĐĂNG NHẬP: Nếu chưa có phiên làm việc -> Cho ra rìa, quay về
-        // login
+        // 2. Kiểm tra đăng nhập
         if (session == null || session.getAttribute("roleGroup") == null) {
             System.out.println("[BẢO VỆ FILTER] -> CHẶN: Chưa đăng nhập. Đá về /login");
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        // 2.1 KIỂM TRA VAI TRÒ CÒN HOẠT ĐỘNG KHÔNG (Real-time Auth)
+        // 2.1 Kiểm tra vai trò còn hoạt động không (Real-time Auth)
         Integer employeeId = (Integer) session.getAttribute("employeeId");
         if (employeeId != null) {
             boolean isRoleActive = userDAO.isUserRoleActive(employeeId);
             if (!isRoleActive) {
-                System.out.println("[BẢO VỆ FILTER] -> CHẶN: Vai trò của tài khoản đã bị vô hiệu hóa bởi Admin!");
+                System.out.println("[BẢO VỆ FILTER] -> CHẶN: Vai trò bị vô hiệu hóa!");
                 session.invalidate();
                 resp.sendRedirect(req.getContextPath() + "/login?error=RoleDeactivated");
                 return;
@@ -67,6 +70,37 @@ public class SecurityFilter implements Filter {
 
         String roleGroup = (String) session.getAttribute("roleGroup");
 
+        // 3. ADMIN: bypass mọi kiểm tra module để tránh tự khoá chính mình
+        if ("ADMIN".equals(roleGroup)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 4. Kiểm tra quyền ĐỘNG dựa trên bảng role_permissions trong DB
+        Map<String, ModulePermissionDTO> userPermissions =
+                (Map<String, ModulePermissionDTO>) session.getAttribute("userPermissions");
+
+        PermissionUtils.RequiredPermission reqPerm =
+                PermissionUtils.getRequiredPermission(req);
+
+        if (reqPerm != null) {
+            boolean hasAccess = PermissionUtils.hasPermission(userPermissions, reqPerm);
+            if (!hasAccess) {
+                System.out.println("[BẢO VỆ FILTER] -> TỪ CHỐI: " + roleGroup
+                        + " không có quyền [" + reqPerm.actionType + "] trên module [" + reqPerm.moduleCode + "]");
+
+                String requestedWith = req.getHeader("X-Requested-With");
+                boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(requestedWith)
+                        || "POST".equalsIgnoreCase(req.getMethod());
+
+                if (isAjax) {
+                    resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    resp.setContentType("text/plain;charset=UTF-8");
+                    resp.getWriter().write("Bạn không có quyền thực hiện hành động này.");
+                } else {
+                    resp.sendError(HttpServletResponse.SC_FORBIDDEN,
+                            "Bạn không có quyền thực hiện hành động này.");
+                }
         boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
                 (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") ||
                         path.equals("/admin/leave-types") || path.equals("/admin/insurance") ||
@@ -101,7 +135,7 @@ public class SecurityFilter implements Filter {
             }
         }
 
-        // Hợp lệ thì cho đi tiếp
+        // 5. Hợp lệ -> cho đi tiếp
         chain.doFilter(request, response);
     }
 

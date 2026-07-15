@@ -29,6 +29,7 @@
             </div>
         </c:if>
 
+        <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['DEPT_MGMT'].create)}">
         <div class="mb-4">
             <button type="button" class="btn text-white px-4 py-2"
                     style="background-color: #6366f1; border-radius: 8px; font-weight: 500; border: none; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);"
@@ -36,6 +37,7 @@
                 + Tạo phòng ban mới
             </button>
         </div>
+        </c:if>
 
         <div class="card border-0 shadow-sm mb-4 p-3" style="border-radius: 12px; background: white;">
             <div class="row align-items-center">
@@ -144,6 +146,7 @@
                             </td>
                             <td class="text-center px-4">
                                 <div class="d-flex justify-content-center align-items-center">
+                                    <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['DEPT_MGMT'].edit)}">
                                     <button class="btn btn-link p-0 border-0"
                                             style="outline: none; background: none;"
                                             data-toggle="modal"
@@ -189,6 +192,7 @@
                                             </button>
                                         </c:otherwise>
                                     </c:choose>
+                                    </c:if>
                                 </div>
                             </td>
                         </tr>

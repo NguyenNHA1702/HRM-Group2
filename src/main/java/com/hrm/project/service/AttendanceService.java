@@ -26,11 +26,13 @@ public interface AttendanceService {
     AttendanceSystemStatsDto getSystemStatistics(int year, int month);
 
     // ── Explanation management ──
-    List<AttendanceExplanation> getExplanations(String statusFilter, int page, int pageSize);
+    List<AttendanceExplanation> getExplanations(Integer departmentId, String statusFilter, int page, int pageSize);
 
-    int countExplanations(String statusFilter);
+    int countExplanations(Integer departmentId, String statusFilter);
 
     boolean reviewExplanation(long id, String reviewStatus, int reviewedBy, String reviewComment);
+
+    AttendanceExplanation getExplanationById(long id);
 
     AttendanceExplanation getExplanationByEmployeeDate(int employeeId, LocalDate date);
 
@@ -41,4 +43,16 @@ public interface AttendanceService {
     boolean lockAttendance(int year, int month, int lockedBy);
 
     boolean unlockAttendance(int year, int month);
+
+    boolean isDepartmentAttendanceLocked(int departmentId, int year, int month);
+
+    boolean lockDepartmentAttendance(int departmentId, int year, int month, int lockedBy);
+
+    boolean unlockDepartmentAttendance(int departmentId, int year, int month);
+
+    boolean isAttendanceLockedForEmployee(int employeeId, int year, int month);
+
+    java.util.List<java.util.Map<String, Object>> getDepartmentLockStatuses(int year, int month);
+
+    AttendanceSystemStatsDto getDepartmentStatistics(int departmentId, int year, int month);
 }
