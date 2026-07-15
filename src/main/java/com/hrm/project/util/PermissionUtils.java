@@ -108,6 +108,8 @@ public class PermissionUtils {
                     return new RequiredPermission("ATTENDANCE", "DELETE");
                 if ("create".equals(action) || "add".equals(action))
                     return new RequiredPermission("ATTENDANCE", "CREATE");
+                if ("submitExplanation".equals(action))
+                    return new RequiredPermission("ATTENDANCE", "VIEW");
                 return new RequiredPermission("ATTENDANCE", "EDIT");
             }
             return new RequiredPermission("ATTENDANCE", "VIEW");
