@@ -251,7 +251,7 @@
                     <div style="display:flex; gap:12px; margin-bottom:12px;">
                         <div class="form-group" style="flex:1;">
                             <label>Số giờ Tăng ca</label>
-                            <input type="number" step="0.5" min="0" max="24" id="ot-hours" name="hours" placeholder="VD: 2" class="form-control" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:8px;" />
+                            <input type="number" step="0.5" min="0" max="24" id="ot-hours" name="hours" placeholder="VD: 2" required class="form-control" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:8px;" />
                         </div>
                         <div class="form-group" style="flex:1;">
                             <label>Loại Tăng ca</label>
