@@ -83,8 +83,9 @@
     </style>
 </head>
 <body>
-    <%@ include file="/WEB-INF/common/sidebar.jsp" %>
-    <main class="main-content">
+    <div class="main-layout">
+        <%@ include file="/WEB-INF/common/sidebar.jsp" %>
+        <main class="content-area">
         <div class="page-header">
             <div class="page-title-group">
                 <h1 class="page-title">Quỹ Lương Phòng Ban</h1>
@@ -273,6 +274,7 @@
             </div>
         </div>
     </main>
+    </div>
 
     <script>
         function formatVND(amount) {
