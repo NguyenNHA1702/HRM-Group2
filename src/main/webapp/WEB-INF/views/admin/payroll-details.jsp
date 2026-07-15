@@ -195,14 +195,15 @@
             <!-- ============ SINGLE COMPREHENSIVE TABLE ============ -->
             <div class="payroll-block">
                 <div class="table-wrapper" style="overflow-x: auto; padding: 0;">
-                    <table class="data-table" style="min-width: 1500px;">
+                    <table class="data-table" style="min-width: 2200px;">
                         <thead>
                             <!-- Header Row 1: Grouping -->
                             <tr style="background: #f1f5f9;">
                                 <th colspan="4" class="text-center" style="border-right: 2px solid #cbd5e1; color: #334155;"><i class="fas fa-info-circle"></i> THÔNG TIN CHUNG</th>
                                 <th colspan="7" class="text-center" style="border-right: 2px solid #cbd5e1; color: #1d4ed8; background: #eff6ff;"><i class="fas fa-calendar-check"></i> NGÀY CÔNG & LƯƠNG CƠ BẢN</th>
                                 <th colspan="5" class="text-center" style="border-right: 2px solid #cbd5e1; color: #6d28d9; background: #f5f3ff;"><i class="fas fa-hand-holding-usd"></i> PHỤ CẤP & BẢO HIỂM</th>
-                                <th colspan="3" class="text-center" style="color: #059669; background: #ecfdf5;"><i class="fas fa-money-bill-wave"></i> THUẾ & LƯƠNG THỰC NHẬN</th>
+                                <th colspan="5" class="text-center" style="border-right: 2px solid #cbd5e1; color: #d97706; background: #fffbeb;"><i class="fas fa-clock"></i> THU NHẬP BỔ SUNG</th>
+                                <th colspan="4" class="text-center" style="color: #059669; background: #ecfdf5;"><i class="fas fa-money-bill-wave"></i> THUẾ & LƯƠNG THỰC NHẬN</th>
                             </tr>
                             <!-- Header Row 2: Columns -->
                             <tr>
@@ -228,20 +229,36 @@
                                 <th class="text-right">BHTN</th>
                                 <th class="text-right" style="border-right: 2px solid #cbd5e1;">Tổng BH</th>
 
-                                <!-- Block 3 -->
+                                <!-- Block 3: Thu nhập bổ sung -->
+                                <th class="text-center">Số giờ TC</th>
+                                <th class="text-right">Tiền tăng ca</th>
+                                <th class="text-right">Tiền ngày lễ</th>
+                                <th class="text-right">Thưởng</th>
+                                <th class="text-right" style="border-right: 2px solid #cbd5e1;">Tổng bổ sung</th>
+
+                                <!-- Block 4 -->
                                 <th class="text-right">Lương trước thuế</th>
                                 <th class="text-right">Thuế TNCN</th>
                                 <th class="text-right" style="font-size:15px; font-weight: 700;">THỰC NHẬN</th>
+                                <th class="text-center">Chi tiết</th>
                             </tr>
                         </thead>
                         <tbody id="payrollTableBody">
                             <c:set var="totalGross" value="0" />
                             <c:set var="totalTax" value="0" />
                             <c:set var="totalNet" value="0" />
+                            <c:set var="totalOTHours" value="0" />
+                            <c:set var="totalOT" value="0" />
+                            <c:set var="totalHolidayPay" value="0" />
+                            <c:set var="totalBonus" value="0" />
                             <c:forEach var="d" items="${details}">
                                 <c:set var="totalGross" value="${totalGross + d.grossSalary}" />
                                 <c:set var="totalTax" value="${totalTax + d.taxDeduction}" />
                                 <c:set var="totalNet" value="${totalNet + d.netSalary}" />
+                                <c:set var="totalOTHours" value="${totalOTHours + d.overtimeWeekdayHours + d.overtimeWeekendHours + d.overtimeHolidayHours}" />
+                                <c:set var="totalOT" value="${totalOT + d.overtimePay}" />
+                                <c:set var="totalHolidayPay" value="${totalHolidayPay + d.holidayWorkPay}" />
+                                <c:set var="totalBonus" value="${totalBonus + d.bonusAmount}" />
                                 <tr class="employee-row">
                                     <!-- General -->
                                     <td><strong>${d.employeeCode}</strong></td>
@@ -269,13 +286,37 @@
                                         -<fmt:formatNumber value="${d.insuranceDeduction}" pattern="#,##0" />
                                     </td>
 
-                                    <!-- Block 3 -->
+                                    <!-- Block 3: Thu nhập bổ sung -->
+                                    <td class="text-center amount amount-positive">
+                                        <c:if test="${(d.overtimeWeekdayHours + d.overtimeWeekendHours + d.overtimeHolidayHours) > 0}">
+                                            <fmt:formatNumber value="${d.overtimeWeekdayHours + d.overtimeWeekendHours + d.overtimeHolidayHours}" pattern="#,##0.#" />h
+                                        </c:if>
+                                    </td>
+                                    <td class="text-right amount amount-positive">
+                                        <c:if test="${d.overtimePay > 0}">+</c:if><fmt:formatNumber value="${d.overtimePay}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount amount-positive">
+                                        <c:if test="${d.holidayWorkPay > 0}">+</c:if><fmt:formatNumber value="${d.holidayWorkPay}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount amount-positive">
+                                        <c:if test="${d.bonusAmount > 0}">+</c:if><fmt:formatNumber value="${d.bonusAmount}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount amount-positive" style="border-right: 2px solid #e2e8f0; font-weight:700;">
+                                        +<fmt:formatNumber value="${d.overtimePay + d.holidayWorkPay + d.bonusAmount}" pattern="#,##0" />
+                                    </td>
+
+                                    <!-- Block 4 -->
                                     <td class="text-right amount"><fmt:formatNumber value="${d.grossSalary}" pattern="#,##0" /></td>
                                     <td class="text-right amount amount-negative">
                                         <c:if test="${d.taxDeduction > 0}">-</c:if><fmt:formatNumber value="${d.taxDeduction}" pattern="#,##0" />
                                     </td>
                                     <td class="text-right amount" style="font-size:15px; font-weight:800; color:#059669;">
                                         <fmt:formatNumber value="${d.netSalary}" pattern="#,##0" /> đ
+                                    </td>
+                                    <td class="text-center">
+                                        <button onclick="viewDetail(${d.id})" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 12px; border-radius: 6px;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -285,11 +326,17 @@
                                 <td colspan="16" class="text-right" style="border-right: 2px solid #cbd5e1; font-size: 14px;">
                                     <strong>TỔNG CỘNG (${payroll.totalEmployees} nhân viên)</strong>
                                 </td>
+                                <td class="text-center amount amount-positive"><c:if test="${totalOTHours > 0}"><fmt:formatNumber value="${totalOTHours}" pattern="#,##0.#" />h</c:if></td>
+                                <td class="text-right amount amount-positive"><fmt:formatNumber value="${totalOT}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-positive"><fmt:formatNumber value="${totalHolidayPay}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-positive"><fmt:formatNumber value="${totalBonus}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-positive" style="border-right: 2px solid #cbd5e1;"><fmt:formatNumber value="${totalOT + totalHolidayPay + totalBonus}" pattern="#,##0" /></td>
                                 <td class="text-right amount"><fmt:formatNumber value="${totalGross}" pattern="#,##0" /></td>
                                 <td class="text-right amount amount-negative"><fmt:formatNumber value="${totalTax}" pattern="#,##0" /></td>
                                 <td class="text-right amount" style="font-size:16px; color:#059669;">
                                     <fmt:formatNumber value="${totalNet}" pattern="#,##0" /> đ
                                 </td>
+                                <td></td>
                             </tr>
                         </tbody>
                     </table>
@@ -382,6 +429,119 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize
     renderPagination();
 });
+</script>
+<!-- Modal Chi tiết Bảng Lương -->
+<div class="modal fade" id="payrollDetailModal" tabindex="-1" style="display: none; background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050; overflow-y: auto;">
+    <div class="modal-dialog" style="max-width: 600px; margin: 30px auto; background: #fff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px;">
+            <h4 style="margin: 0; font-size: 18px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-file-invoice-dollar" style="color: #4f46e5;"></i>
+                Chi tiết Bảng lương
+            </h4>
+            <button type="button" onclick="document.getElementById('payrollDetailModal').style.display='none'" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+        
+        <div id="payrollDetailContent" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="text-align: center; color: #64748b;">Đang tải...</div>
+        </div>
+        
+        <div style="margin-top: 24px; text-align: right;">
+            <button onclick="document.getElementById('payrollDetailModal').style.display='none'" class="btn btn-outline" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer;">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewDetail(detailId) {
+    document.getElementById('payrollDetailModal').style.display = 'block';
+    const contentDiv = document.getElementById('payrollDetailContent');
+    contentDiv.innerHTML = '<div style="text-align: center; color: #64748b;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>';
+    
+    fetch('${pageContext.request.contextPath}/api/payroll-detail?detailId=' + detailId)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                contentDiv.innerHTML = '<div style="color: red; text-align: center;">' + data.error + '</div>';
+                return;
+            }
+            
+            const d = data.detail;
+            const alws = data.allowances || [];
+            
+            const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val) + ' đ';
+            const formatHours = (val) => (val > 0 ? val + 'h' : '0');
+            
+            let html = '';
+            
+            // 1. Phụ cấp
+            html += '<div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">';
+            html += '<div style="font-weight: 600; color: #334155; margin-bottom: 8px;"><i class="fas fa-hand-holding-usd" style="color: #6d28d9; width: 20px;"></i> Chi tiết Phụ cấp</div>';
+            if (alws.length > 0) {
+                html += '<ul style="margin:0; padding-left: 20px; color: #475569; font-size: 14px;">';
+                alws.forEach(a => {
+                    html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>' + a.name + '</span> <strong>' + formatMoney(a.amount) + '</strong></li>';
+                });
+                html += '<li style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; font-weight: 600; color: #0f172a;"><span>Tổng cộng</span> <span>' + formatMoney(d.allowanceAmount) + '</span></li>';
+                html += '</ul>';
+            } else {
+                html += '<div style="color: #64748b; font-size: 14px; font-style: italic;">Không có phụ cấp</div>';
+            }
+            html += '</div>';
+            
+            // 2. Tăng ca
+            html += '<div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">';
+            html += '<div style="font-weight: 600; color: #334155; margin-bottom: 8px;"><i class="fas fa-clock" style="color: #ea580c; width: 20px;"></i> Chi tiết Tăng ca</div>';
+            
+            const hourlyRate = d.standardDays > 0 ? (d.basicSalary / d.standardDays / 8.0) : 0;
+            const weekdayMoney = d.overtimeWeekdayHours * hourlyRate * 1.5;
+            const weekendMoney = d.overtimeWeekendHours * hourlyRate * 2.0;
+            // Dùng phép trừ để tránh sai số do hệ số ngày lễ khác nhau
+            const holidayMoney = Math.max(0, d.overtimePay - weekdayMoney - weekendMoney);
+
+            html += '<ul style="margin:0; padding-left: 20px; color: #475569; font-size: 14px;">';
+            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngày thường (' + formatHours(d.overtimeWeekdayHours) + ')</span> <strong>+' + formatMoney(weekdayMoney) + '</strong></li>';
+            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Cuối tuần (' + formatHours(d.overtimeWeekendHours) + ')</span> <strong>+' + formatMoney(weekendMoney) + '</strong></li>';
+            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngày lễ (' + formatHours(d.overtimeHolidayHours) + ')</span> <strong>+' + formatMoney(holidayMoney) + '</strong></li>';
+            html += '<li style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; font-weight: 600; color: #0f172a;"><span>Tổng tiền Tăng ca</span> <span style="color:#16a34a">' + formatMoney(d.overtimePay) + '</span></li>';
+            html += '</ul>';
+            html += '</div>';
+            
+            // 3. Làm ngày lễ
+            if (d.holidayWorkDays > 0 || d.holidayWorkPay > 0) {
+                html += '<div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">';
+                html += '<div style="font-weight: 600; color: #334155; margin-bottom: 8px;"><i class="fas fa-calendar-star" style="color: #d946ef; width: 20px;"></i> Lương làm ngày lễ</div>';
+                
+                const hd = data.holidayDetails || [];
+                if (hd.length > 0) {
+                    html += '<ul style="margin:0 0 8px 0; padding-left: 20px; color: #475569; font-size: 14px;">';
+                    hd.forEach(h => {
+                        html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>' + h.name + ' (' + h.date + ')</span> <strong>x' + h.coefficient.toFixed(1) + '</strong></li>';
+                    });
+                    html += '</ul>';
+                }
+                
+                html += '<div style="font-size: 14px; color: #475569; display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 8px;"><span>Tổng hệ số quy đổi: ' + d.holidayWorkDays.toFixed(1) + ' ngày</span> <strong style="color:#16a34a">' + formatMoney(d.holidayWorkPay) + '</strong></div>';
+                html += '</div>';
+            }
+            
+            // 4. Khen thưởng
+            if (d.bonusAmount > 0 || d.bonusNote) {
+                html += '<div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">';
+                html += '<div style="font-weight: 600; color: #334155; margin-bottom: 8px;"><i class="fas fa-gift" style="color: #f59e0b; width: 20px;"></i> Khen thưởng</div>';
+                html += '<div style="font-size: 14px; color: #475569; display: flex; justify-content: space-between;"><span>Thưởng:</span> <strong style="color:#16a34a">' + formatMoney(d.bonusAmount) + '</strong></div>';
+                if (d.bonusNote) {
+                    html += '<div style="font-size: 13px; color: #64748b; margin-top: 4px; font-style: italic;">Lý do: ' + d.bonusNote + '</div>';
+                }
+                html += '</div>';
+            }
+            
+            contentDiv.innerHTML = html;
+        })
+        .catch(err => {
+            contentDiv.innerHTML = '<div style="color: red; text-align: center;">Đã xảy ra lỗi khi tải dữ liệu.</div>';
+            console.error(err);
+        });
+}
 </script>
 </body>
 </html>

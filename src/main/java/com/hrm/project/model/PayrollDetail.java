@@ -3,10 +3,11 @@ package com.hrm.project.model;
 import java.sql.Timestamp;
 
 /**
- * Chi tiết bảng lương nhân viên, chia thành 3 blocks:
+ * Chi tiết bảng lương nhân viên, chia thành 4 blocks:
  * Block 1: Ngày công & Lương cơ bản
  * Block 2: Phụ cấp & Bảo hiểm (BHXH, BHYT, BHTN)
- * Block 3: Thuế TNCN & Lương thực nhận
+ * Block 3: Thu nhập bổ sung (Tăng ca, Thưởng, Làm ngày lễ)
+ * Block 4: Gross → Thuế TNCN → Lương thực nhận
  */
 public class PayrollDetail {
     private int id;
@@ -29,7 +30,17 @@ public class PayrollDetail {
     private double bhtnDeduction;        // BHTN
     private double insuranceDeduction;   // Tổng bảo hiểm (= bhxh + bhyt + bhtn)
 
-    // === BLOCK 3: Thuế & Lương thực nhận ===
+    // === BLOCK 3: Thu nhập bổ sung ===
+    private double overtimeWeekdayHours; // Giờ tăng ca ngày thường
+    private double overtimeWeekendHours; // Giờ tăng ca chủ nhật
+    private double overtimeHolidayHours; // Giờ tăng ca ngày lễ
+    private double overtimePay;          // Tổng tiền tăng ca
+    private double holidayWorkDays;      // Số ngày làm ngày lễ
+    private double holidayWorkPay;       // Tiền làm ngày lễ
+    private double bonusAmount;          // Tổng thưởng
+    private String bonusNote;            // Ghi chú thưởng
+
+    // === BLOCK 4: Thuế & Lương thực nhận ===
     private double grossSalary;          // Lương trước thuế
     private double taxDeduction;         // Thuế TNCN
     private double netSalary;            // Lương thực nhận
@@ -102,7 +113,32 @@ public class PayrollDetail {
     public double getInsuranceDeduction() { return insuranceDeduction; }
     public void setInsuranceDeduction(double insuranceDeduction) { this.insuranceDeduction = insuranceDeduction; }
 
-    // Block 3
+    // Block 3: Thu nhập bổ sung
+    public double getOvertimeWeekdayHours() { return overtimeWeekdayHours; }
+    public void setOvertimeWeekdayHours(double v) { this.overtimeWeekdayHours = v; }
+
+    public double getOvertimeWeekendHours() { return overtimeWeekendHours; }
+    public void setOvertimeWeekendHours(double v) { this.overtimeWeekendHours = v; }
+
+    public double getOvertimeHolidayHours() { return overtimeHolidayHours; }
+    public void setOvertimeHolidayHours(double v) { this.overtimeHolidayHours = v; }
+
+    public double getOvertimePay() { return overtimePay; }
+    public void setOvertimePay(double overtimePay) { this.overtimePay = overtimePay; }
+
+    public double getHolidayWorkDays() { return holidayWorkDays; }
+    public void setHolidayWorkDays(double holidayWorkDays) { this.holidayWorkDays = holidayWorkDays; }
+
+    public double getHolidayWorkPay() { return holidayWorkPay; }
+    public void setHolidayWorkPay(double holidayWorkPay) { this.holidayWorkPay = holidayWorkPay; }
+
+    public double getBonusAmount() { return bonusAmount; }
+    public void setBonusAmount(double bonusAmount) { this.bonusAmount = bonusAmount; }
+
+    public String getBonusNote() { return bonusNote; }
+    public void setBonusNote(String bonusNote) { this.bonusNote = bonusNote; }
+
+    // Block 4: Thuế & Lương thực nhận
     public double getGrossSalary() { return grossSalary; }
     public void setGrossSalary(double grossSalary) { this.grossSalary = grossSalary; }
 

@@ -42,6 +42,11 @@ public class PermissionUtils {
         String action = req.getParameter("action");
         boolean isPost = "POST".equalsIgnoreCase(method);
 
+        // Bỏ qua filter cho các trang dành cho mọi nhân viên (Controller sẽ tự kiểm tra quyền riêng)
+        if ("/admin/insurance".equals(path) || path.startsWith("/manager/department-payroll") || "/dashboard".equals(path)) {
+            return null;
+        }
+
         // ─── 1. DASHBOARD ───────────────────────────────────────────────
         if ("/dashboard".equals(path)) {
             return new RequiredPermission("DASHBOARD", "VIEW");
@@ -102,20 +107,21 @@ public class PermissionUtils {
         // Lưu ý: ca làm / ngày lễ / lịch phân công đã được tách sang SCHEDULE_MGMT
         if ("/cham-cong".equals(path) || "/cham-cong/thong-ke".equals(path)
                 || path.startsWith("/hr/attendance-explanations")
-                || "/admin/attendance/lock".equals(path)) {
+                ) {
             if (isPost) {
                 if ("delete".equals(action))
                     return new RequiredPermission("ATTENDANCE", "DELETE");
                 if ("create".equals(action) || "add".equals(action))
                     return new RequiredPermission("ATTENDANCE", "CREATE");
+                if ("submitExplanation".equals(action))
+                    return new RequiredPermission("ATTENDANCE", "VIEW");
                 return new RequiredPermission("ATTENDANCE", "EDIT");
             }
             return new RequiredPermission("ATTENDANCE", "VIEW");
         }
 
         // ─── 7. SCHEDULE_MGMT (Ca làm việc, ngày nghỉ lễ, lịch phân công) ─
-        if ("/admin/work-shifts".equals(path) || "/admin/holidays".equals(path)
-                || path.startsWith("/schedule")) {
+        if ("/admin/work-shifts".equals(path) || "/admin/holidays".equals(path)) {
             if (isPost) {
                 if ("delete".equals(action) || path.contains("/delete"))
                     return new RequiredPermission("SCHEDULE_MGMT", "DELETE");

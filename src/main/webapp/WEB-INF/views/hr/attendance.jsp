@@ -41,6 +41,16 @@
                     </a>
                 </c:if>
                 <form method="get" action="${pageContext.request.contextPath}/cham-cong" class="filter-bar">
+                    <c:if test="${not empty employeeList}">
+                        <select name="employeeId" onchange="this.form.submit()">
+                            <c:forEach var="emp" items="${employeeList}">
+                                <option value="${emp.employeeId}" ${emp.employeeId == viewEmployeeId ? 'selected' : ''}>
+                                    [${emp.employeeCode}] <c:out value="${emp.fullName}"/>
+                                </option>
+                            </c:forEach>
+                        </select>
+                        <div class="divider"></div>
+                    </c:if>
                     <select name="month" onchange="this.form.submit()">
                         <c:forEach var="m" begin="1" end="12">
                             <option value="${m}" ${m == currentMonth ? 'selected' : ''}>Tháng <c:out value="${m}"/></option>
@@ -200,7 +210,6 @@
                     <div class="cv-val" id="cv-checkout">—</div>
                 </div>
             </div>
-
             <form id="explanation-form"
                   class="explanation-form"
                   method="post"
@@ -226,6 +235,41 @@
                 </div>
             </form>
 
+            <c:if test="${roleGroup == 'HR' || roleGroup == 'ADMIN'}">
+                <hr style="margin:20px 0; border:0; border-top:1px solid #e2e8f0;" />
+                <form id="ot-form" method="post" action="${pageContext.request.contextPath}/cham-cong">
+                    <input type="hidden" name="action" value="saveOvertime"/>
+                    <input type="hidden" name="month" value="${currentMonth}"/>
+                    <input type="hidden" name="year" value="${currentYear}"/>
+                    <input type="hidden" name="date" id="ot-date"/>
+                    <input type="hidden" name="employeeId" value="${viewEmployeeId}"/>
+                    
+                    <h4 style="margin-top:0; margin-bottom:12px; color:#4f46e5;"><i class="fas fa-clock"></i> Quản lý Tăng ca</h4>
+                    <p style="font-size: 13px; color: #64748b; margin-top: -8px; margin-bottom: 12px; font-style: italic;">
+                        *Lưu ý: Chỉ nhập số giờ làm lố giờ. Tiền lương làm trong giờ hành chính ngày lễ được hệ thống tính tự động.
+                    </p>
+                    <div style="display:flex; gap:12px; margin-bottom:12px;">
+                        <div class="form-group" style="flex:1;">
+                            <label>Số giờ Tăng ca</label>
+                            <input type="number" step="0.5" min="0" max="24" id="ot-hours" name="hours" placeholder="VD: 2" required class="form-control" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:8px;" />
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Loại Tăng ca</label>
+                            <select id="ot-type" name="overtimeType" class="form-control" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:8px;">
+                                <option value="WEEKDAY">Ngày thường</option>
+                                <option value="WEEKEND">Cuối tuần</option>
+                                <option value="HOLIDAY">Ngày lễ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Ghi chú</label>
+                        <input type="text" id="ot-note" name="note" class="form-control" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:8px;" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">Lưu Giờ Tăng Ca</button>
+                </form>
+            </c:if>
+
         </div>
 
         <div class="modal-footer">
@@ -242,13 +286,8 @@
      * attendance.js đã đăng ký DOMContentLoaded listener.
      * initCalendar() lưu data vào window._attendanceBootData;
      * listener đó sẽ gọi _boot() sau khi DOM ready.
-     * Nếu DOM đã ready (script defer), _boot() chạy ngay lập tức.
-     *
-     * LƯU Ý: KHÔNG khai báo lại biến attendanceData ở đây vì attendance.js
-     * đã dùng `let attendanceData` ở module scope – sẽ gây SyntaxError.
-     * Truyền mảng literal trực tiếp vào initCalendar().
      */
-    initCalendar(${currentMonth}, ${currentYear}, ${attendanceJson}, ${not empty explanationStatusJson ? explanationStatusJson : '{}'}, ${isLocked ? 'true' : 'false'}, ${not empty explanationDetailsJson ? explanationDetailsJson : '{}'});
+    initCalendar(${currentMonth}, ${currentYear}, ${attendanceJson}, ${not empty explanationStatusJson ? explanationStatusJson : '{}'}, ${isLocked ? 'true' : 'false'}, ${not empty explanationDetailsJson ? explanationDetailsJson : '{}'}, ${not empty overtimesJson ? overtimesJson : '[]'}, ${not empty employeeList ? 'true' : 'false'}, ${viewEmployeeId});
 </script>
 </body>
 </html>
