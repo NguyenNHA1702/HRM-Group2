@@ -240,6 +240,7 @@
                                 <th class="text-right">Lương trước thuế</th>
                                 <th class="text-right">Thuế TNCN</th>
                                 <th class="text-right" style="font-size:15px; font-weight: 700;">THỰC NHẬN</th>
+                                <th class="text-center">Chi tiết</th>
                             </tr>
                         </thead>
                         <tbody id="payrollTableBody">
@@ -312,6 +313,11 @@
                                     <td class="text-right amount" style="font-size:15px; font-weight:800; color:#059669;">
                                         <fmt:formatNumber value="${d.netSalary}" pattern="#,##0" /> đ
                                     </td>
+                                    <td class="text-center">
+                                        <button onclick="viewDetail(${d.id})" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 12px; border-radius: 6px;">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             </c:forEach>
 
@@ -330,6 +336,7 @@
                                 <td class="text-right amount" style="font-size:16px; color:#059669;">
                                     <fmt:formatNumber value="${totalNet}" pattern="#,##0" /> đ
                                 </td>
+                                <td></td>
                             </tr>
                         </tbody>
                     </table>
@@ -484,10 +491,17 @@ function viewDetail(detailId) {
             // 2. Tăng ca
             html += '<div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">';
             html += '<div style="font-weight: 600; color: #334155; margin-bottom: 8px;"><i class="fas fa-clock" style="color: #ea580c; width: 20px;"></i> Chi tiết Tăng ca</div>';
+            
+            const hourlyRate = d.standardDays > 0 ? (d.basicSalary / d.standardDays / 8.0) : 0;
+            const weekdayMoney = d.overtimeWeekdayHours * hourlyRate * 1.5;
+            const weekendMoney = d.overtimeWeekendHours * hourlyRate * 2.0;
+            // Dùng phép trừ để tránh sai số do hệ số ngày lễ khác nhau
+            const holidayMoney = Math.max(0, d.overtimePay - weekdayMoney - weekendMoney);
+
             html += '<ul style="margin:0; padding-left: 20px; color: #475569; font-size: 14px;">';
-            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngày thường (' + formatHours(d.overtimeWeekdayHours) + ')</span> <strong>+</strong></li>';
-            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Cuối tuần (' + formatHours(d.overtimeWeekendHours) + ')</span> <strong>+</strong></li>';
-            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngày lễ (' + formatHours(d.overtimeHolidayHours) + ')</span> <strong>+</strong></li>';
+            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngày thường (' + formatHours(d.overtimeWeekdayHours) + ')</span> <strong>+' + formatMoney(weekdayMoney) + '</strong></li>';
+            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Cuối tuần (' + formatHours(d.overtimeWeekendHours) + ')</span> <strong>+' + formatMoney(weekendMoney) + '</strong></li>';
+            html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngày lễ (' + formatHours(d.overtimeHolidayHours) + ')</span> <strong>+' + formatMoney(holidayMoney) + '</strong></li>';
             html += '<li style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; font-weight: 600; color: #0f172a;"><span>Tổng tiền Tăng ca</span> <span style="color:#16a34a">' + formatMoney(d.overtimePay) + '</span></li>';
             html += '</ul>';
             html += '</div>';
@@ -496,7 +510,17 @@ function viewDetail(detailId) {
             if (d.holidayWorkDays > 0 || d.holidayWorkPay > 0) {
                 html += '<div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">';
                 html += '<div style="font-weight: 600; color: #334155; margin-bottom: 8px;"><i class="fas fa-calendar-star" style="color: #d946ef; width: 20px;"></i> Lương làm ngày lễ</div>';
-                html += '<div style="font-size: 14px; color: #475569; display: flex; justify-content: space-between;"><span>Hệ số quy đổi: ' + d.holidayWorkDays.toFixed(1) + ' ngày</span> <strong style="color:#16a34a">' + formatMoney(d.holidayWorkPay) + '</strong></div>';
+                
+                const hd = data.holidayDetails || [];
+                if (hd.length > 0) {
+                    html += '<ul style="margin:0 0 8px 0; padding-left: 20px; color: #475569; font-size: 14px;">';
+                    hd.forEach(h => {
+                        html += '<li style="margin-bottom: 4px; display: flex; justify-content: space-between;"><span>' + h.name + ' (' + h.date + ')</span> <strong>x' + h.coefficient.toFixed(1) + '</strong></li>';
+                    });
+                    html += '</ul>';
+                }
+                
+                html += '<div style="font-size: 14px; color: #475569; display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 8px;"><span>Tổng hệ số quy đổi: ' + d.holidayWorkDays.toFixed(1) + ' ngày</span> <strong style="color:#16a34a">' + formatMoney(d.holidayWorkPay) + '</strong></div>';
                 html += '</div>';
             }
             

@@ -75,9 +75,6 @@
             <c:if test="${param.error == 'already_approved'}">
                 <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Bảng lương đã được duyệt, không thể tạo lại.</div>
             </c:if>
-            <c:if test="${param.error == 'not_all_locked'}">
-                <div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Chưa tất cả phòng ban chốt công. Vui lòng kiểm tra <a href="${pageContext.request.contextPath}/admin/attendance/lock">trang chốt công</a>.</div>
-            </c:if>
             <c:if test="${param.error == 'no_attendance'}">
                 <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> Thiếu bảng công nhân viên. Vui lòng kiểm tra chấm công.</div>
             </c:if>
@@ -92,9 +89,6 @@
                     <p class="page-subtitle">Quản lý bảng lương theo tháng, lọc theo phòng ban</p>
                 </div>
                 <div class="header-actions">
-                    <a href="${pageContext.request.contextPath}/admin/attendance/lock" class="btn btn-outline btn-sm">
-                        <i class="fas fa-lock"></i> Chốt công
-                    </a>
                     <c:if test="${roleGroup == 'HR' || roleGroup == 'ADMIN'}">
                         <a href="${pageContext.request.contextPath}/admin/position-allowances" class="btn btn-outline btn-sm">
                             <i class="fas fa-cog"></i> Cấu hình phụ cấp

@@ -107,7 +107,7 @@ public class PermissionUtils {
         // Lưu ý: ca làm / ngày lễ / lịch phân công đã được tách sang SCHEDULE_MGMT
         if ("/cham-cong".equals(path) || "/cham-cong/thong-ke".equals(path)
                 || path.startsWith("/hr/attendance-explanations")
-                || "/admin/attendance/lock".equals(path)) {
+                ) {
             if (isPost) {
                 if ("delete".equals(action))
                     return new RequiredPermission("ATTENDANCE", "DELETE");
