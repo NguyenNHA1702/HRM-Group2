@@ -126,17 +126,6 @@
             </div>
         </c:if>
 
-        <c:if test="${not empty departments}">
-            <div class="filter-bar" style="margin-bottom: 16px;">
-                <label style="font-weight:600; color:#475569;"><i class="fas fa-building"></i> Chọn phòng ban:</label>
-                <select onchange="window.location.href='?deptId='+this.value">
-                    <c:forEach var="d" items="${departments}">
-                        <option value="${d.id}" ${d.id == selectedDeptId ? 'selected' : ''}>${d.name}</option>
-                    </c:forEach>
-                </select>
-            </div>
-        </c:if>
-
         <c:choose>
             <c:when test="${empty payrolls}">
                 <div class="table-container empty-state">
@@ -148,9 +137,6 @@
             <c:otherwise>
                 <div class="filter-bar">
                     <form action="${pageContext.request.contextPath}/manager/department-payroll" method="get" style="display:flex; width:100%; gap:16px;">
-                        <c:if test="${not empty departments}">
-                            <input type="hidden" name="deptId" value="${selectedDeptId}" />
-                        </c:if>
                         <select name="payrollId" onchange="this.form.submit()">
                             <c:forEach var="p" items="${payrolls}">
                                 <option value="${p.id}" ${selectedPayroll != null && p.id == selectedPayroll.id ? 'selected' : ''}>
