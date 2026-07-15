@@ -42,6 +42,11 @@ public class PermissionUtils {
         String action = req.getParameter("action");
         boolean isPost = "POST".equalsIgnoreCase(method);
 
+        // Bỏ qua filter cho các trang dành cho mọi nhân viên (Controller sẽ tự kiểm tra quyền riêng)
+        if ("/schedule/employee".equals(path) || "/admin/insurance".equals(path)) {
+            return null;
+        }
+
         // ─── 1. DASHBOARD ───────────────────────────────────────────────
         if ("/dashboard".equals(path)) {
             return new RequiredPermission("DASHBOARD", "VIEW");
