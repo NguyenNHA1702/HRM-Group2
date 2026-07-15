@@ -43,7 +43,7 @@ public class PermissionUtils {
         boolean isPost = "POST".equalsIgnoreCase(method);
 
         // Bỏ qua filter cho các trang dành cho mọi nhân viên (Controller sẽ tự kiểm tra quyền riêng)
-        if ("/admin/insurance".equals(path) || path.startsWith("/manager/department-payroll")) {
+        if ("/admin/insurance".equals(path) || path.startsWith("/manager/department-payroll") || "/dashboard".equals(path)) {
             return null;
         }
 
