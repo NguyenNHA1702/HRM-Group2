@@ -1,176 +1,387 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c"   uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8"/>
-    <title>Chi Tiết Bảng Lương T${payroll.month}/${payroll.year} | HRMS</title>
+    <meta charset="UTF-8" />
+    <title>Chi Tiết Bảng Lương | HRMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css" />
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css" />
     <style>
-        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-        .page-title { font-size: 24px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 12px; }
-        .subtitle { color: #64748b; font-size: 14px; margin-top: 6px; }
-        
-        .btn { padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; font-size: 14px; }
-        .btn-outline { background: #fff; border: 1px solid #cbd5e1; color: #475569; }
-        .btn-outline:hover { background: #f8fafc; }
-        .btn-success { background: #10b981; color: #fff; }
-        .btn-success:hover { background: #059669; }
-        
-        .summary-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .card-title { font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
-        .card-value { font-size: 24px; font-weight: 700; color: #0f172a; }
-        
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        th { background: #f8fafc; padding: 14px; text-align: left; font-weight: 600; font-size: 12px; color: #475569; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-        td { padding: 14px; font-size: 13px; color: #1e293b; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        tr:hover td { background: #f8fafc; }
-        
-        .text-right { text-align: right; }
-        .text-green { color: #16a34a; font-weight: 600; }
-        .text-red { color: #dc2626; font-weight: 600; }
-        .text-primary { color: #4f46e5; font-weight: 700; font-size: 14px; }
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid #e2e8f0; padding-bottom:16px; }
+        .page-title-group .page-title { font-size:22px; font-weight:700; color:var(--text); margin:0; }
+        .page-title-group .page-subtitle { font-size:13px; color:#64748b; margin-top:4px; }
+        .header-actions { display:flex; gap:12px; align-items:center; }
+        .btn { padding:10px 18px; border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; border:none; font-size:14px; }
+        .btn-primary { background:#4f46e5; color:#fff; }
+        .btn-primary:hover { background:#4338ca; }
+        .btn-success { background:#059669; color:#fff; }
+        .btn-success:hover { background:#047857; }
+        .btn-warning { background:#d97706; color:#fff; }
+        .btn-warning:hover { background:#b45309; }
+        .btn-outline { background:transparent; border:1px solid #cbd5e1; color:#475569; }
+        .btn-outline:hover { background:#f8fafc; }
+        .btn-sm { padding:6px 12px; font-size:13px; }
+
+        /* Status badges */
+        .badge { padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block; }
+        .badge-yellow { background:#fef3c7; color:#92400e; }
+        .badge-blue { background:#dbeafe; color:#1e40af; }
+        .badge-green { background:#d1fae5; color:#065f46; }
+        .badge-gray { background:#f1f5f9; color:#475569; }
+
+        /* Filter bar */
+        .filter-bar { display:flex; gap:16px; align-items:center; margin-bottom:24px; padding:16px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; }
+        .filter-bar label { font-weight:600; font-size:13px; color:#475569; }
+        .filter-bar select { padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px; min-width:200px; }
+
+        /* Payroll info card */
+        .payroll-info { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px; }
+        .info-card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; }
+        .info-card .label { font-size:12px; color:#64748b; text-transform:uppercase; font-weight:600; margin-bottom:4px; }
+        .info-card .value { font-size:18px; font-weight:700; color:#0f172a; }
+
+        /* 3 Blocks layout */
+        .blocks-container { display:flex; flex-direction:column; gap:24px; }
+        .payroll-block { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; }
+        .block-header { padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:12px; }
+        .block-header .block-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; color:#fff; }
+        .block-header .block-title { font-size:16px; font-weight:700; color:#0f172a; }
+        .block-header .block-subtitle { font-size:12px; color:#64748b; }
+        .block-1 .block-icon { background:linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .block-2 .block-icon { background:linear-gradient(135deg, #8b5cf6, #6d28d9); }
+        .block-3 .block-icon { background:linear-gradient(135deg, #10b981, #059669); }
+
+        /* Table styles */
+        .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .data-table th { background:#f8fafc; padding:10px 14px; text-align:left; font-weight:600; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
+        .data-table td { padding:10px 14px; border-bottom:1px solid #f1f5f9; color:#334155; }
+        .data-table tr:hover { background:#f8fafc; }
+        .data-table .text-right { text-align:right; }
+        .data-table .text-center { text-align:center; }
+        .data-table .amount { font-family:'Roboto Mono', monospace; font-weight:600; }
+        .data-table .amount-positive { color:#059669; }
+        .data-table .amount-negative { color:#dc2626; }
+
+        /* Approval flow */
+        .approval-flow { display:flex; align-items:center; gap:8px; margin-bottom:24px; padding:16px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; flex-wrap:wrap; }
+        .flow-step { padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; }
+        .flow-step.active { background:#4f46e5; color:#fff; }
+        .flow-step.done { background:#d1fae5; color:#065f46; }
+        .flow-step.pending { background:#f1f5f9; color:#94a3b8; }
+        .flow-arrow { color:#94a3b8; font-size:16px; }
+
+        /* Summary row */
+        .summary-row { background:#f0f9ff !important; font-weight:700; }
+        .summary-row td { border-top:2px solid #3b82f6; }
+
+        /* Responsive */
+        .table-wrapper { overflow-x:auto; }
+
+        /* Alert */
+        .alert { padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:14px; }
+        .alert-success { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
+        .alert-error { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+
+        /* Pagination */
+        .pagination-container { display: flex; justify-content: flex-end; align-items: center; padding: 16px; gap: 8px; border-top: 1px solid #e2e8f0; background: #fff; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;}
+        .page-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .page-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+        .page-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+        .page-info { font-size: 13px; color: #64748b; margin-right: 16px; }
     </style>
 </head>
 <body>
-    <div class="main-layout">
-        <%@include file="/WEB-INF/common/sidebar.jsp" %>
-        
-        <main class="content-area">
+<div class="main-layout">
+    <jsp:include page="/WEB-INF/common/sidebar.jsp" />
+    <main class="content-area">
+
+            <!-- Success/Error messages -->
+            <c:if test="${param.success != null}">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <c:choose>
+                        <c:when test="${param.success == 'confirmed'}">Manager đã xác nhận bảng lương thành công!</c:when>
+                        <c:when test="${param.success == 'finalized'}">HR đã chốt lương thành công!</c:when>
+                        <c:otherwise>Thao tác thành công!</c:otherwise>
+                    </c:choose>
+                </div>
+            </c:if>
+            <c:if test="${param.error != null}">
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <c:choose>
+                        <c:when test="${param.error == 'approve_failed'}">Không thể duyệt bảng lương. Kiểm tra trạng thái hiện tại.</c:when>
+                        <c:otherwise>Có lỗi xảy ra.</c:otherwise>
+                    </c:choose>
+                </div>
+            </c:if>
+
+            <!-- Header -->
             <div class="page-header">
-                <div>
-                    <h1 class="page-title">
-                        Bảng Lương Tháng ${payroll.month}/${payroll.year}
-                        <c:if test="${payroll.status == 'DRAFT'}"><span style="background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 99px; font-size: 12px;">BẢN NHÁP</span></c:if>
-                        <c:if test="${payroll.status == 'APPROVED'}"><span style="background: #dbeafe; color: #1d4ed8; padding: 4px 10px; border-radius: 99px; font-size: 12px;">ĐÃ CHỐT</span></c:if>
-                        <c:if test="${payroll.status == 'PAID'}"><span style="background: #dcfce3; color: #166534; padding: 4px 10px; border-radius: 99px; font-size: 12px;">ĐÃ CHI TRẢ</span></c:if>
-                    </h1>
-                    <div class="subtitle">
-                        Tạo ngày <fmt:formatDate value="${payroll.createdAt}" pattern="dd/MM/yyyy HH:mm"/> bởi ${payroll.createdByName}
-                        <c:if test="${not empty payroll.approvedByName}">
-                            | Duyệt bởi: <strong>${payroll.approvedByName}</strong> (<fmt:formatDate value="${payroll.approvedAt}" pattern="dd/MM/yyyy HH:mm"/>)
-                        </c:if>
-                        <c:if test="${not empty payroll.paidByName}">
-                            | Xác nhận chi bởi: <strong>${payroll.paidByName}</strong> (<fmt:formatDate value="${payroll.paidAt}" pattern="dd/MM/yyyy HH:mm"/>)
-                        </c:if>
-                        <c:if test="${payroll.status == 'APPROVED' || payroll.status == 'PAID'}">
-                            <span style="margin-left: 12px; color: #ef4444; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" title="Bảng lương đã chốt và không thể chỉnh sửa">
-                                <i class="fa-solid fa-lock"></i> Chế độ Chỉ Đọc (Read-Only)
-                            </span>
-                        </c:if>
-                    </div>
+                <div class="page-title-group">
+                    <h1 class="page-title">Bảng Lương Tháng ${payroll.month}/${payroll.year}</h1>
+                    <p class="page-subtitle">
+                        <span class="badge ${payroll.statusBadgeClass}">${payroll.statusLabel}</span>
+                        &nbsp; ${payroll.totalEmployees} nhân viên
+                    </p>
                 </div>
-                <div style="display: flex; gap: 12px;">
-                    <a href="${pageContext.request.contextPath}/admin/payrolls" class="btn btn-outline">
-                        <i class="fa-solid fa-arrow-left"></i> Quay lại
+                <div class="header-actions">
+                    <a href="${pageContext.request.contextPath}/admin/payrolls" class="btn btn-outline btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại
                     </a>
-                    <c:if test="${sessionScope.roleGroup == 'ADMIN' || sessionScope.roleGroup == 'HR'}">
-                        <a href="${pageContext.request.contextPath}/admin/payroll/export-excel?payrollId=${payroll.id}" class="btn btn-outline" style="color: #0f766e; border-color: #5eead4;" title="Tải xuống bảng lương (Excel)">
-                            <i class="fa-solid fa-file-excel"></i> Export Excel
-                        </a>
-                    </c:if>
-                    <c:if test="${payroll.status == 'DRAFT'}">
-                        <form action="${pageContext.request.contextPath}/admin/payroll/generate" method="post" style="margin: 0;">
-                            <input type="hidden" name="month" value="${payroll.month}">
-                            <input type="hidden" name="year" value="${payroll.year}">
-                            <button type="submit" class="btn btn-outline" style="color: #b45309; border-color: #fcd34d;" title="Tính lại dựa trên dữ liệu mới" onclick="return confirm('Bạn có chắc chắn muốn xóa bản nháp cũ và tính lại bảng lương tháng này?');">
-                                <i class="fa-solid fa-rotate-right"></i> Tính Lại
+
+                    <!-- Approval buttons based on role and status -->
+                    <c:if test="${payroll.status == 'DRAFT' && roleGroup == 'MANAGER'}">
+                        <form action="${pageContext.request.contextPath}/admin/payroll/approve" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="${payroll.id}" />
+                            <input type="hidden" name="status" value="MANAGER_CONFIRMED" />
+                            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Xác nhận bảng lương cho phòng ban?')">
+                                <i class="fas fa-check"></i> Xác nhận (Manager)
                             </button>
                         </form>
                     </c:if>
-                    <c:if test="${payroll.status == 'DRAFT' && sessionScope.roleGroup == 'ADMIN'}">
-                        <form action="${pageContext.request.contextPath}/admin/payroll/approve" method="post" style="margin: 0;">
-                            <input type="hidden" name="id" value="${payroll.id}">
-                            <input type="hidden" name="status" value="APPROVED">
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Bạn có chắc chắn muốn duyệt bảng lương này?');">
-                                <i class="fa-solid fa-check"></i> Duyệt Bảng Lương
+                    <c:if test="${(payroll.status == 'DRAFT' || payroll.status == 'MANAGER_CONFIRMED') && roleGroup == 'HR'}">
+                        <form action="${pageContext.request.contextPath}/admin/payroll/approve" method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="${payroll.id}" />
+                            <input type="hidden" name="status" value="HR_FINALIZED" />
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Chốt lương tháng ${payroll.month}/${payroll.year}? Sau khi chốt không thể thay đổi.')">
+                                <i class="fas fa-lock"></i> Chốt lương (HR)
                             </button>
                         </form>
                     </c:if>
-                    <c:if test="${payroll.status == 'APPROVED' && sessionScope.roleGroup == 'ADMIN'}">
-                        <form action="${pageContext.request.contextPath}/admin/payroll/approve" method="post" style="margin: 0;">
-                            <input type="hidden" name="id" value="${payroll.id}">
-                            <input type="hidden" name="status" value="PAID">
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận đã chi trả thành công bảng lương này?');">
-                                <i class="fa-solid fa-money-bill-wave"></i> Xác Nhận Chi Trả
-                            </button>
-                        </form>
-                    </c:if>
-                </div>
-            </div>
-            
-            <c:set var="totalGross" value="0" />
-            <c:set var="totalAllowance" value="0" />
-            <c:set var="totalDeduction" value="0" />
-            <c:forEach items="${details}" var="d">
-                <c:set var="totalGross" value="${totalGross + d.basicSalary}" />
-                <c:set var="totalAllowance" value="${totalAllowance + d.allowanceAmount}" />
-                <c:set var="totalDeduction" value="${totalDeduction + d.insuranceDeduction + d.taxDeduction + d.unpaidLeaveDeduction}" />
-            </c:forEach>
-            <div class="summary-cards">
-                <div class="card">
-                    <div class="card-title">Tổng Nhân Viên</div>
-                    <div class="card-value">${payroll.totalEmployees}</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Tổng Lương Cơ Bản</div>
-                    <div class="card-value"><fmt:formatNumber value="${totalGross}" pattern="#,##0"/> đ</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Tổng Phụ Cấp</div>
-                    <div class="card-value text-green">+<fmt:formatNumber value="${totalAllowance}" pattern="#,##0"/> đ</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">Tổng Khấu Trừ</div>
-                    <div class="card-value text-red">-<fmt:formatNumber value="${totalDeduction}" pattern="#,##0"/> đ</div>
-                </div>
-                <div class="card" style="grid-column: span 4; background: #f8fafc; border: 2px solid #e2e8f0;">
-                    <div class="card-title">Tổng Lương Thực Nhận (Net)</div>
-                    <div class="card-value" style="color: #4f46e5;"><fmt:formatNumber value="${payroll.totalAmount}" pattern="#,##0"/> đ</div>
                 </div>
             </div>
 
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mã NV</th>
-                            <th>Họ Tên</th>
-                            <th>Phòng Ban</th>
-                            <th class="text-right">Lương Cơ Bản</th>
-                            <th class="text-right">Phụ Cấp (+)</th>
-                            <th class="text-right">BHXH 8% (-)</th>
-                            <th class="text-right">BHYT 1.5% (-)</th>
-                            <th class="text-right">BHTN 1% (-)</th>
-                            <th class="text-right">Nghỉ KL (-)</th>
-                            <th class="text-right">Khấu Trừ Khác (-)</th>
-                            <th class="text-right">Thực Nhận (NET)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach items="${details}" var="d">
-                            <tr>
-                                <td><strong>${d.employeeCode}</strong></td>
-                                <td>${d.employeeName}</td>
-                                <td>${d.departmentName != null ? d.departmentName : '---'}</td>
-                                <td class="text-right"><fmt:formatNumber value="${d.basicSalary}" pattern="#,##0"/></td>
-                                <td class="text-right text-green">+<fmt:formatNumber value="${d.allowanceAmount}" pattern="#,##0"/></td>
-                                <td class="text-right text-red">-<fmt:formatNumber value="${d.insuranceDeduction * 8 / 10.5}" pattern="#,##0"/></td>
-                                <td class="text-right text-red">-<fmt:formatNumber value="${d.insuranceDeduction * 1.5 / 10.5}" pattern="#,##0"/></td>
-                                <td class="text-right text-red">-<fmt:formatNumber value="${d.insuranceDeduction * 1 / 10.5}" pattern="#,##0"/></td>
-                                <td class="text-right text-red">-<fmt:formatNumber value="${d.unpaidLeaveDeduction}" pattern="#,##0"/></td>
-                                <td class="text-right text-red">-<fmt:formatNumber value="${d.taxDeduction}" pattern="#,##0"/></td>
-                                <td class="text-right text-primary"><fmt:formatNumber value="${d.netSalary}" pattern="#,##0"/> đ</td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
+            <!-- Approval Flow Visual -->
+            <div class="approval-flow">
+                <span class="flow-step ${payroll.status == 'DRAFT' ? 'active' : 'done'}">
+                    <i class="fas fa-file-alt"></i> Bản nháp
+                </span>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <span class="flow-step ${payroll.status == 'MANAGER_CONFIRMED' ? 'active' : (payroll.status == 'HR_FINALIZED' ? 'done' : 'pending')}">
+                    <i class="fas fa-user-tie"></i> Manager xác nhận
+                    <c:if test="${payroll.managerConfirmedByName != null}">
+                        <small style="display:block;font-weight:400;font-size:11px;">${payroll.managerConfirmedByName}</small>
+                    </c:if>
+                </span>
+                <i class="fas fa-arrow-right flow-arrow"></i>
+                <span class="flow-step ${payroll.status == 'HR_FINALIZED' ? 'active done' : 'pending'}">
+                    <i class="fas fa-check-double"></i> HR chốt lương
+                    <c:if test="${payroll.hrConfirmedByName != null}">
+                        <small style="display:block;font-weight:400;font-size:11px;">${payroll.hrConfirmedByName}</small>
+                    </c:if>
+                </span>
             </div>
-        </main>
-    </div>
+
+            <!-- Department Filter & Search -->
+            <div class="filter-bar">
+                <label><i class="fas fa-building"></i> Phòng ban:</label>
+                <select id="deptFilter" onchange="filterByDept()">
+                    <option value="">-- Tất cả phòng ban --</option>
+                    <c:forEach var="dept" items="${departments}">
+                        <option value="${dept.id}" ${selectedDepartmentId == dept.id ? 'selected' : ''}>${dept.name}</option>
+                    </c:forEach>
+                </select>
+
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                    <label><i class="fas fa-search"></i> Tìm kiếm:</label>
+                    <input type="text" id="empSearch" placeholder="Nhập Mã hoặc Tên nhân viên..." style="padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:14px; min-width: 250px;">
+                </div>
+            </div>
+
+            <!-- ============ SINGLE COMPREHENSIVE TABLE ============ -->
+            <div class="payroll-block">
+                <div class="table-wrapper" style="overflow-x: auto; padding: 0;">
+                    <table class="data-table" style="min-width: 1500px;">
+                        <thead>
+                            <!-- Header Row 1: Grouping -->
+                            <tr style="background: #f1f5f9;">
+                                <th colspan="4" class="text-center" style="border-right: 2px solid #cbd5e1; color: #334155;"><i class="fas fa-info-circle"></i> THÔNG TIN CHUNG</th>
+                                <th colspan="7" class="text-center" style="border-right: 2px solid #cbd5e1; color: #1d4ed8; background: #eff6ff;"><i class="fas fa-calendar-check"></i> NGÀY CÔNG & LƯƠNG CƠ BẢN</th>
+                                <th colspan="5" class="text-center" style="border-right: 2px solid #cbd5e1; color: #6d28d9; background: #f5f3ff;"><i class="fas fa-hand-holding-usd"></i> PHỤ CẤP & BẢO HIỂM</th>
+                                <th colspan="3" class="text-center" style="color: #059669; background: #ecfdf5;"><i class="fas fa-money-bill-wave"></i> THUẾ & LƯƠNG THỰC NHẬN</th>
+                            </tr>
+                            <!-- Header Row 2: Columns -->
+                            <tr>
+                                <!-- General Info -->
+                                <th>Mã NV</th>
+                                <th>Họ và tên</th>
+                                <th>Phòng ban</th>
+                                <th style="border-right: 2px solid #cbd5e1;">Chức vụ</th>
+                                
+                                <!-- Block 1 -->
+                                <th class="text-right">Lương CB (HĐ)</th>
+                                <th class="text-center">Ngày chuẩn</th>
+                                <th class="text-center">Thực tế</th>
+                                <th class="text-center">Nghỉ phép</th>
+                                <th class="text-center">Nghỉ ốm</th>
+                                <th class="text-center">Nghỉ KL</th>
+                                <th class="text-right" style="border-right: 2px solid #cbd5e1;">Khấu trừ NKL</th>
+
+                                <!-- Block 2 -->
+                                <th class="text-right">Phụ cấp</th>
+                                <th class="text-right">BHXH</th>
+                                <th class="text-right">BHYT</th>
+                                <th class="text-right">BHTN</th>
+                                <th class="text-right" style="border-right: 2px solid #cbd5e1;">Tổng BH</th>
+
+                                <!-- Block 3 -->
+                                <th class="text-right">Lương trước thuế</th>
+                                <th class="text-right">Thuế TNCN</th>
+                                <th class="text-right" style="font-size:15px; font-weight: 700;">THỰC NHẬN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payrollTableBody">
+                            <c:set var="totalGross" value="0" />
+                            <c:set var="totalTax" value="0" />
+                            <c:set var="totalNet" value="0" />
+                            <c:forEach var="d" items="${details}">
+                                <c:set var="totalGross" value="${totalGross + d.grossSalary}" />
+                                <c:set var="totalTax" value="${totalTax + d.taxDeduction}" />
+                                <c:set var="totalNet" value="${totalNet + d.netSalary}" />
+                                <tr class="employee-row">
+                                    <!-- General -->
+                                    <td><strong>${d.employeeCode}</strong></td>
+                                    <td>${d.employeeName}</td>
+                                    <td>${d.departmentName}</td>
+                                    <td style="border-right: 2px solid #e2e8f0;">${d.positionName}</td>
+
+                                    <!-- Block 1 -->
+                                    <td class="text-right amount"><fmt:formatNumber value="${d.basicSalary}" pattern="#,##0" /></td>
+                                    <td class="text-center">${d.standardDays}</td>
+                                    <td class="text-center">${d.actualWorkedDays}</td>
+                                    <td class="text-center">${d.paidLeaveDays}</td>
+                                    <td class="text-center">${d.sickLeaveDays}</td>
+                                    <td class="text-center">${d.unpaidLeaveDays}</td>
+                                    <td class="text-right amount amount-negative" style="border-right: 2px solid #e2e8f0;">
+                                        <c:if test="${d.unpaidLeaveDeduction > 0}">-</c:if><fmt:formatNumber value="${d.unpaidLeaveDeduction}" pattern="#,##0" />
+                                    </td>
+
+                                    <!-- Block 2 -->
+                                    <td class="text-right amount amount-positive">+<fmt:formatNumber value="${d.allowanceAmount}" pattern="#,##0" /></td>
+                                    <td class="text-right amount amount-negative">-<fmt:formatNumber value="${d.bhxhDeduction}" pattern="#,##0" /></td>
+                                    <td class="text-right amount amount-negative">-<fmt:formatNumber value="${d.bhytDeduction}" pattern="#,##0" /></td>
+                                    <td class="text-right amount amount-negative">-<fmt:formatNumber value="${d.bhtnDeduction}" pattern="#,##0" /></td>
+                                    <td class="text-right amount amount-negative" style="border-right: 2px solid #e2e8f0;">
+                                        -<fmt:formatNumber value="${d.insuranceDeduction}" pattern="#,##0" />
+                                    </td>
+
+                                    <!-- Block 3 -->
+                                    <td class="text-right amount"><fmt:formatNumber value="${d.grossSalary}" pattern="#,##0" /></td>
+                                    <td class="text-right amount amount-negative">
+                                        <c:if test="${d.taxDeduction > 0}">-</c:if><fmt:formatNumber value="${d.taxDeduction}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount" style="font-size:15px; font-weight:800; color:#059669;">
+                                        <fmt:formatNumber value="${d.netSalary}" pattern="#,##0" /> đ
+                                    </td>
+                                </tr>
+                            </c:forEach>
+
+                            <!-- Summary row -->
+                            <tr class="summary-row">
+                                <td colspan="16" class="text-right" style="border-right: 2px solid #cbd5e1; font-size: 14px;">
+                                    <strong>TỔNG CỘNG (${payroll.totalEmployees} nhân viên)</strong>
+                                </td>
+                                <td class="text-right amount"><fmt:formatNumber value="${totalGross}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-negative"><fmt:formatNumber value="${totalTax}" pattern="#,##0" /></td>
+                                <td class="text-right amount" style="font-size:16px; color:#059669;">
+                                    <fmt:formatNumber value="${totalNet}" pattern="#,##0" /> đ
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-container" id="paginationControls"></div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+function filterByDept() {
+    var deptId = document.getElementById('deptFilter').value;
+    var url = '${pageContext.request.contextPath}/admin/payroll/detail?id=${payroll.id}';
+    if (deptId) url += '&departmentId=' + deptId;
+    window.location.href = url;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const rowsPerPage = 5;
+    const tableBody = document.getElementById("payrollTableBody");
+    const allRows = Array.from(tableBody.querySelectorAll("tr.employee-row"));
+    const paginationControls = document.getElementById("paginationControls");
+    const searchInput = document.getElementById("empSearch");
+    
+    let filteredRows = allRows;
+
+    function renderPagination() {
+        paginationControls.innerHTML = "";
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+        
+        // Info text
+        const info = document.createElement("div");
+        info.className = "page-info";
+        info.innerText = "Hiển thị " + rowsPerPage + " dòng / trang (Tổng: " + filteredRows.length + " NV)";
+        paginationControls.appendChild(info);
+
+        // Page buttons
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement("button");
+            btn.className = "page-btn";
+            btn.innerText = i;
+            btn.dataset.page = i;
+            btn.onclick = function() { showPage(i); };
+            paginationControls.appendChild(btn);
+        }
+        
+        paginationControls.style.display = "flex";
+        showPage(1);
+    }
+
+    function showPage(page) {
+        // Hide all rows first
+        allRows.forEach(row => row.style.display = "none");
+        
+        // Show only the filtered rows for the current page
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = page * rowsPerPage;
+        for (let i = startIndex; i < endIndex && i < filteredRows.length; i++) {
+            filteredRows[i].style.display = "";
+        }
+        
+        // Update active class on buttons
+        const buttons = paginationControls.querySelectorAll(".page-btn");
+        buttons.forEach(btn => {
+            if (parseInt(btn.dataset.page) === page) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+    }
+
+    // Filter event listener
+    searchInput.addEventListener("input", function() {
+        const keyword = searchInput.value.toLowerCase().trim();
+        if (!keyword) {
+            filteredRows = allRows;
+        } else {
+            filteredRows = allRows.filter(row => {
+                const empCode = row.cells[0].innerText.toLowerCase();
+                const empName = row.cells[1].innerText.toLowerCase();
+                return empCode.includes(keyword) || empName.includes(keyword);
+            });
+        }
+        renderPagination();
+    });
+
+    // Initialize
+    renderPagination();
+});
+</script>
 </body>
 </html>

@@ -21,24 +21,7 @@
         .modal-content { border-radius: 12px; }
         .form-control, .custom-select { border-radius: 6px; }
 
-        /* ── Allowance popover in table ── */
-        .allowance-cell { position: relative; }
-        .allowance-trigger { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; transition: all 0.15s ease; white-space: nowrap; }
-        .allowance-trigger:hover { background-color: #dcfce7; border-color: #86efac; }
-        .allowance-trigger .count-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background-color: #15803d; color: #fff; font-size: 10px; font-weight: 700; }
-        .allowance-popover { display: none; position: absolute; z-index: 100; top: 100%; left: 0; margin-top: 4px; min-width: 220px; background: #fff; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; padding: 10px 0; }
-        .allowance-cell:hover .allowance-popover { display: block; }
-        .allowance-popover-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; font-size: 13px; }
-        .allowance-popover-item:not(:last-child) { border-bottom: 1px solid #f3f4f6; }
-        .allowance-popover-item .code { font-weight: 600; color: #374151; }
-        .allowance-popover-item .name { color: #6b7280; margin-left: 4px; }
-        .allowance-popover-item .amount { font-weight: 600; color: #059669; white-space: nowrap; }
-        .no-allowance { color: #9ca3af; font-size: 13px; font-style: italic; }
 
-        /* ── Modal allowance container ── */
-        #allowancesContainer { scrollbar-width: thin; scrollbar-color: #d1d5db transparent; }
-        #allowancesContainer::-webkit-scrollbar { width: 5px; }
-        #allowancesContainer::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
     </style>
 </head>
 <body style="background-color: #f8f9fa;">
@@ -56,6 +39,7 @@
         <div id="alertContainer" style="position: fixed; top: 24px; right: 24px; z-index: 9999; min-width: 320px; max-width: 450px;"></div>
 
         <%-- ═══ ACTION BUTTON ═══ --%>
+        <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].create)}">
         <div class="mb-4">
             <button type="button" class="btn text-white px-4 py-2"
                     style="background-color: #6366f1; border-radius: 8px; font-weight: 500; border: none; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);"
@@ -63,6 +47,7 @@
                 + Tạo hợp đồng mới
             </button>
         </div>
+        </c:if>
 
         <%-- ═══ FILTER BAR ═══ --%>
         <div class="card border-0 shadow-sm mb-4 p-3" style="border-radius: 12px; background: white;">
@@ -117,7 +102,7 @@
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 130px;">Loại HĐ</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 180px;">Thời hạn</th>
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 130px;">Lương cứng</th>
-                        <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 110px;">Phụ cấp</th>
+
                         <th class="text-secondary font-weight-bold text-uppercase py-3" style="font-size: 11px; border: none; width: 110px;">Trạng thái</th>
                         <th class="text-secondary font-weight-bold text-uppercase text-center px-4 py-3" style="font-size: 11px; border: none; width: 130px;">Thao tác</th>
                     </tr>
@@ -155,28 +140,7 @@
                                 </c:choose>
                             </td>
                             <td class="salary-cell"><fmt:formatNumber value="${c.baseSalary}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ</td>
-                            <td class="allowance-cell">
-                                <c:choose>
-                                    <c:when test="${not empty c.allowances}">
-                                        <c:set var="allowanceCount" value="0" />
-                                        <c:forEach var="a" items="${c.allowances}"><c:set var="allowanceCount" value="${allowanceCount + 1}" /></c:forEach>
-                                        <span class="allowance-trigger">
-                                            <span class="count-badge">${allowanceCount}</span> phụ cấp
-                                        </span>
-                                        <div class="allowance-popover">
-                                            <c:forEach var="allowance" items="${c.allowances}">
-                                                <div class="allowance-popover-item">
-                                                    <span><span class="code">${allowance.code}</span><span class="name">- ${allowance.name}</span></span>
-                                                    <span class="amount"><fmt:formatNumber value="${allowance.amount}" type="number" groupingUsed="true" maxFractionDigits="0"/>đ</span>
-                                                </div>
-                                            </c:forEach>
-                                        </div>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="no-allowance">—</span>
-                                    </c:otherwise>
-                                </c:choose>
-                            </td>
+
                             <td>
                                 <c:choose>
                                     <c:when test="${c.status == 1}"><span class="badge badge-status badge-active">Active</span></c:when>
@@ -195,21 +159,24 @@
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                 </button>
-                                <%-- Renew (only if Active AND not Indefinite type) --%>
-                                <c:if test="${c.status == 1 && c.contractType != 3}">
+                                <%-- Renew: chỉ Active, không vô thời hạn, và có quyền CREATE --%>
+                                <c:if test="${c.status == 1 and c.contractType != 3}">
+                                    <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].create)}">
                                     <button class="btn-icon" title="Gia hạn hợp đồng"
                                             data-id="${c.id}" data-employeeid="${c.employeeId}"
                                             data-empname="${c.employeeFullName}" data-contractnumber="${c.contractNumber}"
-                                            data-type="${c.contractType}" data-salary="${c.baseSalary}" data-allowances="${c.allowanceTypeIdsString}"
+                                            data-type="${c.contractType}" data-salary="${c.baseSalary}"
                                             onclick="openRenewModal(this)">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="23 4 23 10 17 10"></polyline>
                                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                                         </svg>
                                     </button>
+                                    </c:if>
                                 </c:if>
-                                <%-- Terminate (only if Active) --%>
+                                <%-- Terminate: chỉ Active và có quyền DELETE --%>
                                 <c:if test="${c.status == 1}">
+                                    <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].delete)}">
                                     <button class="btn-icon" title="Chấm dứt hợp đồng"
                                             data-id="${c.id}" data-contractnumber="${c.contractNumber}"
                                             data-empname="${c.employeeFullName}"
@@ -219,12 +186,13 @@
                                             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
                                         </svg>
                                     </button>
+                                    </c:if>
                                 </c:if>
                             </td>
                         </tr>
                     </c:forEach>
                     <tr id="noDataRow" style="display: none;">
-                        <td colspan="11" class="text-center text-muted py-4" style="background: white;">Không tìm thấy hợp đồng nào phù hợp với bộ lọc!</td>
+                        <td colspan="10" class="text-center text-muted py-4" style="background: white;">Không tìm thấy hợp đồng nào phù hợp với bộ lọc!</td>
                     </tr>
                     </tbody>
                 </table>
@@ -312,19 +280,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="form-group mb-3">
-                            <label class="text-dark font-weight-500" style="font-size: 14px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -2px;"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>
-                                Các loại phụ cấp được hưởng
-                            </label>
-                            <div id="allowancesContainer" class="p-3 border rounded" style="max-height: 170px; overflow-y: auto; border-radius: 8px !important; border: 1px solid #e5e7eb !important; background-color: #fafbfc;">
-                                <span class="text-muted" style="font-size: 13px;">Đang tải danh sách phụ cấp...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
                 <div class="row">
                     <div class="col-12">
                         <div class="form-group mb-2">

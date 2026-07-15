@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Pre-load salary scales on page init ───────────────────────────────
     loadSalaryScales();
-    loadActiveAllowances();
+
 });
 
 // ── Init: collect all data rows ──────────────────────────────────────────
@@ -85,14 +85,16 @@ function renderTable() {
     const startIndex = (currentPage - 1) * rowsPerPage;
     const endIndex   = Math.min(startIndex + rowsPerPage, totalRecords);
 
-    // Update all matching rows' STT dynamically so they are contiguous
+    // Update all matching rows' STT and hide all rows first
     filteredRows.forEach((row, index) => {
+        row.style.display = "none";
         const indexCell = row.querySelector(".row-index");
         if (indexCell) {
             indexCell.innerText = index + 1;
         }
     });
 
+    // Show only current page rows
     for (let i = startIndex; i < endIndex; i++) {
         filteredRows[i].style.display = "";
     }
@@ -281,10 +283,7 @@ function openCreateModal() {
     document.getElementById("formDescription").value = "";
     document.getElementById("formContractFile").value = "";
 
-    // Clear allowances checked checkboxes
-    document.querySelectorAll(".allowance-checkbox").forEach(cb => {
-        cb.checked = false;
-    });
+
 
     document.getElementById("btnSubmitContract").innerText = "Lưu hợp đồng";
     document.getElementById("btnSubmitContract").style.backgroundColor = "#6366f1";
@@ -339,12 +338,7 @@ function openRenewModal(btn) {
     document.getElementById("formDescription").value = "";
     document.getElementById("formContractFile").value = "";
 
-    // Pre-select allowances
-    const selectedAllowances = btn.getAttribute("data-allowances") || "";
-    const selectedIds = selectedAllowances ? selectedAllowances.split(",") : [];
-    document.querySelectorAll(".allowance-checkbox").forEach(cb => {
-        cb.checked = selectedIds.includes(cb.value);
-    });
+
 
     document.getElementById("btnSubmitContract").innerText = "Xác nhận gia hạn";
     document.getElementById("btnSubmitContract").style.backgroundColor = "#059669";
@@ -418,17 +412,6 @@ function submitContract() {
         }
     }
 
-    // Get checked allowances
-    const checkedAllowances = [];
-    document.querySelectorAll(".allowance-checkbox:checked").forEach(cb => {
-        checkedAllowances.push(cb.value);
-    });
-
-    if (checkedAllowances.length === 0) {
-        showAlert("error", "Vui lòng chọn ít nhất 1 loại phụ cấp cho hợp đồng.");
-        return;
-    }
-
     // ── Build FormData (multipart) ─────────────────────────────────────
     const formData = new FormData();
     formData.append("action", action);
@@ -440,10 +423,6 @@ function submitContract() {
     formData.append("salaryScaleId", salaryScaleId);
     formData.append("description", description);
 
-    checkedAllowances.forEach(id => {
-        formData.append("allowanceTypeIds", id);
-    });
-
     if (fileInput.files && fileInput.files.length > 0) {
         formData.append("contractFile", fileInput.files[0]);
     }
@@ -454,9 +433,13 @@ function submitContract() {
 
     fetch(CTX + "/hr/api/contracts", {
         method: "POST",
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: formData  // No Content-Type header — browser sets multipart boundary automatically
     })
     .then(res => {
+        if (res.status === 403) {
+            return res.text().then(text => { throw new Error(text || "Bạn không có quyền thực hiện hành động này."); });
+        }
         return res.json().catch(() => {
             throw new Error("Lỗi phản hồi từ hệ thống (Mã trạng thái: " + res.status + ").");
         });
@@ -490,10 +473,18 @@ function submitTerminate() {
 
     fetch(CTX + "/hr/api/contracts", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        headers: { 
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest"
+        },
         body: params.toString()
     })
-    .then(res => res.json())
+    .then(res => {
+        if (res.status === 403) {
+            return res.text().then(text => { throw new Error(text || "Bạn không có quyền thực hiện hành động này."); });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.status === "success") {
             $('#terminateModal').modal('hide');
@@ -608,54 +599,4 @@ function applyEndDateRule() {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ALLOWANCES DYNAMIC LOADING
-// ═══════════════════════════════════════════════════════════════════════════
 
-let activeAllowancesCache = [];
-
-function loadActiveAllowances() {
-    const container = document.getElementById("allowancesContainer");
-    if (!container) return;
-
-    fetch(CTX + "/hr/api/contracts?action=get_active_allowances")
-        .then(res => res.json())
-        .then(data => {
-            activeAllowancesCache = Array.isArray(data) ? data : [];
-            populateAllowancesContainer(activeAllowancesCache);
-        })
-        .catch(err => {
-            console.error("Allowance load error:", err);
-            container.innerHTML = '<span class="text-danger" style="font-size: 13px;">Không thể tải danh sách phụ cấp.</span>';
-        });
-}
-
-function populateAllowancesContainer(allowances) {
-    const container = document.getElementById("allowancesContainer");
-    if (!container) return;
-
-    if (allowances.length === 0) {
-        container.innerHTML = '<span class="text-muted" style="font-size: 13px;">Không có phụ cấp nào đang hoạt động.</span>';
-        return;
-    }
-
-    container.innerHTML = "";
-    allowances.forEach(at => {
-        const div = document.createElement("div");
-        div.className = "d-flex align-items-center";
-        div.style.cssText = "padding: 7px 10px; border-radius: 6px; transition: background 0.15s; cursor: pointer;";
-        div.onmouseenter = function() { this.style.backgroundColor = '#f0fdf4'; };
-        div.onmouseleave = function() { this.style.backgroundColor = 'transparent'; };
-        
-        const formattedAmount = Number(at.amount).toLocaleString('vi-VN');
-        
-        div.innerHTML = `
-            <input type="checkbox" class="allowance-checkbox" id="allowance_${at.id}" value="${at.id}" style="cursor: pointer; width: 15px; height: 15px; margin-right: 10px; flex-shrink: 0; accent-color: #059669;">
-            <label class="mb-0 d-flex justify-content-between w-100 align-items-center" for="allowance_${at.id}" style="font-size: 13px; cursor: pointer; user-select: none;">
-                <span><span style="font-weight: 600; color: #374151; background: #e5e7eb; padding: 1px 6px; border-radius: 4px; font-size: 11px; margin-right: 6px;">${at.code}</span><span class="text-dark">${at.name}</span></span>
-                <span style="font-weight: 600; color: #059669; font-size: 12px; white-space: nowrap;">${formattedAmount}đ</span>
-            </label>
-        `;
-        container.appendChild(div);
-    });
-}

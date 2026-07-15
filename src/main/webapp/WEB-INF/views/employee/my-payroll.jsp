@@ -477,7 +477,7 @@
                                                     </td>
                                                     <td style="text-align: center;">
                                                         <button type="button" class="btn btn-sm btn-outline"
-                                                            onclick="openPayslipModal(${d.id}, '${d.status}', '${d.month}/${d.year}', ${d.basicSalary}, ${d.allowanceAmount}, ${d.insuranceDeduction}, ${d.taxDeduction}, ${d.unpaidLeaveDeduction}, ${d.netSalary}, ${d.standardDays}, ${d.actualDays})">
+                                                            onclick="openPayslipModal(${d.id}, '${d.status}', '${d.month}/${d.year}', ${d.basicSalary}, ${d.allowanceAmount}, ${d.insuranceDeduction}, ${d.taxDeduction}, ${d.unpaidLeaveDeduction}, ${d.netSalary}, ${d.standardDays}, ${d.actualWorkedDays})">
                                                             <i class="fa-solid fa-eye"></i> Xem Chi Tiết
                                                         </button>
                                                     </td>
