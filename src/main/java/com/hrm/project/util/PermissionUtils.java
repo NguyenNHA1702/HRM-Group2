@@ -43,7 +43,7 @@ public class PermissionUtils {
         boolean isPost = "POST".equalsIgnoreCase(method);
 
         // Bỏ qua filter cho các trang dành cho mọi nhân viên (Controller sẽ tự kiểm tra quyền riêng)
-        if ("/schedule/employee".equals(path) || "/admin/insurance".equals(path)) {
+        if ("/admin/insurance".equals(path)) {
             return null;
         }
 
@@ -121,8 +121,7 @@ public class PermissionUtils {
         }
 
         // ─── 7. SCHEDULE_MGMT (Ca làm việc, ngày nghỉ lễ, lịch phân công) ─
-        if ("/admin/work-shifts".equals(path) || "/admin/holidays".equals(path)
-                || path.startsWith("/schedule")) {
+        if ("/admin/work-shifts".equals(path) || "/admin/holidays".equals(path)) {
             if (isPost) {
                 if ("delete".equals(action) || path.contains("/delete"))
                     return new RequiredPermission("SCHEDULE_MGMT", "DELETE");
