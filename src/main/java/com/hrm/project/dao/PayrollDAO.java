@@ -31,4 +31,5 @@ public interface PayrollDAO {
     List<Payroll> getPayrolls(Integer year, String searchKeyword, int offset, int limit);
     int getTotalPayrollsCount(Integer year, String searchKeyword);
     double getTotalAmountYTD(int year);
+    List<Payroll> getPayrollsByDepartment(int departmentId);
 }

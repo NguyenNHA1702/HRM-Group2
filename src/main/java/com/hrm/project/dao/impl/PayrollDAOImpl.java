@@ -1005,4 +1005,27 @@ public class PayrollDAOImpl implements PayrollDAO {
         }
         return 0.0;
     }
+
+    @Override
+    public List<Payroll> getPayrollsByDepartment(int departmentId) {
+        List<Payroll> list = new ArrayList<>();
+        String sql = PAYROLL_SELECT_WITH_NAMES +
+                     "WHERE EXISTS (" +
+                     "  SELECT 1 FROM payroll_details pd " +
+                     "  JOIN employees e ON pd.employee_id = e.id " +
+                     "  WHERE pd.payroll_id = p.id AND e.department_id = ?" +
+                     ") ORDER BY p.year DESC, p.month DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(readPayrollWithNames(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 }
