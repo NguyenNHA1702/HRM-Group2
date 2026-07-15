@@ -118,7 +118,7 @@ public class AttendanceController extends HttpServlet {
         request.setAttribute("explanationDetailsJson", gson.toJson(explanationDetailsMap));
 
         boolean isLocked = false;
-        String roleGroup = (String) session.getAttribute("roleGroup");
+        roleGroup = (String) session.getAttribute("roleGroup");
         if ("HR".equalsIgnoreCase(roleGroup)) {
             isLocked = attendanceService.isAttendanceLocked(year, month);
         } else {
@@ -282,8 +282,8 @@ public class AttendanceController extends HttpServlet {
     }
 
     private void saveOvertime(HttpServletRequest request, HttpSession session) {
-        String roleGroup = (String) session.getAttribute("roleGroup");
-        if (!"HR".equalsIgnoreCase(roleGroup) && !"ADMIN".equalsIgnoreCase(roleGroup)) {
+        String empRole = (String) session.getAttribute("roleGroup");
+        if (!"HR".equalsIgnoreCase(empRole) && !"ADMIN".equalsIgnoreCase(empRole)) {
             flash(session, "error", "Không có quyền thêm OT.");
             return;
         }
