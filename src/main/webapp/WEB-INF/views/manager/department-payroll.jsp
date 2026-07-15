@@ -28,16 +28,15 @@
         .card-headcount .card-icon { color: #3b82f6; }
         .card-average .card-icon { color: #8b5cf6; }
 
-        .filter-bar { background: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 24px; display: flex; gap: 16px; align-items: center; border: 1px solid #e2e8f0; }
-        .filter-bar form { display: flex; gap: 16px; align-items: center; margin: 0; }
-        .filter-bar select { padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-size: 14px; min-width: 200px; color: #334155; font-weight: 500; cursor: pointer; }
-        .filter-bar select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        .filter-bar .btn { padding: 10px 20px; border: none; background: #4f46e5; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; transition: all 0.2s; }
-        .filter-bar .btn:hover { background: #4338ca; transform: translateY(-1px); }
+        .filter-bar { background:#f8fafc; padding:16px; border-radius:10px; margin-bottom:24px; border:1px solid #e2e8f0; display:flex; gap:16px; align-items:center; }
+        .filter-bar select { padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:14px; color:#334155; flex:1; max-width:300px; outline:none; }
+        .filter-bar select:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.1); }
+        .btn { padding:8px 16px; border-radius:6px; font-weight:500; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; border:none; font-size:14px; background:#3b82f6; color:#fff; transition:all 0.2s; }
+        .btn:hover { background:#2563eb; }
 
-        .table-container { background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+        .table-container { background:#fff; border-radius:12px; box-shadow:0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06); overflow:hidden; border:1px solid #e2e8f0; }
         .data-table { width:100%; border-collapse:collapse; }
-        .data-table th { background:#f8fafc; padding:12px 16px; text-align:left; font-size:12px; text-transform:uppercase; font-weight:600; color:#64748b; border-bottom:1px solid #e2e8f0; }
+        .data-table th { background:#f8fafc; padding:12px 16px; text-align:left; font-size:12px; font-weight:600; color:#475569; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; }
         .data-table td { padding:14px 16px; border-bottom:1px solid #f1f5f9; font-size:14px; color:#334155; vertical-align:middle; }
         .data-table tr:hover { background:#f8fafc; }
         
@@ -60,6 +59,27 @@
         .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 16px; }
         .empty-state h3 { font-size: 18px; font-weight: 600; color: #334155; margin: 0 0 8px 0; }
         .empty-state p { margin: 0; font-size: 14px; }
+        
+        /* Modal Styles */
+        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4); backdrop-filter:blur(4px); }
+        .modal-content { background-color:#fff; margin:5% auto; border-radius:12px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); width:90%; max-width:600px; animation:modalSlideIn 0.3s ease-out; }
+        @keyframes modalSlideIn { from { transform:translateY(-20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+        .modal-header { padding:20px 24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
+        .modal-title { margin:0; font-size:18px; font-weight:600; color:#0f172a; }
+        .close { color:#94a3b8; font-size:24px; font-weight:bold; cursor:pointer; transition:color 0.2s; line-height:1; }
+        .close:hover { color:#0f172a; }
+        .modal-body { padding:24px; }
+        .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #e2e8f0; }
+        .info-item { display:flex; flex-direction:column; gap:4px; }
+        .info-label { font-size:12px; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .info-value { font-size:14px; color:#0f172a; font-weight:500; }
+        .salary-breakdown { border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+        .breakdown-row { display:flex; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #e2e8f0; }
+        .breakdown-row:last-child { border-bottom:none; }
+        .breakdown-row.total { background:#f8fafc; font-weight:700; color:#0f172a; font-size:16px; }
+        .modal-footer { padding:16px 24px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; }
+        .btn-secondary { background:#f1f5f9; color:#475569; padding:8px 16px; border-radius:6px; font-weight:500; border:none; cursor:pointer; transition:all 0.2s; }
+        .btn-secondary:hover { background:#e2e8f0; color:#0f172a; }
     </style>
 </head>
 <body>
@@ -71,22 +91,22 @@
                 <p class="page-subtitle">Tổng quan ngân sách và chi tiết lương từng nhân sự trong phòng ban</p>
             </div>
             
-            <c:if test="">
+            <c:if test="\">
                 <div class="header-actions">
                     <c:choose>
-                        <c:when test="">
+                        <c:when test="\">
                             <span class="badge badge-yellow"><i class="fas fa-edit"></i> Bản nháp - Chờ duyệt</span>
-                            <form action="/manager/department-payroll/approve" method="post" style="margin:0;">
-                                <input type="hidden" name="payrollId" value="">
-                                <button type="submit" class="btn-approve" onclick="return confirm('Bạn xác nhận duyệt bảng lương tháng / của phòng ban? Sau khi duyệt sẽ chuyển sang HR xử lý.')">
+                            <form action="\/manager/department-payroll/approve" method="post" style="margin:0;">
+                                <input type="hidden" name="payrollId" value="\">
+                                <button type="submit" class="btn-approve" onclick="return confirm('Bạn xác nhận duyệt bảng lương tháng \/\ của phòng ban? Sau khi duyệt sẽ chuyển sang HR xử lý.')">
                                     <i class="fas fa-check-circle"></i> Duyệt Bảng Lương
                                 </button>
                             </form>
                         </c:when>
-                        <c:when test="">
-                            <span class="badge badge-blue"><i class="fas fa-user-check"></i> Đã duyệt</span>
+                        <c:when test="\">
+                            <span class="badge badge-blue"><i class="fas fa-user-check"></i> Đã duyệt (Chờ HR chốt)</span>
                         </c:when>
-                        <c:when test="">
+                        <c:when test="\">
                             <span class="badge badge-green"><i class="fas fa-check-double"></i> Đã chốt</span>
                         </c:when>
                     </c:choose>
@@ -94,19 +114,19 @@
             </c:if>
         </div>
 
-        <c:if test="">
+        <c:if test="\">
             <div style="background:#d1fae5; color:#065f46; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:500;">
-                <i class="fas fa-check-circle" style="margin-right:8px;"></i> Thao tác thành công!
+                <i class="fas fa-check-circle" style="margin-right:8px;"></i> Duyệt bảng lương thành công!
             </div>
         </c:if>
-        <c:if test="">
+        <c:if test="\">
             <div style="background:#fee2e2; color:#991b1b; padding:12px 16px; border-radius:8px; margin-bottom:20px; font-weight:500;">
-                <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Có lỗi xảy ra, vui lòng thử lại!
+                <i class="fas fa-exclamation-circle" style="margin-right:8px;"></i> Có lỗi xảy ra: \
             </div>
         </c:if>
 
         <c:choose>
-            <c:when test="">
+            <c:when test="\">
                 <div class="table-container empty-state">
                     <i class="fas fa-folder-open"></i>
                     <h3>Chưa có dữ liệu bảng lương</h3>
@@ -115,11 +135,11 @@
             </c:when>
             <c:otherwise>
                 <div class="filter-bar">
-                    <form action="/manager/department-payroll" method="get">
-                        <select name="payrollId">
-                            <c:forEach var="p" items="">
-                                <option value="" >
-                                    Tháng  / 
+                    <form action="\/manager/department-payroll" method="get" style="display:flex; width:100%; gap:16px;">
+                        <select name="payrollId" onchange="this.form.submit()">
+                            <c:forEach var="p" items="\">
+                                <option value="\" \>
+                                    Tháng \/\ - \
                                 </option>
                             </c:forEach>
                         </select>
@@ -127,22 +147,22 @@
                     </form>
                 </div>
 
-                <c:if test="">
+                <c:if test="\">
                     <div class="summary-cards">
                         <div class="card card-fund">
                             <i class="fas fa-coins card-icon"></i>
-                            <div class="card-title">Tổng Quỹ Lương</div>
-                            <div class="card-value"><fmt:formatNumber value="" type="number" maxFractionDigits="0"/> đ</div>
+                            <div class="card-title">Tổng Quỹ Lương (Thực nhận)</div>
+                            <div class="card-value"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/> đ</div>
                         </div>
                         <div class="card card-headcount">
                             <i class="fas fa-users card-icon"></i>
                             <div class="card-title">Số Lượng Nhân Sự</div>
-                            <div class="card-value"></div>
+                            <div class="card-value">\ người</div>
                         </div>
                         <div class="card card-average">
                             <i class="fas fa-chart-pie card-icon"></i>
                             <div class="card-title">Lương Trung Bình / Người</div>
-                            <div class="card-value"><fmt:formatNumber value="" type="number" maxFractionDigits="0"/> đ</div>
+                            <div class="card-value"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/> đ</div>
                         </div>
                     </div>
 
@@ -161,30 +181,30 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:forEach var="d" items="">
+                                <c:forEach var="d" items="\">
                                     <tr>
-                                        <td style="font-weight:600; color:#4f46e5;">EMP</td>
+                                        <td style="font-weight:600; color:#4f46e5;">EMP\</td>
                                         <td>
-                                            <div style="font-weight:600;"></div>
-                                            <div style="font-size:12px; color:#64748b;"></div>
+                                            <div style="font-weight:600;">\</div>
+                                            <div style="font-size:12px; color:#64748b;">\</div>
                                         </td>
-                                        <td> ngày</td>
-                                        <td style="text-align:right" class="currency"><fmt:formatNumber value="" type="number" maxFractionDigits="0"/></td>
-                                        <td style="text-align:right" class="currency positive">+<fmt:formatNumber value="" type="number" maxFractionDigits="0"/></td>
-                                        <td style="text-align:right" class="currency negative">-<fmt:formatNumber value="" type="number" maxFractionDigits="0"/></td>
-                                        <td style="text-align:right; font-size:16px;" class="currency positive"><fmt:formatNumber value="" type="number" maxFractionDigits="0"/> đ</td>
+                                        <td>\ ngày</td>
+                                        <td style="text-align:right" class="currency"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/></td>
+                                        <td style="text-align:right" class="currency positive">+<fmt:formatNumber value="\" type="number" maxFractionDigits="0"/></td>
+                                        <td style="text-align:right" class="currency negative">-<fmt:formatNumber value="\" type="number" maxFractionDigits="0"/></td>
+                                        <td style="text-align:right; font-size:16px;" class="currency positive"><fmt:formatNumber value="\" type="number" maxFractionDigits="0"/> đ</td>
                                         <td style="text-align:center">
                                             <button class="btn-icon" onclick="viewSalaryDetail(this)"
-                                                data-emp-id="EMP"
-                                                data-emp-name=""
-                                                data-position=""
-                                                data-dept="/"
-                                                data-working-days=""
-                                                data-basic=""
-                                                data-total-allowance=""
-                                                data-overtime=""
-                                                data-total-deduction=""
-                                                data-net="">
+                                                data-emp-id="EMP\"
+                                                data-emp-name="\"
+                                                data-position="\"
+                                                data-dept="\/\"
+                                                data-working-days="\"
+                                                data-basic="\"
+                                                data-total-allowance="\"
+                                                data-overtime="\"
+                                                data-total-deduction="\"
+                                                data-net="\">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                         </td>
@@ -197,8 +217,94 @@
             </c:otherwise>
         </c:choose>
 
-        <!-- MODAL NOT FOUND -->
+        <!-- Modal Detail -->
+        <div id="salaryModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Chi Tiết Lương <span id="modalEmpName" style="color:#3b82f6;"></span></h2>
+                    <span class="close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Kỳ Lương</span>
+                            <span class="info-value" id="modalPeriod"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mã Nhân Viên</span>
+                            <span class="info-value" id="modalEmpId"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Vị Trí</span>
+                            <span class="info-value" id="modalPosition"></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ngày Công Thực Tế</span>
+                            <span class="info-value"><span id="modalDays"></span> ngày</span>
+                        </div>
+                    </div>
+                    
+                    <div class="salary-breakdown">
+                        <div class="breakdown-row">
+                            <span style="color:#475569;">Lương Cơ Bản</span>
+                            <span class="currency" id="modalBasic"></span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span style="color:#475569;">Tổng Phụ Cấp</span>
+                            <span class="currency positive">+<span id="modalAllowance"></span></span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span style="color:#475569;">Lương Tăng Ca</span>
+                            <span class="currency positive">+<span id="modalOvertime"></span></span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span style="color:#475569;">Tổng Khấu Trừ (Thuế, BH)</span>
+                            <span class="currency negative">-<span id="modalDeduction"></span></span>
+                        </div>
+                        <div class="breakdown-row total">
+                            <span>Thực Nhận</span>
+                            <span class="currency positive" id="modalNet"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeModal()">Đóng</button>
+                </div>
+            </div>
+        </div>
     </main>
-<!-- SCRIPT NOT FOUND -->
+
+    <script>
+        function formatVND(amount) {
+            return new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
+        }
+
+        function viewSalaryDetail(btn) {
+            document.getElementById('modalEmpName').textContent = btn.dataset.empName;
+            document.getElementById('modalPeriod').textContent = 'Tháng ' + btn.dataset.dept;
+            document.getElementById('modalEmpId').textContent = btn.dataset.empId;
+            document.getElementById('modalPosition').textContent = btn.dataset.position;
+            document.getElementById('modalDays').textContent = btn.dataset.workingDays;
+            
+            document.getElementById('modalBasic').textContent = formatVND(btn.dataset.basic);
+            document.getElementById('modalAllowance').textContent = formatVND(btn.dataset.totalAllowance);
+            document.getElementById('modalOvertime').textContent = formatVND(btn.dataset.overtime);
+            document.getElementById('modalDeduction').textContent = formatVND(btn.dataset.totalDeduction);
+            document.getElementById('modalNet').textContent = formatVND(btn.dataset.net);
+            
+            document.getElementById('salaryModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('salaryModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('salaryModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>
