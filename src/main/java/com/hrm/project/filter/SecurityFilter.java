@@ -38,7 +38,8 @@ public class SecurityFilter implements Filter {
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
                 path.startsWith("/login") || path.startsWith("/logout") ||
                 path.startsWith("/forgot-password") || path.startsWith("/assets") ||
-                path.startsWith("/uploads") || path.equals("/check-db")) {
+                path.startsWith("/uploads") || path.equals("/check-db") ||
+                path.startsWith("/api/notifications")) {   // SSE stream & notification API - mọi role đã login đều dùng
 
             chain.doFilter(request, response);
             return;
@@ -74,7 +75,9 @@ public class SecurityFilter implements Filter {
                         path.equals("/admin/payroll/approve") ||
                         path.equals("/admin/payroll/export-excel") ||
                         path.equals("/admin/attendance/lock") ||
-                        path.equals("/admin/position-allowances"));
+                        path.equals("/admin/position-allowances") ||
+                        path.equals("/admin/notifications") ||           // Trang gửi thông báo
+                        path.equals("/api/admin/notifications/send"));    // API gửi thông báo
 
         // MANAGER: xem/duyệt bảng lương dept mình + chốt công
         boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&

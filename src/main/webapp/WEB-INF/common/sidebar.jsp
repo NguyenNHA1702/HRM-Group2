@@ -200,6 +200,14 @@
                         Lịch của tôi
                     </a>
                 </li>
+
+                <li class="nav-section">Truyền Thông Nội Bộ</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/notifications') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/notifications">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+                        Gửi Thông Báo
+                    </a>
+                </li>
             </c:if>
 
             <%-- PHÂN HỆ: ADMIN --%>
@@ -309,6 +317,14 @@
                         Lịch của tôi
                     </a>
                 </li>
+
+                <li class="nav-section">Truyền Thông Nội Bộ</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/notifications') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/notifications">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+                        Gửi Thông Báo
+                    </a>
+                </li>
             </c:if>
         </ul>
     </nav>
@@ -343,7 +359,35 @@
                             </span>
                         </div>
                     </a>
-                    <a href="${pageContext.request.contextPath}/logout" class="logout-icon" title="Đăng xuất">
+
+                    <!-- Bell Icon + Dropdown Panel -->
+                    <div id="noti-wrapper" style="position: relative;">
+                        <button id="notification-bell" onclick="toggleNotiPanel(event)" title="Thong bao"
+                            style="background:none; border:none; cursor:pointer; position:relative; padding:4px; display:flex; align-items:center; color: #64748b;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span id="noti-badge" style="display:none; position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff; border-radius:50%; min-width:17px; height:17px; font-size:10px; font-weight:700; line-height:17px; text-align:center; padding:0 3px;">0</span>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div id="noti-panel" style="display:none; position:fixed; bottom:70px; left:16px; width:340px; max-height:450px;
+                             background:#1e293b; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+                             z-index:9998; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                            <div style="padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+                                <span style="color:#f1f5f9; font-weight:700; font-size:14px;">Thong bao</span>
+                                <button onclick="markAllRead()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:12px;padding:0;text-decoration:underline;">Doc tat ca</button>
+                            </div>
+                            <div id="noti-list" style="overflow-y:auto; max-height:370px; padding:8px 0;">
+                                <div id="noti-empty" style="text-align:center; padding:32px 16px; color:#64748b; font-size:13px;">
+                                    Khong co thong bao moi
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="${pageContext.request.contextPath}/logout" class="logout-icon" title="Dang xuat">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -354,3 +398,281 @@
                 </div>
             </div>
         </aside>
+
+        <!-- Toast Notification Styles -->
+        <style>
+            #noti-toast-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                pointer-events: none;
+            }
+            .noti-toast {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                background: #1e293b;
+                color: #f8fafc;
+                padding: 14px 18px;
+                border-radius: 12px;
+                box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+                min-width: 300px;
+                max-width: 420px;
+                pointer-events: all;
+                animation: slideInToast 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+                border-left: 4px solid #4f46e5;
+            }
+            .noti-toast.toast-success { border-left-color: #22c55e; }
+            .noti-toast.toast-warning { border-left-color: #f59e0b; }
+            .noti-toast-icon {
+                width: 20px;
+                height: 20px;
+                flex-shrink: 0;
+                margin-top: 1px;
+                color: #4f46e5;
+            }
+            .noti-toast.toast-success .noti-toast-icon { color: #22c55e; }
+            .noti-toast.toast-warning .noti-toast-icon { color: #f59e0b; }
+            .noti-toast-body { flex: 1; }
+            .noti-toast-title { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+            .noti-toast-content { font-size: 13px; color: #94a3b8; line-height: 1.4; }
+            .noti-toast-close {
+                background: none; border: none; color: #64748b;
+                cursor: pointer; font-size: 16px; padding: 0; line-height: 1;
+                flex-shrink: 0; margin-top: -2px;
+            }
+            .noti-toast-close:hover { color: #f8fafc; }
+            @keyframes slideInToast {
+                from { opacity: 0; transform: translateX(60px) scale(0.9); }
+                to   { opacity: 1; transform: translateX(0) scale(1); }
+            }
+            @keyframes fadeOutToast {
+                from { opacity: 1; transform: translateX(0); }
+                to   { opacity: 0; transform: translateX(60px); }
+            }
+        </style>
+
+        <!-- Toast Container -->
+        <div id="noti-toast-container"></div>
+
+        <!-- Script Notification SSE -->
+        <style>
+            #noti-panel .noti-item:hover { background: rgba(255,255,255,0.05) !important; }
+        </style>
+        <script>
+            var _notiPanelOpen = false;
+
+            function toggleNotiPanel(e) {
+                e.stopPropagation();
+                var panel = document.getElementById('noti-panel');
+                _notiPanelOpen = !_notiPanelOpen;
+                panel.style.display = _notiPanelOpen ? 'block' : 'none';
+                if (_notiPanelOpen) loadNotiPanel();
+            }
+
+            document.addEventListener('click', function(e) {
+                var wrapper = document.getElementById('noti-wrapper');
+                if (_notiPanelOpen && wrapper && !wrapper.contains(e.target)) {
+                    document.getElementById('noti-panel').style.display = 'none';
+                    _notiPanelOpen = false;
+                }
+            });
+
+            function loadNotiPanel() {
+                fetch('${pageContext.request.contextPath}/api/notifications/')
+                    .then(function(r) { return r.json(); })
+                    .then(function(list) { renderNotiList(list); })
+                    .catch(function() {});
+            }
+
+            function renderNotiList(list) {
+                var container = document.getElementById('noti-list');
+                var empty = document.getElementById('noti-empty');
+                container.querySelectorAll('.noti-item').forEach(function(el) { el.remove(); });
+                if (!list || list.length === 0) { empty.style.display = 'block'; return; }
+                empty.style.display = 'none';
+                list.forEach(function(item) {
+                    var n = item.notification || {};
+                    var tc = n.type === 'SUCCESS' ? '#22c55e' : (n.type === 'WARNING' ? '#f59e0b' : '#4f46e5');
+                    var div = document.createElement('div');
+                    div.className = 'noti-item';
+                    div.setAttribute('data-id', item.id);
+                    div.style.padding = '12px 18px';
+                    div.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+                    div.style.cursor = 'pointer';
+                    div.style.transition = 'background 0.15s';
+                    div.style.background = item.read ? 'transparent' : 'rgba(79,70,229,0.08)';
+
+                    var wrapper2 = document.createElement('div');
+                    wrapper2.style.display = 'flex';
+                    wrapper2.style.gap = '10px';
+                    wrapper2.style.alignItems = 'flex-start';
+
+                    var dot = document.createElement('div');
+                    dot.style.width = '8px';
+                    dot.style.height = '8px';
+                    dot.style.borderRadius = '50%';
+                    dot.style.background = item.read ? 'transparent' : tc;
+                    dot.style.flexShrink = '0';
+                    dot.style.marginTop = '5px';
+
+                    var body2 = document.createElement('div');
+                    body2.style.flex = '1';
+                    body2.style.minWidth = '0';
+
+                    var titleEl = document.createElement('div');
+                    titleEl.style.fontWeight = '600';
+                    titleEl.style.fontSize = '13px';
+                    titleEl.style.color = '#f1f5f9';
+                    titleEl.style.marginBottom = '2px';
+                    titleEl.textContent = n.title || '';
+
+                    var contentEl = document.createElement('div');
+                    contentEl.style.fontSize = '12px';
+                    contentEl.style.color = '#94a3b8';
+                    contentEl.style.lineHeight = '1.4';
+                    contentEl.textContent = n.content || '';
+
+                    body2.appendChild(titleEl);
+                    body2.appendChild(contentEl);
+                    wrapper2.appendChild(dot);
+                    wrapper2.appendChild(body2);
+                    div.appendChild(wrapper2);
+
+                    div.addEventListener('click', (function(id, el, dotEl) {
+                        return function() { markOneRead(id, el, dotEl); };
+                    })(item.id, div, dot));
+
+                    container.insertBefore(div, empty);
+                });
+            }
+
+            function prependNotiItem(title, content, type) {
+                document.getElementById('noti-empty').style.display = 'none';
+                var container = document.getElementById('noti-list');
+                var tc = type === 'SUCCESS' ? '#22c55e' : (type === 'WARNING' ? '#f59e0b' : '#4f46e5');
+                var div = document.createElement('div');
+                div.className = 'noti-item';
+                div.style.padding = '12px 18px';
+                div.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+                div.style.background = 'rgba(79,70,229,0.08)';
+
+                var wrapper2 = document.createElement('div');
+                wrapper2.style.display = 'flex';
+                wrapper2.style.gap = '10px';
+                wrapper2.style.alignItems = 'flex-start';
+
+                var dot = document.createElement('div');
+                dot.style.width = '8px'; dot.style.height = '8px';
+                dot.style.borderRadius = '50%'; dot.style.background = tc;
+                dot.style.flexShrink = '0'; dot.style.marginTop = '5px';
+
+                var body2 = document.createElement('div');
+                body2.style.flex = '1'; body2.style.minWidth = '0';
+
+                var titleEl = document.createElement('div');
+                titleEl.style.fontWeight = '600'; titleEl.style.fontSize = '13px';
+                titleEl.style.color = '#f1f5f9'; titleEl.style.marginBottom = '2px';
+                titleEl.textContent = title;
+
+                var contentEl = document.createElement('div');
+                contentEl.style.fontSize = '12px'; contentEl.style.color = '#94a3b8';
+                contentEl.style.lineHeight = '1.4';
+                contentEl.textContent = content;
+
+                body2.appendChild(titleEl); body2.appendChild(contentEl);
+                wrapper2.appendChild(dot); wrapper2.appendChild(body2);
+                div.appendChild(wrapper2);
+                container.insertBefore(div, container.firstChild);
+            }
+
+            function markOneRead(id, el, dotEl) {
+                fetch('${pageContext.request.contextPath}/api/notifications/read/' + id, { method: 'POST' })
+                    .then(function() {
+                        el.style.background = 'transparent';
+                        if (dotEl) dotEl.style.background = 'transparent';
+                        decreaseBadge();
+                    }).catch(function() {});
+            }
+
+            function markAllRead() {
+                fetch('${pageContext.request.contextPath}/api/notifications/read-all', { method: 'POST' })
+                    .then(function() {
+                        var badge = document.getElementById('noti-badge');
+                        badge.style.display = 'none'; badge.innerText = '0';
+                        document.querySelectorAll('.noti-item').forEach(function(el) {
+                            el.style.background = 'transparent';
+                        });
+                    }).catch(function() {});
+            }
+
+            function decreaseBadge() {
+                var badge = document.getElementById('noti-badge');
+                var c = Math.max(0, (parseInt(badge.innerText) || 0) - 1);
+                badge.innerText = c;
+                if (c <= 0) badge.style.display = 'none';
+            }
+
+            function showNotiToast(title, content, type) {
+                var container = document.getElementById('noti-toast-container');
+                if (!container) return;
+                var tc = type === 'SUCCESS' ? 'toast-success' : (type === 'WARNING' ? 'toast-warning' : '');
+                var toast = document.createElement('div');
+                toast.className = 'noti-toast ' + tc;
+
+                var svg = document.createElement('span');
+                svg.innerHTML = '<svg class="noti-toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+
+                var bodyEl = document.createElement('div');
+                bodyEl.className = 'noti-toast-body';
+                var titleEl = document.createElement('div');
+                titleEl.className = 'noti-toast-title';
+                titleEl.textContent = title;
+                var contentEl = document.createElement('div');
+                contentEl.className = 'noti-toast-content';
+                contentEl.textContent = content;
+                bodyEl.appendChild(titleEl); bodyEl.appendChild(contentEl);
+
+                var closeBtn = document.createElement('button');
+                closeBtn.className = 'noti-toast-close';
+                closeBtn.textContent = '\u00d7';
+                closeBtn.onclick = function() { this.closest('.noti-toast').remove(); };
+
+                toast.appendChild(svg.firstChild); toast.appendChild(bodyEl); toast.appendChild(closeBtn);
+                container.appendChild(toast);
+
+                setTimeout(function() {
+                    toast.style.animation = 'fadeOutToast 0.3s ease forwards';
+                    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+                }, 6000);
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var es = new EventSource('${pageContext.request.contextPath}/api/notifications/stream');
+                es.onmessage = function(event) {
+                    try {
+                        var data = JSON.parse(event.data);
+                        var badge = document.getElementById('noti-badge');
+                        badge.innerText = (parseInt(badge.innerText) || 0) + 1;
+                        badge.style.display = 'inline-block';
+                        showNotiToast(data.title, data.content, data.type || 'INFO');
+                        if (_notiPanelOpen) prependNotiItem(data.title, data.content, data.type || 'INFO');
+                    } catch(e) {}
+                };
+                es.onerror = function() {};
+
+                fetch('${pageContext.request.contextPath}/api/notifications/count')
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.count && data.count > 0) {
+                            var badge = document.getElementById('noti-badge');
+                            badge.innerText = data.count;
+                            badge.style.display = 'inline-block';
+                        }
+                    }).catch(function() {});
+            });
+        </script>

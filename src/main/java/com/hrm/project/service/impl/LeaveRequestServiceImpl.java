@@ -31,17 +31,51 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
     @Override
     public boolean createRequest(LeaveRequest request) {
-        return leaveRequestDAO.create(request);
+        boolean result = leaveRequestDAO.create(request);
+        if (result) {
+            sendNotificationToRoleGroup("HR", "Đơn nghỉ phép mới", "Có một đơn xin nghỉ phép mới cần duyệt.", "INFO");
+        }
+        return result;
     }
 
     @Override
     public boolean approveRequest(int requestId, int reviewerId) {
-        return leaveRequestDAO.approve(requestId, reviewerId);
+        boolean result = leaveRequestDAO.approve(requestId, reviewerId);
+        if (result) {
+            sendNotificationToEmployee(requestId, "Đơn nghỉ phép được duyệt", "Đơn nghỉ phép của bạn đã được duyệt.", "SUCCESS");
+        }
+        return result;
     }
 
     @Override
     public boolean rejectRequest(int requestId, int reviewerId) {
-        return leaveRequestDAO.reject(requestId, reviewerId);
+        boolean result = leaveRequestDAO.reject(requestId, reviewerId);
+        if (result) {
+            sendNotificationToEmployee(requestId, "Đơn nghỉ phép bị từ chối", "Đơn nghỉ phép của bạn đã bị từ chối.", "WARNING");
+        }
+        return result;
+    }
+
+    private void sendNotificationToEmployee(int requestId, String title, String content, String type) {
+        try {
+            LeaveRequest req = leaveRequestDAO.getById(requestId);
+            if (req != null) {
+                com.hrm.project.dao.NotificationDAO notificationDAO = new com.hrm.project.dao.impl.NotificationDAOImpl();
+                com.hrm.project.model.Notification noti = new com.hrm.project.model.Notification();
+                noti.setTitle(title);
+                noti.setContent(content);
+                noti.setType(type);
+                
+                int notiId = notificationDAO.createNotification(noti);
+                if (notiId > 0) {
+                    notificationDAO.addNotificationForUsers(notiId, java.util.Collections.singletonList(req.getEmployeeId()));
+                    String payload = "{\"title\":\"" + title + "\", \"content\":\"" + content + "\"}";
+                    com.hrm.project.utils.SSEManager.sendNotification(req.getEmployeeId(), payload);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -52,5 +86,26 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
     @Override
     public List<LeaveSummaryDto> getLeaveSummaryReport(Date fromDate, Date toDate, Integer departmentId) {
         return leaveRequestDAO.getLeaveSummaryReport(fromDate, toDate, departmentId);
+    }
+
+    private void sendNotificationToRoleGroup(String roleGroup, String title, String content, String type) {
+        try {
+            com.hrm.project.dao.NotificationDAO notificationDAO = new com.hrm.project.dao.impl.NotificationDAOImpl();
+            com.hrm.project.model.Notification noti = new com.hrm.project.model.Notification();
+            noti.setTitle(title);
+            noti.setContent(content);
+            noti.setType(type);
+            
+            int notiId = notificationDAO.createNotification(noti);
+            if (notiId > 0) {
+                notificationDAO.addNotificationForRoleGroup(notiId, roleGroup);
+                String payload = "{\"title\":\"" + title + "\", \"content\":\"" + content + "\"}";
+                // Broadcast cho tất cả (ai thuộc nhóm HR có trong DB sẽ có thông báo khi refresh, còn popup hiện tạm cho mọi người)
+                // Hoặc có thể cải tiến lấy userIds từ role.
+                com.hrm.project.utils.SSEManager.broadcastNotification(payload); 
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
