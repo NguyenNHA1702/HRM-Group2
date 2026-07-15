@@ -14,4 +14,5 @@ public interface DepartmentDAO {
     int countActiveEmployees(int departmentId);
     List<UserAccountDTO> getMembersByDepartment(int departmentId);
     boolean bulkTransferEmployees(int targetDepartmentId, List<Integer> employeeIds);
+    Integer getDepartmentIdByManagerId(int managerId);
 }
