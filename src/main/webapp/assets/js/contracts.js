@@ -433,9 +433,13 @@ function submitContract() {
 
     fetch(CTX + "/hr/api/contracts", {
         method: "POST",
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
         body: formData  // No Content-Type header — browser sets multipart boundary automatically
     })
     .then(res => {
+        if (res.status === 403) {
+            return res.text().then(text => { throw new Error(text || "Bạn không có quyền thực hiện hành động này."); });
+        }
         return res.json().catch(() => {
             throw new Error("Lỗi phản hồi từ hệ thống (Mã trạng thái: " + res.status + ").");
         });
@@ -469,10 +473,18 @@ function submitTerminate() {
 
     fetch(CTX + "/hr/api/contracts", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+        headers: { 
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest"
+        },
         body: params.toString()
     })
-    .then(res => res.json())
+    .then(res => {
+        if (res.status === 403) {
+            return res.text().then(text => { throw new Error(text || "Bạn không có quyền thực hiện hành động này."); });
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.status === "success") {
             $('#terminateModal').modal('hide');
