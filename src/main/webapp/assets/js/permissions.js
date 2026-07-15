@@ -360,24 +360,48 @@ function renderMatrixTable(permissions) {
         row.className = "hover:bg-gray-50 transition";
         row.setAttribute('data-module-id', perm.moduleId);
 
-        // Nếu là Admin (roleId = 1), ép buộc hiển thị toàn bộ tích xanh (true)
-        const displayView = currentRoleId === 1 ? true : perm.view;
-        const displayCreate = currentRoleId === 1 ? true : perm.create;
-        const displayEdit = currentRoleId === 1 ? true : perm.edit;
-        const displayDelete = currentRoleId === 1 ? true : perm.delete;
+        // Kiểm tra xem có phải module nhạy cảm (RBAC hoặc SYSTEM) không
+        const isSystemModule = (perm.moduleCode === 'RBAC' || perm.moduleCode === 'SYSTEM');
+
+        // Logic xác định giá trị quyền hiển thị:
+        // - Nếu là Admin (roleId = 1): Toàn bộ tích xanh (true)
+        // - Nếu là vai trò khác và là module hệ thống: Ép buộc tích đỏ (false)
+        // - Các trường hợp khác: Lấy giá trị từ DB
+        let displayView = perm.view;
+        let displayCreate = perm.create;
+        let displayEdit = perm.edit;
+        let displayDelete = perm.delete;
+
+        if (currentRoleId === 1) {
+            displayView = true;
+            displayCreate = true;
+            displayEdit = true;
+            displayDelete = true;
+        } else if (isSystemModule) {
+            displayView = false;
+            displayCreate = false;
+            displayEdit = false;
+            displayDelete = false;
+        }
+
+        // Nếu vai trò hiện tại không phải Admin và đây là module hệ thống -> Vô hiệu hóa tương tác ô đó
+        const isDisabled = (currentRoleId !== 1 && isSystemModule);
+        const cellClass = isDisabled
+            ? "px-6 py-4 whitespace-nowrap text-center perm-cell select-none bg-gray-100 opacity-60 cursor-not-allowed"
+            : "px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition";
 
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${perm.moduleName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="view" data-value="${displayView}">
+            <td class="${cellClass}" data-type="view" data-value="${displayView}" data-disabled="${isDisabled}">
                 ${displayView ? getCheckIcon() : getXIcon()}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="create" data-value="${displayCreate}">
+            <td class="${cellClass}" data-type="create" data-value="${displayCreate}" data-disabled="${isDisabled}">
                 ${displayCreate ? getCheckIcon() : getXIcon()}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="edit" data-value="${displayEdit}">
+            <td class="${cellClass}" data-type="edit" data-value="${displayEdit}" data-disabled="${isDisabled}">
                 ${displayEdit ? getCheckIcon() : getXIcon()}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="delete" data-value="${displayDelete}">
+            <td class="${cellClass}" data-type="delete" data-value="${displayDelete}" data-disabled="${isDisabled}">
                 ${displayDelete ? getCheckIcon() : getXIcon()}
             </td>
         `;
@@ -395,6 +419,12 @@ document.getElementById('matrix-body').addEventListener('click', function(e) {
 
     const cell = e.target.closest('.perm-cell');
     if (!cell) return;
+
+    // Chặn click nếu ô phân quyền bị vô hiệu hóa (module hệ thống dành riêng cho Admin)
+    if (cell.getAttribute('data-disabled') === 'true') {
+        showToast('⚠️ Module phân quyền và cấu hình hệ thống chỉ dành riêng cho vai trò Admin.', 'error');
+        return;
+    }
 
     let currentValue = cell.getAttribute('data-value') === 'true';
     let newValue = !currentValue;
