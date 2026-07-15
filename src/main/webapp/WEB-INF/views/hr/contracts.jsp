@@ -39,6 +39,7 @@
         <div id="alertContainer" style="position: fixed; top: 24px; right: 24px; z-index: 9999; min-width: 320px; max-width: 450px;"></div>
 
         <%-- ═══ ACTION BUTTON ═══ --%>
+        <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].create)}">
         <div class="mb-4">
             <button type="button" class="btn text-white px-4 py-2"
                     style="background-color: #6366f1; border-radius: 8px; font-weight: 500; border: none; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);"
@@ -46,6 +47,7 @@
                 + Tạo hợp đồng mới
             </button>
         </div>
+        </c:if>
 
         <%-- ═══ FILTER BAR ═══ --%>
         <div class="card border-0 shadow-sm mb-4 p-3" style="border-radius: 12px; background: white;">
@@ -157,8 +159,9 @@
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
                                 </button>
-                                <%-- Renew (only if Active AND not Indefinite type) --%>
-                                <c:if test="${c.status == 1 && c.contractType != 3}">
+                                <%-- Renew: chỉ Active, không vô thời hạn, và có quyền CREATE --%>
+                                <c:if test="${c.status == 1 and c.contractType != 3}">
+                                    <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].create)}">
                                     <button class="btn-icon" title="Gia hạn hợp đồng"
                                             data-id="${c.id}" data-employeeid="${c.employeeId}"
                                             data-empname="${c.employeeFullName}" data-contractnumber="${c.contractNumber}"
@@ -169,9 +172,11 @@
                                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                                         </svg>
                                     </button>
+                                    </c:if>
                                 </c:if>
-                                <%-- Terminate (only if Active) --%>
+                                <%-- Terminate: chỉ Active và có quyền DELETE --%>
                                 <c:if test="${c.status == 1}">
+                                    <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].delete)}">
                                     <button class="btn-icon" title="Chấm dứt hợp đồng"
                                             data-id="${c.id}" data-contractnumber="${c.contractNumber}"
                                             data-empname="${c.employeeFullName}"
@@ -181,6 +186,7 @@
                                             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
                                         </svg>
                                     </button>
+                                    </c:if>
                                 </c:if>
                             </td>
                         </tr>

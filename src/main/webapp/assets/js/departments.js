@@ -152,7 +152,9 @@ $(document).ready(function() {
 
         e.preventDefault();
         const form = this;
-        const url = form.action;
+        // BUG FIX: form.action is shadowed by <input name="action"> in the form.
+        // Must use getAttribute('action') to read the HTML attribute directly.
+        const url = form.getAttribute('action');
         const formData = new FormData(form);
         const searchParams = new URLSearchParams();
         for (const pair of formData.entries()) {
@@ -162,14 +164,15 @@ $(document).ready(function() {
         fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: searchParams.toString()
         })
         .then(response => {
             if (!response.ok) {
                 return response.text().then(text => {
-                    throw new Error(text || "Error: Cannot assign an Admin or HR personnel as a Department Manager!");
+                    throw new Error(text || "Đã xảy ra lỗi khi xử lý yêu cầu.");
                 });
             }
             return response.text();
@@ -214,7 +217,7 @@ $(document).ready(function() {
                 },
                 error: function(xhr, status, error) {
                     console.error('Error deactivating department:', error);
-                    alert('Lỗi hệ thống: Không thể vô hiệu hóa phòng ban.');
+                    alert(xhr.responseText || 'Lỗi hệ thống: Không thể vô hiệu hóa phòng ban.');
                 }
             });
         }
@@ -244,7 +247,7 @@ $(document).ready(function() {
                 },
                 error: function(xhr, status, error) {
                     console.error('Error activating department:', error);
-                    alert('Lỗi hệ thống: Không thể kích hoạt phòng ban.');
+                    alert(xhr.responseText || 'Lỗi hệ thống: Không thể kích hoạt phòng ban.');
                 }
             });
         }
@@ -372,7 +375,7 @@ $(document).ready(function() {
                 },
                 error: function(xhr, status, error) {
                     console.error('Error during bulk transfer:', error);
-                    $('#transferAlert').text('Lỗi hệ thống: Điều chuyển thất bại.').show();
+                    $('#transferAlert').text(xhr.responseText || 'Lỗi hệ thống: Điều chuyển thất bại.').show();
                 }
             });
         }

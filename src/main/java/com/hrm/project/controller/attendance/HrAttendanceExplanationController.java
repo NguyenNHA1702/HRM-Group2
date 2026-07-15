@@ -45,12 +45,12 @@ public class HrAttendanceExplanationController extends HttpServlet {
         if (statusFilter != null && statusFilter.isBlank()) statusFilter = null;
 
         try {
-            int total      = attendanceService.countExplanations(statusFilter);
+            int total      = attendanceService.countExplanations(null, statusFilter);
             int totalPages = Math.max(1, (int) Math.ceil((double) total / PAGE_SIZE));
             if (page > totalPages) page = totalPages;
 
             List<AttendanceExplanation> explanations =
-                    attendanceService.getExplanations(statusFilter, page, PAGE_SIZE);
+                    attendanceService.getExplanations(null, statusFilter, page, PAGE_SIZE);
 
             req.setAttribute("explanations", explanations);
             req.setAttribute("total", total);

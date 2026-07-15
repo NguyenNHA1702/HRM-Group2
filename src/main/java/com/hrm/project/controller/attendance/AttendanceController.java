@@ -117,7 +117,13 @@ public class AttendanceController extends HttpServlet {
         request.setAttribute("explanationStatusJson", gson.toJson(explanationStatusMap));
         request.setAttribute("explanationDetailsJson", gson.toJson(explanationDetailsMap));
 
-        boolean isLocked = attendanceService.isAttendanceLocked(year, month);
+        boolean isLocked = false;
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        if ("HR".equalsIgnoreCase(roleGroup)) {
+            isLocked = attendanceService.isAttendanceLocked(year, month);
+        } else {
+            isLocked = attendanceService.isAttendanceLockedForEmployee(employeeId, year, month);
+        }
         request.setAttribute("isLocked", isLocked);
         request.setAttribute("canLockAttendance", "HR".equalsIgnoreCase((String) session.getAttribute("roleGroup")));
 
@@ -254,7 +260,7 @@ public class AttendanceController extends HttpServlet {
 
         try {
             LocalDate date = LocalDate.parse(dateStr);
-            if (attendanceService.isAttendanceLocked(date.getYear(), date.getMonthValue())) {
+            if (attendanceService.isAttendanceLockedForEmployee(employeeId, date.getYear(), date.getMonthValue())) {
                 flash(session, "error", "Tháng chấm công này đã bị khóa. Không thể gửi giải trình.");
                 return;
             }
