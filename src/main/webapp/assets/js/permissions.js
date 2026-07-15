@@ -210,10 +210,16 @@ function saveRoleDetails() {
 
     fetch(contextPath + '/admin/api/roles/update', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+        headers: { 
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         body: JSON.stringify(updatePayload)
     })
     .then(response => {
+        if (response.status === 403) {
+            return response.text().then(text => { throw new Error(text || 'Bạn không có quyền thực hiện hành động này.'); });
+        }
         if (!response.ok) {
             return response.json().then(err => { throw new Error(err.error || 'Lỗi cập nhật chi tiết.') });
         }
@@ -227,9 +233,15 @@ function saveRoleDetails() {
             };
             return fetch(contextPath + '/admin/api/roles/toggle', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                headers: { 
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: JSON.stringify(togglePayload)
             }).then(resp => {
+                if (resp.status === 403) {
+                    return resp.text().then(text => { throw new Error(text || 'Bạn không có quyền thực hiện hành động này.'); });
+                }
                 if (!resp.ok) {
                     return resp.json().then(err => { throw new Error(err.error || 'Lỗi cập nhật trạng thái.') });
                 }
@@ -316,6 +328,18 @@ function selectRole(roleId, roleName, roleDesc) {
     document.getElementById('matrix-desc').innerText = roleDesc ? roleDesc : "Không có mô tả chi tiết.";
     document.getElementById('matrix-container').classList.remove('hidden');
 
+    // Ẩn/Hiện/Vô hiệu hóa nút Lưu thay đổi nếu là Admin
+    const saveBtn = document.getElementById('btn-save-permissions');
+    if (roleId === 1) {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        saveBtn.title = "Không thể chỉnh sửa quyền của Admin";
+    } else {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        saveBtn.title = "";
+    }
+
     fetch(contextPath + '/admin/api/role-permissions?roleId=' + roleId)
         .then(response => {
             if (!response.ok) throw new Error('Lỗi kết nối hệ thống.');
@@ -336,19 +360,25 @@ function renderMatrixTable(permissions) {
         row.className = "hover:bg-gray-50 transition";
         row.setAttribute('data-module-id', perm.moduleId);
 
+        // Nếu là Admin (roleId = 1), ép buộc hiển thị toàn bộ tích xanh (true)
+        const displayView = currentRoleId === 1 ? true : perm.view;
+        const displayCreate = currentRoleId === 1 ? true : perm.create;
+        const displayEdit = currentRoleId === 1 ? true : perm.edit;
+        const displayDelete = currentRoleId === 1 ? true : perm.delete;
+
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${perm.moduleName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="view" data-value="${perm.view}">
-                ${perm.view ? getCheckIcon() : getXIcon()}
+            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="view" data-value="${displayView}">
+                ${displayView ? getCheckIcon() : getXIcon()}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="create" data-value="${perm.create}">
-                ${perm.create ? getCheckIcon() : getXIcon()}
+            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="create" data-value="${displayCreate}">
+                ${displayCreate ? getCheckIcon() : getXIcon()}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="edit" data-value="${perm.edit}">
-                ${perm.edit ? getCheckIcon() : getXIcon()}
+            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="edit" data-value="${displayEdit}">
+                ${displayEdit ? getCheckIcon() : getXIcon()}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="delete" data-value="${perm.delete}">
-                ${perm.delete ? getCheckIcon() : getXIcon()}
+            <td class="px-6 py-4 whitespace-nowrap text-center perm-cell cursor-pointer select-none hover:bg-indigo-50 transition" data-type="delete" data-value="${displayDelete}">
+                ${displayDelete ? getCheckIcon() : getXIcon()}
             </td>
         `;
         tbody.appendChild(row);
@@ -357,6 +387,12 @@ function renderMatrixTable(permissions) {
 
 // Lắng nghe click để đổi trạng thái tích xanh/đỏ mượt mà
 document.getElementById('matrix-body').addEventListener('click', function(e) {
+    // Nếu là Admin mặc định (roleId = 1), không cho phép chỉnh sửa quyền
+    if (currentRoleId === 1) {
+        showToast('⚠️ Đây là vai trò Admin hệ thống, toàn bộ quyền luôn được mở mặc định và không thể sửa đổi.', 'error');
+        return;
+    }
+
     const cell = e.target.closest('.perm-cell');
     if (!cell) return;
 
@@ -397,10 +433,16 @@ document.getElementById('btn-save-permissions').addEventListener('click', functi
 
     fetch(contextPath + '/admin/api/role-permissions/save', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+        headers: { 
+            'Content-Type': 'application/json; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         body: JSON.stringify(payload)
     })
         .then(response => {
+            if (response.status === 403) {
+                return response.text().then(text => { throw new Error(text || 'Bạn không có quyền lưu ma trận phân quyền.'); });
+            }
             if (!response.ok) throw new Error('Sự cố lưu dữ liệu.');
             return response.json();
         })

@@ -97,6 +97,7 @@
 
             <%-- PHÂN HỆ: HR --%>
             <c:if test="${sessionScope.roleGroup eq 'HR'}">
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['EMPLOYEE_MGMT'].view)}">
                 <li class="nav-section">Quản Lý Tổ Chức</li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/nhan-vien') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/nhan-vien">
@@ -104,26 +105,37 @@
                         Nhân viên
                     </a>
                 </li>
+                </c:if>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['DEPT_MGMT'].view)}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/hr/departments') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/hr/departments">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                         Phòng ban
                     </a>
                 </li>
+                </c:if>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['CONTRACT_MGMT'].view)}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/hr/contracts') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/hr/contracts">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         Hợp đồng
                     </a>
                 </li>
+                </c:if>
 
-                <li class="nav-section">Thời Gian &amp; Chấm Công</li>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' 
+                    or (not empty sessionScope.userPermissions and (sessionScope.userPermissions['ATTENDANCE'].view or sessionScope.userPermissions['LEAVE_MGMT'].view))}">
+                    <li class="nav-section">Thời Gian &amp; Chấm Công</li>
+                </c:if>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['ATTENDANCE'].view)}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/cham-cong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/cham-cong">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><polyline points="9 14 11 16 15 12"></polyline></svg>
                         Chấm công
                     </a>
                 </li>
+                </c:if>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['LEAVE_MGMT'].view)}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/hr/leave-requests') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/hr/leave-requests">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -142,45 +154,61 @@
                         Báo cáo nghỉ phép
                     </a>
                 </li>
+                </c:if>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['ATTENDANCE'].view)}">
                 <li class="nav-item ${pageContext.request.requestURI.contains('/hr/attendance-explanations') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/hr/attendance-explanations">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="9" y1="10" x2="15" y2="10"></line><line x1="9" y1="14" x2="15" y2="14"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>
                         Giải trình công
                     </a>
                 </li>
+                </c:if>
 
-                <li class="nav-section">Lương &amp; Phúc Lợi</li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/luong') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/luong">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Lương
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/payrolls">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
-                        Bảng lương
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/salary-scales">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                        Thang bảng lương
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/allowance-types') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/allowance-types">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                        Loại phụ cấp
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/insurance') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/insurance">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        Bảo hiểm
-                    </a>
-                </li>
+                <%-- ── Section: Lương & Phúc Lợi ── --%>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' 
+                    or (not empty sessionScope.userPermissions and (sessionScope.userPermissions['PAYROLL'].view or sessionScope.userPermissions['SALARY_CONFIG'].view))}">
+                    <li class="nav-section">Lương &amp; Phúc Lợi</li>
+                </c:if>
 
+                <%-- Các mục thuộc module Lương (PAYROLL) --%>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['PAYROLL'].view)}">
+                    <li class="nav-item ${pageContext.request.requestURI.contains('/luong') ? 'active' : ''}">
+                        <a href="${pageContext.request.contextPath}/luong">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            Lương
+                        </a>
+                    </li>
+                    <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
+                        <a href="${pageContext.request.contextPath}/admin/payrolls">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                            Bảng lương
+                        </a>
+                    </li>
+                </c:if>
+
+                <%-- Các mục thuộc module Cấu hình Lương (SALARY_CONFIG) --%>
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['SALARY_CONFIG'].view)}">
+                    <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
+                        <a href="${pageContext.request.contextPath}/admin/salary-scales">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                            Thang bảng lương
+                        </a>
+                    </li>
+                    <li class="nav-item ${pageContext.request.requestURI.contains('/admin/allowance-types') ? 'active' : ''}">
+                        <a href="${pageContext.request.contextPath}/admin/allowance-types">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                            Loại phụ cấp
+                        </a>
+                    </li>
+                    <li class="nav-item ${pageContext.request.requestURI.contains('/admin/insurance') ? 'active' : ''}">
+                        <a href="${pageContext.request.contextPath}/admin/insurance">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            Bảo hiểm
+                        </a>
+                    </li>
+                </c:if>
+
+                <c:if test="${sessionScope.roleGroup eq 'ADMIN' or (not empty sessionScope.userPermissions and sessionScope.userPermissions['SCHEDULE_MGMT'].view)}">
                 <li class="nav-section">Lịch Làm Việc</li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/schedule/view') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/schedule/view">
@@ -200,7 +228,8 @@
                         Lịch của tôi
                     </a>
                 </li>
-            </c:if>
+                </c:if><%-- end SCHEDULE_MGMT --%>
+            </c:if><%-- end HR group --%>
 
             <%-- PHÂN HỆ: ADMIN --%>
             <c:if test="${sessionScope.roleGroup eq 'ADMIN'}">
