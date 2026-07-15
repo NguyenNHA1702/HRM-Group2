@@ -61,6 +61,14 @@
     <main class="content-area">
 
             <!-- Alerts -->
+            <c:if test="${not empty sessionScope.flash_success}">
+                <div class="alert alert-success"><i class="fas fa-check-circle"></i> <c:out value="${sessionScope.flash_success}"/></div>
+                <c:remove var="flash_success" scope="session"/>
+            </c:if>
+            <c:if test="${not empty sessionScope.flash_error}">
+                <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <c:out value="${sessionScope.flash_error}"/></div>
+                <c:remove var="flash_error" scope="session"/>
+            </c:if>
             <c:if test="${param.success == 'generated'}">
                 <div class="alert alert-success"><i class="fas fa-check-circle"></i> Tạo bảng lương thành công!</div>
             </c:if>
@@ -113,6 +121,9 @@
                         </select>
                         <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Tạo bảng lương? Hệ thống sẽ tính lương từ hợp đồng và phụ cấp theo chức vụ.')">
                             <i class="fas fa-play"></i> Tạo bảng lương
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('bonusModal').style.display='flex';" style="margin-left:auto; border-color:#10b981; color:#10b981;">
+                            <i class="fas fa-gift"></i> Nhập Thưởng
                         </button>
                     </form>
                 </div>
@@ -199,5 +210,62 @@
         </div>
     </main>
 </div>
+
+<!-- Modal Nhập Thưởng -->
+<div id="bonusModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); align-items:center; justify-content:center; z-index:1000; padding:16px;">
+    <div class="modal-content" style="background:#fff; width:100%; max-width:400px; border-radius:16px; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); display:flex; flex-direction:column;">
+        <div class="modal-header" style="padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+            <h3 style="margin:0; font-size:18px; color:#0f172a;"><i class="fas fa-gift" style="color:#10b981; margin-right:8px;"></i>Nhập Thưởng</h3>
+            <button onclick="document.getElementById('bonusModal').style.display='none';" style="background:transparent; border:none; font-size:20px; color:#94a3b8; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:20px;">
+            <form action="${pageContext.request.contextPath}/admin/payroll/bonus/save" method="post">
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:14px; font-weight:600; color:#475569; margin-bottom:8px;">Tháng / Năm</label>
+                    <div style="display:flex; gap:8px;">
+                        <select name="month" style="flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;">
+                            <c:forEach var="m" begin="1" end="12">
+                                <option value="${m}" ${m == currentMonth ? 'selected' : ''}>Tháng ${m}</option>
+                            </c:forEach>
+                        </select>
+                        <select name="year" style="flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;">
+                            <c:forEach var="y" begin="2024" end="2027">
+                                <option value="${y}" ${y == currentYear ? 'selected' : ''}>${y}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:14px; font-weight:600; color:#475569; margin-bottom:8px;">Nhân viên</label>
+                    <select name="employeeId" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;">
+                        <option value="">-- Chọn nhân viên --</option>
+                        <c:forEach var="emp" items="${employeeList}">
+                            <option value="${emp.employeeId}">[${emp.employeeCode}] ${emp.fullName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; font-size:14px; font-weight:600; color:#475569; margin-bottom:8px;">Số tiền thưởng (VNĐ)</label>
+                    <input type="number" name="amount" required min="1000" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;" placeholder="VD: 500000" />
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-size:14px; font-weight:600; color:#475569; margin-bottom:8px;">Ghi chú / Lý do</label>
+                    <input type="text" name="note" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;" placeholder="VD: Thưởng dự án ABC" />
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:12px; font-size:15px; background:#10b981;">Lưu Thưởng</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onclick = function(event) {
+        var modal = document.getElementById('bonusModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+
 </body>
 </html>

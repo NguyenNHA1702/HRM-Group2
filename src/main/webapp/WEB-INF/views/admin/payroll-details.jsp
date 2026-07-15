@@ -195,13 +195,14 @@
             <!-- ============ SINGLE COMPREHENSIVE TABLE ============ -->
             <div class="payroll-block">
                 <div class="table-wrapper" style="overflow-x: auto; padding: 0;">
-                    <table class="data-table" style="min-width: 1500px;">
+                    <table class="data-table" style="min-width: 2200px;">
                         <thead>
                             <!-- Header Row 1: Grouping -->
                             <tr style="background: #f1f5f9;">
                                 <th colspan="4" class="text-center" style="border-right: 2px solid #cbd5e1; color: #334155;"><i class="fas fa-info-circle"></i> THÔNG TIN CHUNG</th>
                                 <th colspan="7" class="text-center" style="border-right: 2px solid #cbd5e1; color: #1d4ed8; background: #eff6ff;"><i class="fas fa-calendar-check"></i> NGÀY CÔNG & LƯƠNG CƠ BẢN</th>
                                 <th colspan="5" class="text-center" style="border-right: 2px solid #cbd5e1; color: #6d28d9; background: #f5f3ff;"><i class="fas fa-hand-holding-usd"></i> PHỤ CẤP & BẢO HIỂM</th>
+                                <th colspan="5" class="text-center" style="border-right: 2px solid #cbd5e1; color: #d97706; background: #fffbeb;"><i class="fas fa-clock"></i> THU NHẬP BỔ SUNG</th>
                                 <th colspan="3" class="text-center" style="color: #059669; background: #ecfdf5;"><i class="fas fa-money-bill-wave"></i> THUẾ & LƯƠNG THỰC NHẬN</th>
                             </tr>
                             <!-- Header Row 2: Columns -->
@@ -228,7 +229,14 @@
                                 <th class="text-right">BHTN</th>
                                 <th class="text-right" style="border-right: 2px solid #cbd5e1;">Tổng BH</th>
 
-                                <!-- Block 3 -->
+                                <!-- Block 3: Thu nhập bổ sung -->
+                                <th class="text-center">Số giờ TC</th>
+                                <th class="text-right">Tiền tăng ca</th>
+                                <th class="text-right">Tiền ngày lễ</th>
+                                <th class="text-right">Thưởng</th>
+                                <th class="text-right" style="border-right: 2px solid #cbd5e1;">Tổng bổ sung</th>
+
+                                <!-- Block 4 -->
                                 <th class="text-right">Lương trước thuế</th>
                                 <th class="text-right">Thuế TNCN</th>
                                 <th class="text-right" style="font-size:15px; font-weight: 700;">THỰC NHẬN</th>
@@ -238,10 +246,18 @@
                             <c:set var="totalGross" value="0" />
                             <c:set var="totalTax" value="0" />
                             <c:set var="totalNet" value="0" />
+                            <c:set var="totalOTHours" value="0" />
+                            <c:set var="totalOT" value="0" />
+                            <c:set var="totalHolidayPay" value="0" />
+                            <c:set var="totalBonus" value="0" />
                             <c:forEach var="d" items="${details}">
                                 <c:set var="totalGross" value="${totalGross + d.grossSalary}" />
                                 <c:set var="totalTax" value="${totalTax + d.taxDeduction}" />
                                 <c:set var="totalNet" value="${totalNet + d.netSalary}" />
+                                <c:set var="totalOTHours" value="${totalOTHours + d.overtimeWeekdayHours + d.overtimeWeekendHours + d.overtimeHolidayHours}" />
+                                <c:set var="totalOT" value="${totalOT + d.overtimePay}" />
+                                <c:set var="totalHolidayPay" value="${totalHolidayPay + d.holidayWorkPay}" />
+                                <c:set var="totalBonus" value="${totalBonus + d.bonusAmount}" />
                                 <tr class="employee-row">
                                     <!-- General -->
                                     <td><strong>${d.employeeCode}</strong></td>
@@ -269,7 +285,26 @@
                                         -<fmt:formatNumber value="${d.insuranceDeduction}" pattern="#,##0" />
                                     </td>
 
-                                    <!-- Block 3 -->
+                                    <!-- Block 3: Thu nhập bổ sung -->
+                                    <td class="text-center amount amount-positive">
+                                        <c:if test="${(d.overtimeWeekdayHours + d.overtimeWeekendHours + d.overtimeHolidayHours) > 0}">
+                                            <fmt:formatNumber value="${d.overtimeWeekdayHours + d.overtimeWeekendHours + d.overtimeHolidayHours}" pattern="#,##0.#" />h
+                                        </c:if>
+                                    </td>
+                                    <td class="text-right amount amount-positive">
+                                        <c:if test="${d.overtimePay > 0}">+</c:if><fmt:formatNumber value="${d.overtimePay}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount amount-positive">
+                                        <c:if test="${d.holidayWorkPay > 0}">+</c:if><fmt:formatNumber value="${d.holidayWorkPay}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount amount-positive">
+                                        <c:if test="${d.bonusAmount > 0}">+</c:if><fmt:formatNumber value="${d.bonusAmount}" pattern="#,##0" />
+                                    </td>
+                                    <td class="text-right amount amount-positive" style="border-right: 2px solid #e2e8f0; font-weight:700;">
+                                        +<fmt:formatNumber value="${d.overtimePay + d.holidayWorkPay + d.bonusAmount}" pattern="#,##0" />
+                                    </td>
+
+                                    <!-- Block 4 -->
                                     <td class="text-right amount"><fmt:formatNumber value="${d.grossSalary}" pattern="#,##0" /></td>
                                     <td class="text-right amount amount-negative">
                                         <c:if test="${d.taxDeduction > 0}">-</c:if><fmt:formatNumber value="${d.taxDeduction}" pattern="#,##0" />
@@ -285,6 +320,11 @@
                                 <td colspan="16" class="text-right" style="border-right: 2px solid #cbd5e1; font-size: 14px;">
                                     <strong>TỔNG CỘNG (${payroll.totalEmployees} nhân viên)</strong>
                                 </td>
+                                <td class="text-center amount amount-positive"><c:if test="${totalOTHours > 0}"><fmt:formatNumber value="${totalOTHours}" pattern="#,##0.#" />h</c:if></td>
+                                <td class="text-right amount amount-positive"><fmt:formatNumber value="${totalOT}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-positive"><fmt:formatNumber value="${totalHolidayPay}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-positive"><fmt:formatNumber value="${totalBonus}" pattern="#,##0" /></td>
+                                <td class="text-right amount amount-positive" style="border-right: 2px solid #cbd5e1;"><fmt:formatNumber value="${totalOT + totalHolidayPay + totalBonus}" pattern="#,##0" /></td>
                                 <td class="text-right amount"><fmt:formatNumber value="${totalGross}" pattern="#,##0" /></td>
                                 <td class="text-right amount amount-negative"><fmt:formatNumber value="${totalTax}" pattern="#,##0" /></td>
                                 <td class="text-right amount" style="font-size:16px; color:#059669;">

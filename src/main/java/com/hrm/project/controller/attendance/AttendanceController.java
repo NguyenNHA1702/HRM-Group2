@@ -54,6 +54,12 @@ public class AttendanceController extends HttpServlet {
                     return new JsonPrimitive(src.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
                 }
             })
+            .registerTypeAdapter(java.sql.Date.class, new JsonSerializer<java.sql.Date>() {
+                @Override
+                public JsonElement serialize(java.sql.Date src, Type typeOfSrc, JsonSerializationContext context) {
+                    return new JsonPrimitive(src.toString());
+                }
+            })
             .create();
 
     @Override
@@ -76,8 +82,29 @@ public class AttendanceController extends HttpServlet {
             return;
         }
 
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        boolean isHrOrAdmin = "HR".equalsIgnoreCase(roleGroup) || "ADMIN".equalsIgnoreCase(roleGroup);
+        
         int employeeId = (Integer) session.getAttribute("employeeId");
+        if (isHrOrAdmin && request.getParameter("employeeId") != null) {
+            employeeId = parseIntOrDefault(request.getParameter("employeeId"), employeeId);
+        }
+        
+        if (isHrOrAdmin) {
+            com.hrm.project.dao.UserDAO userDAO = new com.hrm.project.dao.impl.UserDAOImpl();
+            try {
+                request.setAttribute("employeeList", userDAO.getAllEmployees());
+            } catch (java.sql.SQLException e) {
+                // ignore or log
+            }
+        }
+
+        request.setAttribute("viewEmployeeId", employeeId);
         List<Attendance> attendances = attendanceService.getAttendanceByMonth(year, month, employeeId);
+        
+        com.hrm.project.dao.OvertimeRecordDAO otDao = new com.hrm.project.dao.impl.OvertimeRecordDAOImpl();
+        java.util.List<com.hrm.project.model.OvertimeRecord> overtimes = otDao.getByEmployeeMonth(employeeId, year, month);
+        request.setAttribute("overtimesJson", gson.toJson(overtimes));
 
         // Tải trạng thái giải trình để hiển thị badge trên calendar
         Map<String, com.hrm.project.model.AttendanceExplanation> explanationDetailsMap =
@@ -133,6 +160,8 @@ public class AttendanceController extends HttpServlet {
                 lockAttendance(request, session, year, month);
             } else if ("unlockAttendance".equals(action)) {
                 unlockAttendance(request, session, year, month);
+            } else if ("saveOvertime".equals(action)) {
+                saveOvertime(request, session);
             } else {
                 flash(session, "error", "Nguoi dung khong duoc phep dieu chinh du lieu cham cong.");
             }
@@ -244,6 +273,86 @@ public class AttendanceController extends HttpServlet {
                 submitted
                         ? "Gửi giải trình chấm công thành công. HR sẽ xem xét và phản hồi sớm."
                         : "Không thể gửi giải trình chấm công.");
+    }
+
+    private void saveOvertime(HttpServletRequest request, HttpSession session) {
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        if (!"HR".equalsIgnoreCase(roleGroup) && !"ADMIN".equalsIgnoreCase(roleGroup)) {
+            flash(session, "error", "Không có quyền thêm OT.");
+            return;
+        }
+
+        try {
+            int targetEmployeeId = parseIntOrDefault(request.getParameter("employeeId"), 0);
+            String dateStr = request.getParameter("date");
+            String hoursStr = request.getParameter("hours");
+            double hours = 0;
+            if (hoursStr != null && !hoursStr.isBlank()) {
+                try {
+                    hours = Double.parseDouble(hoursStr);
+                } catch (NumberFormatException e) {
+                    flash(session, "error", "Dữ liệu Tăng ca không hợp lệ.");
+                    return;
+                }
+            }
+            String otType = request.getParameter("overtimeType");
+            String note = request.getParameter("note");
+            
+            if (targetEmployeeId == 0 || dateStr == null || dateStr.isBlank() || hours < 0) {
+                flash(session, "error", "Dữ liệu Tăng ca không hợp lệ.");
+                return;
+            }
+
+            com.hrm.project.dao.OvertimeRecordDAO otDao = new com.hrm.project.dao.impl.OvertimeRecordDAOImpl();
+            java.util.List<com.hrm.project.model.OvertimeRecord> existingList = otDao.getByEmployeeMonth(targetEmployeeId, java.time.LocalDate.parse(dateStr).getYear(), java.time.LocalDate.parse(dateStr).getMonthValue());
+            
+            com.hrm.project.model.OvertimeRecord existingRecord = null;
+            for (com.hrm.project.model.OvertimeRecord existing : existingList) {
+                if (existing.getOvertimeDate().toString().equals(dateStr)) {
+                    existingRecord = existing;
+                    break;
+                }
+            }
+
+            if (hours == 0) {
+                if (existingRecord != null) {
+                    if (otDao.delete(existingRecord.getId())) {
+                        flash(session, "success", "Đã xóa giờ Tăng ca.");
+                    } else {
+                        flash(session, "error", "Lỗi khi xóa Tăng ca.");
+                    }
+                } else {
+                    flash(session, "error", "Dữ liệu Tăng ca không hợp lệ.");
+                }
+                return;
+            }
+
+            com.hrm.project.model.OvertimeRecord ot = new com.hrm.project.model.OvertimeRecord();
+            ot.setEmployeeId(targetEmployeeId);
+            ot.setOvertimeDate(java.sql.Date.valueOf(dateStr));
+            ot.setHours(hours);
+            ot.setOvertimeType(otType);
+            ot.setNote(note);
+            ot.setStatus("APPROVED");
+            ot.setCreatedBy((Integer) session.getAttribute("employeeId"));
+
+            if (existingRecord != null) {
+                ot.setId(existingRecord.getId());
+                if (otDao.update(ot)) {
+                    flash(session, "success", "Đã cập nhật Tăng ca.");
+                } else {
+                    flash(session, "error", "Lỗi khi cập nhật Tăng ca.");
+                }
+            } else {
+                if (otDao.add(ot)) {
+                    flash(session, "success", "Đã lưu Tăng ca thành công.");
+                } else {
+                    flash(session, "error", "Lỗi khi lưu Tăng ca.");
+                }
+            }
+        } catch (Exception e) {
+            flash(session, "error", "Lỗi lưu Tăng ca: " + e.getMessage());
+        }
     }
 
     private void lockAttendance(HttpServletRequest request, HttpSession session, int year, int month) {
