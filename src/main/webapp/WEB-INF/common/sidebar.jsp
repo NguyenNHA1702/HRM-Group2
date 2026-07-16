@@ -117,6 +117,20 @@
                     </a>
                 </li>
 
+                <li class="nav-section">Tuyển Dụng</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/vacancies') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/vacancies">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        Vị trí tuyển dụng
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/candidates') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/candidates">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                        Ứng viên
+                    </a>
+                </li>
+
                 <li class="nav-section">Thời Gian &amp; Chấm Công</li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/cham-cong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/cham-cong">
@@ -221,6 +235,20 @@
                     <a href="${pageContext.request.contextPath}/hr/contracts">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         Hợp đồng
+                    </a>
+                </li>
+
+                <li class="nav-section">Tuyển Dụng</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/vacancies') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/vacancies">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        Vị trí tuyển dụng
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/candidates') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/candidates">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                        Ứng viên
                     </a>
                 </li>
 
