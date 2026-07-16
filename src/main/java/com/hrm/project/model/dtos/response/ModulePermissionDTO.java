@@ -2,6 +2,7 @@ package com.hrm.project.model.dtos.response;
 
 public class ModulePermissionDTO {
     private int moduleId;
+    private String moduleCode; // Mã định danh ngắn: DASHBOARD, EMPLOYEE_MGMT, PAYROLL...
     private String moduleName;
     private boolean view;
     private boolean create;
@@ -13,8 +14,9 @@ public class ModulePermissionDTO {
     }
 
     // Full Constructor
-    public ModulePermissionDTO(int moduleId, String moduleName, boolean view, boolean create, boolean edit, boolean delete) {
+    public ModulePermissionDTO(int moduleId, String moduleCode, String moduleName, boolean view, boolean create, boolean edit, boolean delete) {
         this.moduleId = moduleId;
+        this.moduleCode = moduleCode;
         this.moduleName = moduleName;
         this.view = view;
         this.create = create;
@@ -29,6 +31,14 @@ public class ModulePermissionDTO {
 
     public void setModuleId(int moduleId) {
         this.moduleId = moduleId;
+    }
+
+    public String getModuleCode() {
+        return moduleCode;
+    }
+
+    public void setModuleCode(String moduleCode) {
+        this.moduleCode = moduleCode;
     }
 
     public String getModuleName() {

@@ -70,8 +70,9 @@ public class ExportPayslipPdfController extends HttpServlet {
         }
 
         // Status check
-        if (!"APPROVED".equals(detail.getStatus()) && !"PAID".equals(detail.getStatus())) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ được phép tải phiếu lương đã được duyệt (APPROVED) hoặc đã thanh toán (PAID).");
+        if (!"APPROVED".equals(detail.getStatus()) && !"PAID".equals(detail.getStatus())
+                && !"HR_FINALIZED".equals(detail.getStatus()) && !"MANAGER_CONFIRMED".equals(detail.getStatus())) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ được phép tải phiếu lương đã được duyệt.");
             return;
         }
 
@@ -118,9 +119,11 @@ public class ExportPayslipPdfController extends HttpServlet {
             addTableRow(table, "Tổng giờ/ngày công (Working Hours/Days):", "N/A", normalFont, boldFont);
             addTableRow(table, "Lương cơ bản (Basic Salary):", df.format(detail.getBasicSalary()) + " VNĐ", normalFont, normalFont);
             addTableRow(table, "Tổng phụ cấp (Allowance):", df.format(detail.getAllowanceAmount()) + " VNĐ", normalFont, normalFont);
-            addTableRow(table, "Tổng tăng ca (Overtime):", "N/A", normalFont, normalFont);
+            addTableRow(table, "Tổng tăng ca (Overtime):", df.format(detail.getOvertimePay()) + " VNĐ", normalFont, normalFont);
+            addTableRow(table, "Lương làm ngày lễ (Holiday Work):", df.format(detail.getHolidayWorkPay()) + " VNĐ", normalFont, normalFont);
+            addTableRow(table, "Thưởng (Bonus):", df.format(detail.getBonusAmount()) + " VNĐ", normalFont, normalFont);
             
-            double deductions = detail.getInsuranceDeduction() + detail.getUnpaidLeaveDeduction() + detail.getTaxDeduction();
+            double deductions = detail.getInsuranceDeduction() + detail.getTaxDeduction();
             addTableRow(table, "Tổng khấu trừ (Deductions):", df.format(deductions) + " VNĐ", normalFont, normalFont);
             addTableRow(table, "Thực lĩnh (Net Salary):", df.format(detail.getNetSalary()) + " VNĐ", normalFont, boldFont);
             addTableRow(table, "Trạng thái (Status):", detail.getStatus(), normalFont, boldFont);

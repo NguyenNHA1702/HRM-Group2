@@ -1,8 +1,11 @@
 package com.hrm.project.controller.auth;
 
 import com.hrm.project.model.dtos.response.LoginResponseDto;
+import com.hrm.project.model.dtos.response.ModulePermissionDTO;
 import com.hrm.project.service.AuthService;
+import com.hrm.project.service.RolePermissionService;
 import com.hrm.project.service.impl.AuthServiceImpl;
+import com.hrm.project.service.impl.RolePermissionServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -11,11 +14,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login", "/logout"})
 public class LoginServlet extends HttpServlet {
 
     private final AuthService authService = new AuthServiceImpl();
+    private final RolePermissionService rolePermissionService = new RolePermissionServiceImpl();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -73,6 +80,19 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("avatarUrl",   result.getAvatarUrl());
             session.setAttribute("sessionToken", result.getSessionToken());
             session.setAttribute("roleId",      result.getRoleId());
+
+            // --- LOAD QUYỀN VÀO SESSION (cache để tránh query DB mỗi request) ---
+            // Chuyển List<DTO> thành Map<moduleCode, DTO> để tra cứu O(1)
+            List<ModulePermissionDTO> permList =
+                    rolePermissionService.getPermissionsByRoleId(result.getRoleId());
+            Map<String, ModulePermissionDTO> userPermissions = new HashMap<>();
+            for (ModulePermissionDTO perm : permList) {
+                if (perm.getModuleCode() != null) {
+                    userPermissions.put(perm.getModuleCode(), perm);
+                }
+            }
+            session.setAttribute("userPermissions", userPermissions);
+            System.out.println("[LOGIN] Đã nạp " + userPermissions.size() + " module quyền vào Session cho roleId=" + result.getRoleId());
 
             resp.sendRedirect(req.getContextPath() + "/dashboard");
         } catch (Exception e) {

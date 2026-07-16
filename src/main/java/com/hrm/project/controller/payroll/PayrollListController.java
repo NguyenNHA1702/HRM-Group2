@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "PayrollListController", urlPatterns = {"/admin/payrolls"})
+@WebServlet(name = "PayrollListController", urlPatterns = {"/admin/payrolls", "/admin/payroll/bonus/save"})
 public class PayrollListController extends HttpServlet {
     private PayrollDAO payrollDAO;
     private DepartmentDAO departmentDAO;
@@ -54,6 +54,15 @@ public class PayrollListController extends HttpServlet {
         // Lấy danh sách phòng ban cho dropdown filter
         List<Department> departments = departmentDAO.getAllDepartments();
 
+        if ("HR".equalsIgnoreCase(roleGroup) || "ADMIN".equalsIgnoreCase(roleGroup)) {
+            com.hrm.project.dao.UserDAO userDAO = new com.hrm.project.dao.impl.UserDAOImpl();
+            try {
+                request.setAttribute("employeeList", userDAO.getAllEmployees());
+            } catch (java.sql.SQLException e) {
+                // ignore or log
+            }
+        }
+
         request.setAttribute("payrolls", payrolls);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
@@ -65,5 +74,55 @@ public class PayrollListController extends HttpServlet {
         request.setAttribute("roleGroup", roleGroup);
 
         request.getRequestDispatcher("/WEB-INF/views/admin/payroll-list.jsp").forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String pathInfo = request.getServletPath();
+        if ("/admin/payroll/bonus/save".equals(pathInfo)) {
+            saveBonus(request, response);
+        } else {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
+
+    private void saveBonus(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession();
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        if (!"HR".equalsIgnoreCase(roleGroup) && !"ADMIN".equalsIgnoreCase(roleGroup)) {
+            response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=no_permission");
+            return;
+        }
+
+        try {
+            int employeeId = Integer.parseInt(request.getParameter("employeeId"));
+            int month = Integer.parseInt(request.getParameter("month"));
+            int year = Integer.parseInt(request.getParameter("year"));
+            double amount = Double.parseDouble(request.getParameter("amount"));
+            String note = request.getParameter("note");
+            Integer createdBy = (Integer) session.getAttribute("employeeId");
+
+            com.hrm.project.model.PayrollBonus bonus = new com.hrm.project.model.PayrollBonus();
+            bonus.setEmployeeId(employeeId);
+            bonus.setBonusMonth(month);
+            bonus.setBonusYear(year);
+            bonus.setBonusType("OTHER"); // Default type if not provided from form
+            bonus.setAmount(amount);
+            bonus.setNote(note);
+            bonus.setCreatedBy(createdBy != null ? createdBy : 0);
+
+            com.hrm.project.dao.PayrollBonusDAO bonusDAO = new com.hrm.project.dao.impl.PayrollBonusDAOImpl();
+            if (bonusDAO.add(bonus)) {
+                // Flash message trick via URL or session, let's use session
+                session.setAttribute("flash_success", "Đã lưu Thưởng thành công!");
+            } else {
+                session.setAttribute("flash_error", "Không thể lưu Thưởng, có lỗi xảy ra.");
+            }
+        } catch (Exception e) {
+            session.setAttribute("flash_error", "Dữ liệu nhập không hợp lệ.");
+        }
+        
+        // Redirect back to payroll list
+        response.sendRedirect(request.getContextPath() + "/admin/payrolls?year=" + request.getParameter("year"));
     }
 }

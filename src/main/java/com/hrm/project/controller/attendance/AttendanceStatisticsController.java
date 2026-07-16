@@ -43,11 +43,11 @@ public class AttendanceStatisticsController extends HttpServlet {
         }
 
         try {
-            AttendanceSystemStatsDto statistics =
-                    attendanceService.getSystemStatistics(year, month);
+            java.util.List<java.util.Map<String, Object>> departmentLockStatuses =
+                    attendanceService.getDepartmentLockStatuses(year, month);
             request.setAttribute("currentMonth", month);
             request.setAttribute("currentYear", year);
-            request.setAttribute("statistics", statistics);
+            request.setAttribute("departmentLockStatuses", departmentLockStatuses);
             request.getRequestDispatcher(
                     "/WEB-INF/views/hr/attendance-statistics.jsp").forward(request, response);
         } catch (IllegalStateException e) {

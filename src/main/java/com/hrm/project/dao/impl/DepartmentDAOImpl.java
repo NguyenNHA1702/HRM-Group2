@@ -228,4 +228,21 @@ public class DepartmentDAOImpl implements DepartmentDAO {
         }
         return false;
     }
+
+    @Override
+    public Integer getDepartmentIdByManagerId(int managerId) {
+        String sql = "SELECT id FROM departments WHERE manager_id = ? AND is_active = 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, managerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

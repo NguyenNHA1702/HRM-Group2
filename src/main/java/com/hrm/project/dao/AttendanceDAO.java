@@ -19,37 +19,35 @@ public interface AttendanceDAO {
     List<AttendanceEmployeeStatsDto> getEmployeeStatistics(int year, int month);
 
     // ── Explanation management ──
-    List<AttendanceExplanation> getExplanations(String statusFilter, int page, int pageSize);
+    List<AttendanceExplanation> getExplanations(Integer departmentId, String statusFilter, int page, int pageSize);
 
-    int countExplanations(String statusFilter);
+    int countExplanations(Integer departmentId, String statusFilter);
 
     boolean reviewExplanation(long id, String reviewStatus, int reviewedBy, String reviewComment);
+
+    AttendanceExplanation getExplanationById(long id);
 
     AttendanceExplanation getExplanationByEmployeeDate(int employeeId, LocalDate date);
 
     Map<String, AttendanceExplanation> getExplanationsByMonth(int employeeId, int year, int month);
 
-    // ── Attendance lock (global - backward compatible) ──
     boolean isAttendanceLocked(int year, int month);
 
     boolean lockAttendance(int year, int month, int lockedBy);
 
     boolean unlockAttendance(int year, int month);
 
-    // ── Attendance lock by department (new) ──
-    boolean isAttendanceLockedByDepartment(int year, int month, int departmentId);
-
-    boolean lockAttendanceByDepartment(int year, int month, int departmentId, int lockedBy);
-
-    boolean unlockAttendanceByDepartment(int year, int month, int departmentId);
-
-    /**
-     * Lấy danh sách department_id đã chốt công trong tháng/năm.
-     */
-    List<Integer> getLockedDepartmentIds(int year, int month);
-
-    /**
-     * Kiểm tra tất cả phòng ban đã chốt công chưa.
-     */
+    boolean isDepartmentAttendanceLocked(int departmentId, int year, int month);
+    
     boolean areAllDepartmentsLocked(int year, int month);
+
+    boolean lockDepartmentAttendance(int departmentId, int year, int month, int lockedBy);
+
+    boolean unlockDepartmentAttendance(int departmentId, int year, int month);
+
+    boolean isAttendanceLockedForEmployee(int employeeId, int year, int month);
+
+    java.util.List<java.util.Map<String, Object>> getDepartmentLockStatuses(int year, int month);
+
+    List<AttendanceEmployeeStatsDto> getDepartmentEmployeeStatistics(int departmentId, int year, int month);
 }
