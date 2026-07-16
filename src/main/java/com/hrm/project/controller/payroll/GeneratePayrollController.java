@@ -43,7 +43,7 @@ public class GeneratePayrollController extends HttpServlet {
             int month = Integer.parseInt(request.getParameter("month"));
             int year = Integer.parseInt(request.getParameter("year"));
 
-            // Kiểm tra tất cả phòng ban đã chốt công chưa
+            // Kiểm tra xem tất cả các phòng ban đã chốt công chưa
             if (!attendanceDAO.areAllDepartmentsLocked(year, month)) {
                 response.sendRedirect(request.getContextPath() + "/admin/payrolls?error=not_all_locked");
                 return;

@@ -40,9 +40,10 @@
                         Nghỉ phép
                     </a>
                 </li>
+                <li class="nav-section">Lương &amp; Phúc Lợi</li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/luong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/luong">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 18V6"></path></svg>
                         Lương
                     </a>
                 </li>
@@ -50,12 +51,6 @@
                     <a href="${pageContext.request.contextPath}/admin/insurance">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 1 2.81.7A2 2 0 0 1 22 16.92z"></path><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M16 12H8" stroke-width="1.5"></path></svg>
                         Bảo hiểm
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/schedule/employee') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/schedule/employee">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        Lịch của tôi
                     </a>
                 </li>
             </c:if>
@@ -88,10 +83,19 @@
                         Báo cáo nghỉ phép
                     </a>
                 </li>
+                <li class="nav-section">Lương &amp; Phúc Lợi</li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/insurance') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/insurance">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M16 12H8" stroke-width="1.5"></path></svg>
                         Bảo hiểm
+                    </a>
+                </li>
+
+                <li class="nav-section">Lương & Phúc Lợi</li>
+                <li class="nav-item ">
+                    <a href="/manager/department-payroll">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        Lương Phòng Ban
                     </a>
                 </li>
             </c:if>
@@ -116,6 +120,23 @@
                         Hợp đồng
                     </a>
                 </li>
+
+                <li class="nav-section">Tuyển Dụng</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/vacancies') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/vacancies">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        Vị trí tuyển dụng
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/candidates') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/candidates">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                        Ứng viên
+                    </a>
+                </li>
+
+                <li class="nav-section">Thời Gian &amp; Chấm Công</li>
+
                 <li class="nav-item ${pageContext.request.requestURI.contains('/cham-cong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/cham-cong">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -140,29 +161,37 @@
                         Báo cáo nghỉ phép
                     </a>
                 </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/attendance-explanations') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/attendance-explanations">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Giải trình công
+                    </a>
+                </li>
 
+                <li class="nav-section">Lương &amp; Phúc Lợi</li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/luong') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/luong">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 18V6"></path></svg>
                         lương
                     </a>
                 </li>
 
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/payrolls">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
                         Bảng lương
                     </a>
                 </li>
+
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/salary-scales">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
                         Thang bảng lương
                     </a>
                 </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/allowance-types') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/allowance-types">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
                         Loại phụ cấp
                     </a>
                 </li>
@@ -222,6 +251,23 @@
                         Hợp đồng
                     </a>
                 </li>
+
+                <li class="nav-section">Tuyển Dụng</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/vacancies') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/vacancies">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        Vị trí tuyển dụng
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/hr/candidates') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/hr/candidates">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                        Ứng viên
+                    </a>
+                </li>
+
+                <li class="nav-section">Thời Gian &amp; Chấm Công</li>
+
                 <li class="nav-item ${pageContext.request.requestURI.contains('/hr/leave-requests') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/hr/leave-requests">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -241,30 +287,6 @@
                         Loại nghỉ phép
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/payrolls">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Bảng lương
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/users') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/users">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        Quản lý Users
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/salary-scales">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Thang bảng lương
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/allowance-types') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/allowance-types">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-                        Loại phụ cấp
-                    </a>
-                </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/work-shifts') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/work-shifts">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -278,7 +300,45 @@
                     </a>
                 </li>
 
-                <%-- Phân quyền - từ main --%>
+                <li class="nav-section">Lương &amp; Phúc Lợi</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/payrolls">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                        Bảng lương
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/overtime') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/overtime">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        Tăng ca
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll-bonuses') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/payroll-bonuses">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                        Thưởng
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/salary-scales">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                        Thang bảng lương
+                    </a>
+                </li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/allowance-types') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/allowance-types">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                        Loại phụ cấp
+                    </a>
+                </li>
+
+                <li class="nav-section">Cài Đặt Hệ Thống</li>
+                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/users') ? 'active' : ''}">
+                    <a href="${pageContext.request.contextPath}/admin/users">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><circle cx="19" cy="11" r="2"></circle><path d="M19 8v1"></path><path d="M19 13v1"></path><path d="M21.6 9.5l-.87.5"></path><path d="M17.27 12l-.87.5"></path><path d="M21.6 12.5l-.87-.5"></path><path d="M17.27 10l-.87-.5"></path></svg>
+                        Quản lý Users
+                    </a>
+                </li>
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/permissions') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/permissions">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
