@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css" />
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css" />
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <style>
         .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid #e2e8f0; padding-bottom:16px; }
         .page-title-group .page-title { font-size:24px; font-weight:700; color:var(--text); margin:0; text-transform:uppercase; }
@@ -234,7 +235,7 @@
                 </div>
                 <div style="margin-bottom:16px;">
                     <label style="display:block; font-size:14px; font-weight:600; color:#475569; margin-bottom:8px;">Nhân viên</label>
-                    <select name="employeeId" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;">
+                    <select name="employeeId" id="employeeSelect" required style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; outline:none;">
                         <option value="">-- Chọn nhân viên --</option>
                         <c:forEach var="emp" items="${employeeList}">
                             <option value="${emp.employeeId}">[${emp.employeeCode}] ${emp.fullName}</option>
@@ -255,6 +256,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
     window.onclick = function(event) {
         var modal = document.getElementById('bonusModal');
@@ -262,6 +264,19 @@
             modal.style.display = "none";
         }
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        if (document.getElementById('employeeSelect')) {
+            new TomSelect('#employeeSelect', {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                placeholder: "-- Chọn nhân viên --"
+            });
+        }
+    });
 </script>
 
 </body>
