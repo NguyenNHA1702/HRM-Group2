@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance.css"/>
@@ -42,7 +43,7 @@
                 </c:if>
                 <form method="get" action="${pageContext.request.contextPath}/cham-cong" class="filter-bar">
                     <c:if test="${not empty employeeList}">
-                        <select name="employeeId" onchange="this.form.submit()">
+                        <select name="employeeId" id="employeeSelect" style="width: 250px;">
                             <c:forEach var="emp" items="${employeeList}">
                                 <option value="${emp.employeeId}" ${emp.employeeId == viewEmployeeId ? 'selected' : ''}>
                                     [${emp.employeeCode}] <c:out value="${emp.fullName}"/>
@@ -281,6 +282,26 @@
 
 <!-- ══ Scripts: external FIRST, then inline data ══ -->
 <script src="${pageContext.request.contextPath}/assets/js/attendance.js?v=20260701-1"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (document.getElementById('employeeSelect')) {
+            new TomSelect('#employeeSelect', {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                placeholder: "Tìm kiếm nhân viên...",
+                onChange: function(value) {
+                    if (value) {
+                        document.getElementById('employeeSelect').form.submit();
+                    }
+                }
+            });
+        }
+    });
+</script>
 <script>
     /*
      * attendance.js đã đăng ký DOMContentLoaded listener.
