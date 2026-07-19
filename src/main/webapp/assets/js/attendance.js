@@ -7,6 +7,8 @@
 /* ── Constants ── */
 const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 const STATUS_LABEL = { present: 'Đủ công', late: 'Đi muộn', absent: 'Vắng mặt', leave: 'Nghỉ phép' };
+/* Nhãn hiển thị mặc định khi note rỗng */
+const LEAVE_DEFAULT_LABEL = 'Nghỉ phép';
 const STATUS_ICON = { present: '✓', late: '⚠', absent: '✕', leave: '◷' };
 
 /* ── Global state – written by JSP inline script, read after DOMContentLoaded ── */
@@ -250,10 +252,10 @@ function buildDayHTML(day, att, isWeekend, isFuture, ot) {
 
         var labelText = STATUS_LABEL[att.status] || att.status;
         if (att.status === 'leave' && att.note && att.note.trim() !== '') {
-            labelText = att.note;
+            labelText = att.note.trim();
         }
 
-        var badge = '<div class="day-badge ' + att.status + '">'
+        var badge = '<div class="day-badge ' + att.status + '" title="' + labelText + '">'
             + (STATUS_ICON[att.status] || '') + ' '
             + labelText
             + '</div>';
@@ -317,18 +319,45 @@ function openModal(dateStr, att, isFuture, dayNum, ot) {
     var modal = document.getElementById('editModal');
     if (!modal) return;
 
-    var expStatus = explanationStatusMap[dateStr] || null;
-    var expDetails = explanationDetailsMap[dateStr] || null;
+
 
     document.getElementById('modal-date').innerText =
         'Ngày ' + (dayNum < 10 ? '0' + dayNum : dayNum) + '/' +
         (currentMonth < 10 ? '0' + currentMonth : currentMonth) + '/' + currentYear;
     document.getElementById('explanation-date').value = dateStr;
 
-    var cvIn = document.getElementById('cv-checkin');
+    /* ── Xử lý đặc biệt cho ngày nghỉ phép ── */
+    var isLeaveDay = att && att.status === 'leave';
+    var leaveTypeName = isLeaveDay
+        ? ((att.note && att.note.trim() !== '') ? att.note.trim() : LEAVE_DEFAULT_LABEL)
+        : null;
+
+    /* Hàng check-in / check-out – ẩn khi là ngày nghỉ phép */
+    var cvInRow  = document.getElementById('cv-checkin-row');
+    var cvOutRow = document.getElementById('cv-checkout-row');
+    var cvIn  = document.getElementById('cv-checkin');
     var cvOut = document.getElementById('cv-checkout');
-    if (cvIn) cvIn.textContent = att ? (att.checkIn || '--:--') : '--:--';
-    if (cvOut) cvOut.textContent = att ? (att.checkOut || '--:--') : '--:--';
+    if (isLeaveDay) {
+        if (cvInRow)  cvInRow.style.display  = 'none';
+        if (cvOutRow) cvOutRow.style.display = 'none';
+    } else {
+        if (cvInRow)  cvInRow.style.display  = '';
+        if (cvOutRow) cvOutRow.style.display = '';
+        if (cvIn)  cvIn.textContent  = att ? (att.checkIn  || '--:--') : '--:--';
+        if (cvOut) cvOut.textContent = att ? (att.checkOut || '--:--') : '--:--';
+    }
+
+    /* Hàng loại nghỉ phép – chỉ hiện khi là ngày nghỉ */
+    var leaveTypeRow  = document.getElementById('cv-leave-type-row');
+    var leaveTypeVal  = document.getElementById('cv-leave-type');
+    if (leaveTypeRow) {
+        if (isLeaveDay) {
+            leaveTypeRow.style.display = '';
+            if (leaveTypeVal) leaveTypeVal.textContent = leaveTypeName;
+        } else {
+            leaveTypeRow.style.display = 'none';
+        }
+    }
 
     var explanationDate = document.getElementById('explanation-date');
     var explanationReason = document.getElementById('explanation-reason');
@@ -369,12 +398,32 @@ function openModal(dateStr, att, isFuture, dayNum, ot) {
     var dow = new Date(currentYear, currentMonth - 1, dayNum).getDay();
     var isWeekend = (dow === 0 || dow === 6);
     // Xác định xem có cần giải trình không (ngày đi muộn, vắng mặt hoặc ngày thường trong quá khứ không có record)
-    var needsExplanation = (att && (att.status === 'late' || att.status === 'absent')) || (!att && !isWeekend && !isFuture);
+    // Ngày nghỉ phép đã duyệt KHÔNG cần giải trình
+    var needsExplanation = !isLeaveDay && (
+        (att && (att.status === 'late' || att.status === 'absent')) ||
+        (!att && !isWeekend && !isFuture)
+    );
     var expStatus = explanationStatusMap[dateStr] || null;
+
+    /* Banner thông tin ngày nghỉ phép đã duyệt */
+    var leaveBanner = document.getElementById('leave-approved-banner');
+    if (leaveBanner) {
+        if (isLeaveDay) {
+            leaveBanner.style.display = 'block';
+            leaveBanner.innerHTML =
+                '<div class="quick-action-bar" style="background:#ede9fe;border-color:#c4b5fd;">' +
+                '<div class="qab-text" style="color:#5b21b6">' +
+                '<strong>✓ Nghỉ phép đã được duyệt</strong>' +
+                'Ngày này đã được ghi nhận là: <strong>' + leaveTypeName + '</strong>' +
+                '</div></div>';
+        } else {
+            leaveBanner.style.display = 'none';
+        }
+    }
 
     if (explanationForm) {
         if (isFuture || !needsExplanation) {
-            // Ngày tương lai hoặc đủ công / nghỉ phép — ẩn toàn bộ form
+            // Ngày tương lai, đủ công hoặc nghỉ phép đã duyệt — ẩn toàn bộ form
             explanationForm.style.display = 'none';
         } else {
             explanationForm.style.display = 'flex';

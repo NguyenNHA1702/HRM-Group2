@@ -16,8 +16,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class AttendanceDAOImpl implements AttendanceDAO {
 
@@ -112,6 +114,98 @@ public class AttendanceDAOImpl implements AttendanceDAO {
                 throw e;
             } finally {
                 connection.setAutoCommit(true);
+            }
+        }
+    }
+
+    @Override
+    public Set<String> getApprovedLeaveDateKeys(List<Attendance> attendances) {
+        Set<String> leaveKeys = new HashSet<>();
+        if (attendances == null || attendances.isEmpty()) {
+            return leaveKeys;
+        }
+
+        /*
+         * Tách thành hai nhóm:
+         *  - byId  : bản ghi có employeeId (không null)
+         *  - byCode: bản ghi chỉ có employeeCode
+         * Mỗi nhóm dùng một query riêng phù hợp.
+         */
+        List<Object[]> byId   = new ArrayList<>();  // {employeeId, Date}
+        List<Object[]> byCode = new ArrayList<>();  // {employeeCode, Date}
+
+        for (Attendance att : attendances) {
+            if (att.getDate() == null) continue;
+            Date sqlDate = Date.valueOf(att.getDate());
+            if (att.getEmployeeId() != null) {
+                byId.add(new Object[]{att.getEmployeeId(), sqlDate});
+            } else if (att.getEmployeeCode() != null && !att.getEmployeeCode().isBlank()) {
+                byCode.add(new Object[]{att.getEmployeeCode().trim(), sqlDate});
+            }
+        }
+
+        try (Connection connection = DBConnection.getConnection()) {
+            // ── Nhóm 1: theo employee_id ──
+            if (!byId.isEmpty()) {
+                StringBuilder sql = new StringBuilder(
+                        "SELECT a.employee_id, a.date, a.note, e.employee_code FROM attendance a "
+                        + "JOIN employees e ON e.id = a.employee_id "
+                        + "WHERE a.status = 'LEAVE' AND (a.employee_id, a.date) IN (");
+                for (int i = 0; i < byId.size(); i++) {
+                    if (i > 0) sql.append(",");
+                    sql.append("(?,?)");
+                }
+                sql.append(")");
+                try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+                    int idx = 1;
+                    for (Object[] pair : byId) {
+                        statement.setInt(idx++, (Integer) pair[0]);
+                        statement.setDate(idx++, (Date) pair[1]);
+                    }
+                    collectLeaveKeys(statement, leaveKeys);
+                }
+            }
+
+            // ── Nhóm 2: theo employee_code (cần JOIN employees) ──
+            if (!byCode.isEmpty()) {
+                StringBuilder sql = new StringBuilder(
+                        "SELECT a.employee_id, a.date, a.note, e.employee_code FROM attendance a "
+                        + "JOIN employees e ON e.id = a.employee_id "
+                        + "WHERE a.status = 'LEAVE' AND (e.employee_code, a.date) IN (");
+                for (int i = 0; i < byCode.size(); i++) {
+                    if (i > 0) sql.append(",");
+                    sql.append("(?,?)");
+                }
+                sql.append(")");
+                try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+                    int idx = 1;
+                    for (Object[] pair : byCode) {
+                        statement.setString(idx++, (String) pair[0]);
+                        statement.setDate(idx++, (Date) pair[1]);
+                    }
+                    collectLeaveKeys(statement, leaveKeys);
+                }
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Không thể kiểm tra ngày nghỉ phép đã duyệt.", e);
+        }
+        return leaveKeys;
+    }
+
+    /**
+     * Thực thi PreparedStatement đã chuẩn bị sẵn và thu thập các key
+     * theo format "employeeId_yyyy-MM-dd_employeeCode|leaveTypeName" vào Set.
+     * Bao gồm cả employee_code để match chính xác khi file Excel dùng mã NV.
+     */
+    private void collectLeaveKeys(PreparedStatement statement, Set<String> keys) throws SQLException {
+        try (ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                int empId      = resultSet.getInt("employee_id");
+                String date    = resultSet.getDate("date").toLocalDate().toString();
+                String note    = resultSet.getString("note");
+                String empCode = resultSet.getString("employee_code");
+                String leaveTypeName = (note != null ? note.trim() : "Nghỉ phép");
+                keys.add(empId + "_" + date + "_" + (empCode != null ? empCode : "") + "|" + leaveTypeName);
             }
         }
     }

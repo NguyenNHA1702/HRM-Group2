@@ -144,6 +144,13 @@
             <div class="flash error"><c:out value="${sessionScope.flash_error}"/></div>
             <c:remove var="flash_error" scope="session"/>
         </c:if>
+        <c:if test="${not empty sessionScope.flash_warning}">
+            <div class="flash"
+                 style="background:#fffbeb;border-color:#fcd34d;color:#92400e;border-left:4px solid #f59e0b;">
+                <c:out value="${sessionScope.flash_warning}"/>
+            </div>
+            <c:remove var="flash_warning" scope="session"/>
+        </c:if>
         
         <c:if test="${isLocked}">
             <div class="flash error" style="background:#fee2e2; border-color:#fecaca; color:#991b1b;">
@@ -177,7 +184,7 @@
                 <div class="legend-item"><div class="legend-dot present"></div> Đủ công</div>
                 <div class="legend-item"><div class="legend-dot late"></div> Đi muộn / Về sớm</div>
                 <div class="legend-item"><div class="legend-dot absent"></div> Vắng mặt</div>
-                <div class="legend-item"><div class="legend-dot leave"></div> Nghỉ phép</div>
+                <div class="legend-item"><div class="legend-dot leave"></div> Nghỉ phép (theo loại)</div>
                 <div class="legend-item"><div class="legend-dot weekend"></div> Ngày nghỉ / Lễ</div>
             </div>
         </div>
@@ -201,15 +208,21 @@
             <div id="quick-action-bar" style="display:none"></div>
 
             <div class="current-values">
-                <div class="cv-item">
+                <div class="cv-item" id="cv-checkin-row">
                     <div class="cv-label">Giờ vào ghi nhận</div>
                     <div class="cv-val" id="cv-checkin">—</div>
                 </div>
-                <div class="cv-item">
+                <div class="cv-item" id="cv-checkout-row">
                     <div class="cv-label">Giờ ra ghi nhận</div>
                     <div class="cv-val" id="cv-checkout">—</div>
                 </div>
+                <div class="cv-item" id="cv-leave-type-row" style="display:none;">
+                    <div class="cv-label">Loại nghỉ phép</div>
+                    <div class="cv-val" id="cv-leave-type"
+                         style="color:#5b21b6;font-weight:600;">—</div>
+                </div>
             </div>
+            <div id="leave-approved-banner" style="display:none;"></div>
             <form id="explanation-form"
                   class="explanation-form"
                   method="post"

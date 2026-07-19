@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -158,13 +159,83 @@ public class AttendanceServiceImpl implements AttendanceService {
                 return result;
             }
 
-            result.setImportedRows(attendanceDAO.importAttendances(attendances));
+            // ── Bảo vệ ngày nghỉ phép đã duyệt ─────────────────────────────────
+            // Query một lần duy nhất để lấy tất cả (employeeId, date) đang LEAVE
+            // trong tập hợp sẽ import. Key format: "empId_yyyy-MM-dd_empCode|leaveTypeName"
+            Set<String> leaveKeys = attendanceDAO.getApprovedLeaveDateKeys(attendances);
+
+            List<Attendance> toImport = new ArrayList<>();
+            for (Attendance att : attendances) {
+                String skippedLeaveType = findLeaveKey(leaveKeys, att);
+                if (skippedLeaveType != null) {
+                    // Bản ghi này trùng với ngày nghỉ phép đã duyệt → bỏ qua + cảnh báo
+                    String empLabel = att.getEmployeeCode() != null
+                            ? att.getEmployeeCode()
+                            : "ID=" + att.getEmployeeId();
+                    String dateLabel = att.getDate()
+                            .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    result.addSkipped(
+                            "Nhân viên " + empLabel + " ngày " + dateLabel
+                            + ": Đang nghỉ phép [" + skippedLeaveType + "] đã được duyệt — bỏ qua.");
+                } else {
+                    toImport.add(att);
+                }
+            }
+
+            if (toImport.isEmpty()) {
+                // Tất cả dòng đều bị bỏ qua vì trùng nghỉ phép đã duyệt
+                result.addError(
+                        "Tất cả " + result.getSkippedCount()
+                        + " dòng trong file trùng với ngày nghỉ phép đã được duyệt. "
+                        + "Không có dữ liệu nào được import.");
+                return result;
+            }
+
+            result.setImportedRows(attendanceDAO.importAttendances(toImport));
+            // ─────────────────────────────────────────────────────────────────
+
         } catch (SQLException e) {
             result.addError(e.getMessage());
         } catch (Exception e) {
             result.addError("Không thể đọc file .xlsx. Vui lòng kiểm tra lại định dạng file.");
         }
         return result;
+    }
+
+    /**
+     * Tìm key nghỉ phép tương ứng với bản ghi attendance trong tập leaveKeys.
+     * Trả về tên loại nghỉ phép nếu tìm thấy, null nếu không bị bảo vệ.
+     *
+     * Key format trong Set (từ DAO): "empId_yyyy-MM-dd_empCode|leaveTypeName"
+     *  - Nếu att có employeeId → tìm key bắt đầu bằng "empId_date_"
+     *  - Nếu att chỉ có employeeCode → tìm key chứa "_date_empCode"
+     */
+    private String findLeaveKey(Set<String> leaveKeys, Attendance att) {
+        if (att.getDate() == null || leaveKeys.isEmpty()) return null;
+        String dateStr = att.getDate().toString(); // yyyy-MM-dd
+
+        if (att.getEmployeeId() != null) {
+            // Match chính xác theo empId + date
+            String prefix = att.getEmployeeId() + "_" + dateStr + "_";
+            for (String key : leaveKeys) {
+                if (key.startsWith(prefix)) {
+                    // Lấy phần sau dấu '|' = leaveTypeName
+                    int pipe = key.indexOf('|');
+                    return pipe >= 0 ? key.substring(pipe + 1) : "Nghỉ phép";
+                }
+            }
+        } else if (att.getEmployeeCode() != null && !att.getEmployeeCode().isBlank()) {
+            // Match theo empCode + date: key có dạng "empId_date_empCode|leaveType"
+            for (String key : leaveKeys) {
+                int pipeIdx = key.indexOf('|');
+                if (pipeIdx < 0) continue;
+                String keyPart = key.substring(0, pipeIdx); // "empId_date_empCode"
+                if (keyPart.contains("_" + dateStr + "_" + att.getEmployeeCode().trim())) {
+                    return key.substring(pipeIdx + 1);
+                }
+            }
+        }
+        return null;
     }
 
     @Override

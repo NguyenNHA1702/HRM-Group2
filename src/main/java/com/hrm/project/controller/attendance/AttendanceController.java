@@ -71,14 +71,14 @@ public class AttendanceController extends HttpServlet {
         }
         if (!canAccessAttendance((String) session.getAttribute("roleGroup"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "Ban khong co quyen truy cap chuc nang cham cong.");
+                    "Bạn không có quyền truy cập chức năng chấm công.");
             return;
         }
 
         int month = parseIntOrDefault(request.getParameter("month"), LocalDate.now().getMonthValue());
         int year = parseIntOrDefault(request.getParameter("year"), LocalDate.now().getYear());
         if (month < 1 || month > 12 || year < 2000 || year > 2100) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Thang hoac nam khong hop le.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tháng hoặc năm không hợp lệ.");
             return;
         }
 
@@ -147,7 +147,7 @@ public class AttendanceController extends HttpServlet {
         }
         if (!canAccessAttendance((String) session.getAttribute("roleGroup"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "Ban khong co quyen truy cap chuc nang cham cong.");
+                    "Bạn không có quyền truy cập chức năng chấm công.");
             return;
         }
 
@@ -159,7 +159,7 @@ public class AttendanceController extends HttpServlet {
             if ("stageImport".equals(action)) {
                 stageExcel(request, session, month, year);
             } else if ("commitImport".equals(action)) {
-                commitExcel(session);
+                commitExcel(session, year, month);
             } else if ("submitExplanation".equals(action)) {
                 submitExplanation(request, session);
             } else if ("lockAttendance".equals(action)) {
@@ -169,12 +169,12 @@ public class AttendanceController extends HttpServlet {
             } else if ("saveOvertime".equals(action)) {
                 saveOvertime(request, session);
             } else {
-                flash(session, "error", "Nguoi dung khong duoc phep dieu chinh du lieu cham cong.");
+                flash(session, "error", "Người dùng không được phép chỉnh dữ liệu chấm công.");
             }
         } catch (IllegalArgumentException e) {
             flash(session, "error", e.getMessage());
         } catch (Exception e) {
-            flash(session, "error", "Da xay ra loi khi xu ly cham cong.");
+            flash(session, "error", "Đã xảy ra lỗi khi xử lí dữ liệu chấm công.");
         }
 
         response.sendRedirect(request.getContextPath()
@@ -185,13 +185,17 @@ public class AttendanceController extends HttpServlet {
             throws IOException, ServletException {
         requireImportPermission(session);
 
+        if (attendanceService.isAttendanceLocked(year, month)) {
+            throw new IllegalArgumentException("Bảng công tháng này đã bị khóa. Không thể tải lên file Excel.");
+        }
+
         Part filePart = request.getPart("attendanceFile");
         String fileName = filePart == null ? null : filePart.getSubmittedFileName();
         if (filePart == null || filePart.getSize() == 0 || fileName == null) {
-            throw new IllegalArgumentException("Vui long chon file Excel.");
+            throw new IllegalArgumentException("Vui lòng chọn file Excel.");
         }
         if (!fileName.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
-            throw new IllegalArgumentException("Chi chap nhan file co dinh dang .xlsx.");
+            throw new IllegalArgumentException("Chỉ chấp nhận file có định dạng .xlsx.");
         }
 
         byte[] fileData;
@@ -215,14 +219,18 @@ public class AttendanceController extends HttpServlet {
         session.setAttribute("pendingAttendanceFile", fileData);
         session.setAttribute("pendingAttendanceFileName", sanitizeFileName(fileName));
         flash(session, "success",
-                "Da tai file Excel len. Nhan \"Insert du lieu\" de ghi vao he thong.");
+                "Đã tải file excel lên. Nhấn \"Insert\" để ghi vào hệ thống.");
     }
 
-    private void commitExcel(HttpSession session) {
+    private void commitExcel(HttpSession session, int year, int month) {
         requireImportPermission(session);
+        
+        if (attendanceService.isAttendanceLocked(year, month)) {
+            throw new IllegalArgumentException("Bảng công tháng này đã bị khóa. Không thể import dữ liệu.");
+        }
         byte[] fileData = (byte[]) session.getAttribute("pendingAttendanceFile");
         if (fileData == null || fileData.length == 0) {
-            throw new IllegalArgumentException("Khong co file Excel nao dang cho insert.");
+            throw new IllegalArgumentException("Không có file Excel nào đang chờ insert.");
         }
 
         AttendanceImportResult result = attendanceService.importFromExcel(
@@ -231,11 +239,30 @@ public class AttendanceController extends HttpServlet {
         if (result.isSuccess()) {
             session.removeAttribute("pendingAttendanceFile");
             session.removeAttribute("pendingAttendanceFileName");
-            flash(session, "success",
-                    "Insert thanh cong " + result.getImportedRows() + " dong cham cong vao he thong.");
+
+            // Thông báo thành công
+            String successMsg = "Nhập file excel thành công";
+            flash(session, "success", successMsg);
+
+            // Cảnh báo chi tiết từng dòng bị skip (tối đa MAX_IMPORT_ERRORS dòng đầu)
+            if (result.hasSkipped()) {
+                flash(session, "warning", summarizeSkippedRows(result.getSkippedRows()));
+            }
+
+        } else if (result.hasSkipped() && result.getErrors().size() == 1
+                && result.getErrors().get(0).contains("trùng với ngày nghỉ phép")) {
+            // Toàn bộ dòng bị skip — không có gì import được
+            session.removeAttribute("pendingAttendanceFile");
+            session.removeAttribute("pendingAttendanceFileName");
+            flash(session, "error", result.getErrors().get(0));
+            flash(session, "warning", summarizeSkippedRows(result.getSkippedRows()));
         } else {
             flash(session, "error", summarizeImportErrors(result.getErrors()));
         }
+    }
+
+    private String summarizeSkippedRows(List<String> skipped) {
+        return "⚠ Đã bỏ qua những ngày nghỉ phép đã duyệt để tránh ghi đè dữ liệu nghỉ phép.";
     }
 
     private String summarizeImportErrors(List<String> errors) {
@@ -387,7 +414,7 @@ public class AttendanceController extends HttpServlet {
     private void requireImportPermission(HttpSession session) {
         String role = (String) session.getAttribute("roleGroup");
         if (!canImportAttendance(role)) {
-            throw new IllegalArgumentException("Ban khong co quyen import du lieu cham cong.");
+            throw new IllegalArgumentException("Bạn không có quyền import dữ liệu chấm công.");
         }
     }
 
@@ -437,7 +464,7 @@ public class AttendanceController extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("employeeId") == null) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
-                    "Phien lam viec da het han. Vui long dang nhap lai.");
+                    "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.");
             return null;
         }
         return session;
