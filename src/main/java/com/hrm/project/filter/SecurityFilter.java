@@ -41,7 +41,9 @@ public class SecurityFilter implements Filter {
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
                 path.startsWith("/login") || path.startsWith("/logout") ||
                 path.startsWith("/forgot-password") || path.startsWith("/assets") ||
-                path.startsWith("/uploads") || path.equals("/check-db")) {
+                path.startsWith("/uploads") || path.equals("/check-db") ||
+                path.startsWith("/api/notifications")) {   // SSE stream & notification API - mọi role đã login đều dùng
+
             chain.doFilter(request, response);
             return;
         }
@@ -85,9 +87,9 @@ public class SecurityFilter implements Filter {
             if (!hasAccess) {
                 System.out.println("[BẢO VỆ FILTER] -> TỪ CHỐI: " + roleGroup
                         + " không có quyền [" + reqPerm.actionType + "] trên module [" + reqPerm.moduleCode + "]");
-                
+
                 String requestedWith = req.getHeader("X-Requested-With");
-                boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(requestedWith) 
+                boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(requestedWith)
                         || "POST".equalsIgnoreCase(req.getMethod());
 
                 if (isAjax) {
@@ -98,6 +100,41 @@ public class SecurityFilter implements Filter {
                     resp.sendError(HttpServletResponse.SC_FORBIDDEN,
                             "Bạn không có quyền thực hiện hành động này.");
                 }
+                return;
+            }
+        }
+
+        // HR: được phép vào một số trang admin chuyên biệt
+        boolean isHrAllowedAdminPath = "HR".equals(roleGroup) &&
+                (path.equals("/admin/salary-scales") || path.equals("/admin/allowance-types") ||
+                        path.equals("/admin/leave-types") || path.equals("/admin/insurance") ||
+                        path.equals("/admin/insurance/action") || path.equals("/admin/payrolls") ||
+                        path.equals("/admin/payroll/generate") || path.equals("/admin/payroll/detail") ||
+                        path.equals("/admin/payroll/approve") ||
+                        path.equals("/admin/payroll/export-excel") ||
+                        path.equals("/admin/attendance/lock") ||
+                        path.equals("/admin/position-allowances") ||
+                        path.equals("/admin/notifications") ||           // Trang gửi thông báo
+                        path.equals("/api/admin/notifications/send"));   // API gửi thông báo
+
+        // MANAGER: xem/duyệt bảng lương dept mình + chốt công
+        boolean isManagerAllowedAdminPath = "MANAGER".equals(roleGroup) &&
+                (path.equals("/admin/payrolls") || path.equals("/admin/payroll/detail") ||
+                 path.equals("/admin/payroll/approve") || path.equals("/admin/attendance/lock") ||
+                 (path.equals("/admin/insurance") && "GET".equalsIgnoreCase(req.getMethod())));
+
+        boolean isEmployeeAllowedAdminPath = "EMPLOYEE".equals(roleGroup) &&
+                "GET".equalsIgnoreCase(req.getMethod()) &&
+                path.equals("/admin/insurance");
+
+        if (!isHrAllowedAdminPath && !isManagerAllowedAdminPath &&
+                !isEmployeeAllowedAdminPath &&
+                (path.startsWith("/admin") || path.equals("/phan-quyen") ||
+                        path.equals("/quan-ly-users") || path.equals("/cau-hinh"))) {
+
+            if (!"ADMIN".equals(roleGroup)) {
+                System.out.println("[BẢO VỆ FILTER] -> TỪ CHỐI: User " + roleGroup + " đòi vào vùng Admin!");
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập.");
                 return;
             }
         }
