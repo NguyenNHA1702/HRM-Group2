@@ -10,9 +10,6 @@ import java.util.List;
 
 public class PayrollDAOImpl implements PayrollDAO {
 
-    // ── Biểu thuế lũy tiến VN 7 bậc ──
-    // Giảm trừ bản thân: 11,000,000 VND/tháng
-    // Giảm trừ người phụ thuộc: 4,400,000 VND/người/tháng
     private static final double PERSONAL_DEDUCTION = 11_000_000;
     private static final double DEPENDENT_DEDUCTION = 4_400_000;
 
@@ -41,12 +38,11 @@ public class PayrollDAOImpl implements PayrollDAO {
             remaining -= bracketSize;
             prevBracket = TAX_BRACKETS[i];
         }
-        // Bậc 7: phần trên 80 triệu
+
         tax += remaining * TAX_RATES[6];
         return tax;
     }
 
-    // ── Helper: read Payroll from ResultSet ──
     private Payroll readPayroll(ResultSet rs) throws SQLException {
         Payroll p = new Payroll();
         p.setId(rs.getInt("id"));
@@ -193,14 +189,38 @@ public class PayrollDAOImpl implements PayrollDAO {
         }
         d.setInsuranceDeduction(rs.getDouble("insurance_deduction"));
         // Block 3: Thu nhập bổ sung
-        try { d.setOvertimeWeekdayHours(rs.getDouble("overtime_weekday_hours")); } catch (SQLException ignored) {}
-        try { d.setOvertimeWeekendHours(rs.getDouble("overtime_weekend_hours")); } catch (SQLException ignored) {}
-        try { d.setOvertimeHolidayHours(rs.getDouble("overtime_holiday_hours")); } catch (SQLException ignored) {}
-        try { d.setOvertimePay(rs.getDouble("overtime_pay")); } catch (SQLException ignored) {}
-        try { d.setHolidayWorkDays(rs.getDouble("holiday_work_days")); } catch (SQLException ignored) {}
-        try { d.setHolidayWorkPay(rs.getDouble("holiday_work_pay")); } catch (SQLException ignored) {}
-        try { d.setBonusAmount(rs.getDouble("bonus_amount")); } catch (SQLException ignored) {}
-        try { d.setBonusNote(rs.getString("bonus_note")); } catch (SQLException ignored) {}
+        try {
+            d.setOvertimeWeekdayHours(rs.getDouble("overtime_weekday_hours"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setOvertimeWeekendHours(rs.getDouble("overtime_weekend_hours"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setOvertimeHolidayHours(rs.getDouble("overtime_holiday_hours"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setOvertimePay(rs.getDouble("overtime_pay"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setHolidayWorkDays(rs.getDouble("holiday_work_days"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setHolidayWorkPay(rs.getDouble("holiday_work_pay"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setBonusAmount(rs.getDouble("bonus_amount"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setBonusNote(rs.getString("bonus_note"));
+        } catch (SQLException ignored) {
+        }
         // Block 4: Gross, Thuế, Net
         try {
             d.setGrossSalary(rs.getDouble("gross_salary"));
@@ -402,25 +422,33 @@ public class PayrollDAOImpl implements PayrollDAO {
     }
 
     /**
-     * Tính ngày công chuẩn động: đếm ngày T2-T6 trong tháng, trừ ngày lễ rơi vào weekday.
+     * Tính ngày công chuẩn động: đếm ngày T2-T6 trong tháng, trừ ngày lễ rơi vào
+     * weekday.
      */
     private int calculateStandardDays(Connection conn, int month, int year) throws SQLException {
-        // Đếm weekdays (Mon-Fri) trong tháng
+
         String sql = "SELECT COUNT(*) FROM (" +
                 "  SELECT DATE(CONCAT(?, '-', LPAD(?, 2, '0'), '-01')) + INTERVAL (n-1) DAY AS d " +
                 "  FROM (SELECT @row := @row + 1 AS n FROM " +
-                "    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION " +
-                "     SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION " +
-                "     SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30 UNION SELECT 31" +
+                "    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION "
+                +
+                "     SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION "
+                +
+                "     SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30 UNION SELECT 31"
+                +
                 "    ) nums, (SELECT @row := 0) r) seq " +
-                "  WHERE DATE(CONCAT(?, '-', LPAD(?, 2, '0'), '-01')) + INTERVAL (n-1) DAY < DATE(CONCAT(?, '-', LPAD(?, 2, '0'), '-01')) + INTERVAL 1 MONTH" +
+                "  WHERE DATE(CONCAT(?, '-', LPAD(?, 2, '0'), '-01')) + INTERVAL (n-1) DAY < DATE(CONCAT(?, '-', LPAD(?, 2, '0'), '-01')) + INTERVAL 1 MONTH"
+                +
                 ") dates " +
-                "WHERE DAYOFWEEK(d) NOT IN (1, 7)"; // 1=Sunday, 7=Saturday
+                "WHERE DAYOFWEEK(d) NOT IN (1, 7)";
         int totalWeekdays;
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, year); ps.setInt(2, month);
-            ps.setInt(3, year); ps.setInt(4, month);
-            ps.setInt(5, year); ps.setInt(6, month);
+            ps.setInt(1, year);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+            ps.setInt(4, month);
+            ps.setInt(5, year);
+            ps.setInt(6, month);
             try (ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 totalWeekdays = rs.getInt(1);
@@ -432,9 +460,12 @@ public class PayrollDAOImpl implements PayrollDAO {
                 "  SELECT h.start_date + INTERVAL seq.n DAY AS d " +
                 "  FROM holidays h " +
                 "  CROSS JOIN (SELECT @r := @r + 1 - 1 AS n FROM " +
-                "    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION " +
-                "     SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION " +
-                "     SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30" +
+                "    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION "
+                +
+                "     SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION "
+                +
+                "     SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30"
+                +
                 "    ) nums, (SELECT @r := 0) r2) seq " +
                 "  WHERE h.start_date + INTERVAL seq.n DAY <= h.end_date" +
                 ") hd " +
@@ -444,7 +475,8 @@ public class PayrollDAOImpl implements PayrollDAO {
             ps.setInt(1, month);
             ps.setInt(2, year);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) holidaysOnWeekday = rs.getInt(1);
+                if (rs.next())
+                    holidaysOnWeekday = rs.getInt(1);
             }
         }
 
@@ -452,17 +484,22 @@ public class PayrollDAOImpl implements PayrollDAO {
     }
 
     /**
-     * Lấy danh sách ngày lễ (java.sql.Date) trong tháng, dùng để nhận diện làm ngày lễ.
+     * Lấy danh sách ngày lễ (java.sql.Date) trong tháng, dùng để nhận diện làm ngày
+     * lễ.
      */
-    private java.util.Map<String, Double> getHolidayDatesInMonth(Connection conn, int month, int year) throws SQLException {
+    private java.util.Map<String, Double> getHolidayDatesInMonth(Connection conn, int month, int year)
+            throws SQLException {
         java.util.Map<String, Double> holidays = new java.util.HashMap<>();
         String sql = "SELECT DISTINCT DATE_FORMAT(hd.d, '%Y-%m-%d') as hdate, hd.salary_coefficient FROM (" +
                 "  SELECT h.start_date + INTERVAL seq.n DAY AS d, h.salary_coefficient " +
                 "  FROM holidays h " +
                 "  CROSS JOIN (SELECT @r2 := @r2 + 1 - 1 AS n FROM " +
-                "    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION " +
-                "     SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION " +
-                "     SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30" +
+                "    (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION "
+                +
+                "     SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION "
+                +
+                "     SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30"
+                +
                 "    ) nums, (SELECT @r2 := 0) r2) seq " +
                 "  WHERE h.start_date + INTERVAL seq.n DAY <= h.end_date" +
                 ") hd " +
@@ -480,24 +517,28 @@ public class PayrollDAOImpl implements PayrollDAO {
     }
 
     /**
-     * Tính tổng hệ số lương của những ngày nhân viên thực sự đi làm vào ngày lễ (có check-in trong attendance).
+     * Tính tổng hệ số lương của những ngày nhân viên thực sự đi làm vào ngày lễ (có
+     * check-in trong attendance).
      * Trả về tổng hệ số (ví dụ: làm 2 ngày lễ có hệ số 3.0 -> trả về 6.0)
      */
-    private double calculateHolidayWorkMultiplier(Connection conn, int empId, int month, int year, java.util.Map<String, Double> holidayMap) throws SQLException {
-        if (holidayMap.isEmpty()) return 0.0;
+    private double calculateHolidayWorkMultiplier(Connection conn, int empId, int month, int year,
+            java.util.Map<String, Double> holidayMap) throws SQLException {
+        if (holidayMap.isEmpty())
+            return 0.0;
         StringBuilder sb = new StringBuilder(
-            "SELECT DATE_FORMAT(date, '%Y-%m-%d') as wdate FROM attendance WHERE employee_id = ? " +
-            "AND MONTH(date) = ? AND YEAR(date) = ? " +
-            "AND status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') " +
-            "AND DATE_FORMAT(date, '%Y-%m-%d') IN (");
+                "SELECT DATE_FORMAT(date, '%Y-%m-%d') as wdate FROM attendance WHERE employee_id = ? " +
+                        "AND MONTH(date) = ? AND YEAR(date) = ? " +
+                        "AND status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') " +
+                        "AND DATE_FORMAT(date, '%Y-%m-%d') IN (");
         int i = 0;
         for (String d : holidayMap.keySet()) {
-            if (i > 0) sb.append(",");
+            if (i > 0)
+                sb.append(",");
             sb.append("?");
             i++;
         }
         sb.append(")");
-        
+
         double totalMultiplier = 0.0;
         try (PreparedStatement ps = conn.prepareStatement(sb.toString())) {
             ps.setInt(1, empId);
@@ -518,11 +559,15 @@ public class PayrollDAOImpl implements PayrollDAO {
     }
 
     private void syncAttendanceSummary(int month, int year, int standardDays, Connection conn) throws SQLException {
-        String sql = "INSERT INTO attendance_summary (employee_id, month, year, standard_days, actual_worked_days, paid_leave_days, unpaid_leave_days) " +
+        String sql = "INSERT INTO attendance_summary (employee_id, month, year, standard_days, actual_worked_days, paid_leave_days, unpaid_leave_days) "
+                +
                 "SELECT e.id, ?, ?, ?, " +
-                "       COALESCE(SUM(CASE WHEN a.status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') THEN 1 ELSE 0 END), 0) AS actual_worked, " +
-                "       COALESCE(SUM(CASE WHEN a.status IN ('LEAVE', 'HOLIDAY') THEN 1 ELSE 0 END), 0) AS paid_leave, " +
-                "       GREATEST(0, ? - COALESCE(SUM(CASE WHEN a.status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') THEN 1 ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN a.status IN ('LEAVE', 'HOLIDAY') THEN 1 ELSE 0 END), 0)) AS unpaid_leave " +
+                "       COALESCE(SUM(CASE WHEN a.status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') THEN 1 ELSE 0 END), 0) AS actual_worked, "
+                +
+                "       COALESCE(SUM(CASE WHEN a.status IN ('LEAVE', 'HOLIDAY') THEN 1 ELSE 0 END), 0) AS paid_leave, "
+                +
+                "       GREATEST(0, ? - COALESCE(SUM(CASE WHEN a.status IN ('PRESENT', 'LATE', 'EARLY_LEAVE') THEN 1 ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN a.status IN ('LEAVE', 'HOLIDAY') THEN 1 ELSE 0 END), 0)) AS unpaid_leave "
+                +
                 "FROM employees e " +
                 "JOIN user_accounts ua ON e.id = ua.employee_id " +
                 "LEFT JOIN attendance a ON e.id = a.employee_id AND MONTH(a.date) = ? AND YEAR(a.date) = ? " +
@@ -567,11 +612,13 @@ public class PayrollDAOImpl implements PayrollDAO {
 
             // 0d. Lấy overtime records đã duyệt
             com.hrm.project.dao.OvertimeRecordDAO otDao = new OvertimeRecordDAOImpl();
-            java.util.Map<Integer, java.util.List<com.hrm.project.model.OvertimeRecord>> overtimeMap = otDao.getApprovedByMonthForPayroll(year, month);
+            java.util.Map<Integer, java.util.List<com.hrm.project.model.OvertimeRecord>> overtimeMap = otDao
+                    .getApprovedByMonthForPayroll(year, month);
 
             // 0e. Lấy bonus
             com.hrm.project.dao.PayrollBonusDAO bonusDao = new PayrollBonusDAOImpl();
-            java.util.Map<Integer, java.util.List<com.hrm.project.model.PayrollBonus>> bonusMap = bonusDao.getByMonthForPayroll(year, month);
+            java.util.Map<Integer, java.util.List<com.hrm.project.model.PayrollBonus>> bonusMap = bonusDao
+                    .getByMonthForPayroll(year, month);
 
             // 1. Check existing payroll
             String checkSql = "SELECT id, status FROM payrolls WHERE month = ? AND year = ?";
@@ -641,7 +688,8 @@ public class PayrollDAOImpl implements PayrollDAO {
 
             String insDetailSql = "INSERT INTO payroll_details (" +
                     "payroll_id, employee_id, basic_salary, " +
-                    "standard_days, actual_worked_days, paid_leave_days, unpaid_leave_days, sick_leave_days, unpaid_leave_deduction, " +
+                    "standard_days, actual_worked_days, paid_leave_days, unpaid_leave_days, sick_leave_days, unpaid_leave_deduction, "
+                    +
                     "allowance_amount, bhxh_deduction, bhyt_deduction, bhtn_deduction, insurance_deduction, " +
                     "overtime_weekday_hours, overtime_weekend_hours, overtime_holiday_hours, overtime_pay, " +
                     "holiday_work_days, holiday_work_pay, bonus_amount, bonus_note, " +
@@ -670,7 +718,8 @@ public class PayrollDAOImpl implements PayrollDAO {
                         double unpaidLeaveDays = rs.getDouble("unpaid_leave_days");
                         double sickLeaveDays = 0; // TODO: integrate sick leave from attendance
                         double unpaidDeduction = stdDays > 0 ? (basicSalary / stdDays) * unpaidLeaveDays : 0;
-                        // Lương cơ bản thực nhận = basicSalary / stdDays * (actualWorked + paidLeave + sickLeave)
+                        // Lương cơ bản thực nhận = basicSalary / stdDays * (actualWorked + paidLeave +
+                        // sickLeave)
                         double basicSalaryActual = stdDays > 0
                                 ? (basicSalary / stdDays) * (actualWorkedDays + paidLeaveDays + sickLeaveDays)
                                 : 0;
@@ -709,7 +758,8 @@ public class PayrollDAOImpl implements PayrollDAO {
                                         otHolidayHours += h;
                                         double coeff = 3.0;
                                         if (ot.getOvertimeDate() != null) {
-                                            String otDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(ot.getOvertimeDate());
+                                            String otDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd")
+                                                    .format(ot.getOvertimeDate());
                                             coeff = holidayMap.getOrDefault(otDateStr, 3.0);
                                         }
                                         overtimePay += h * hourlyRate * coeff;
@@ -719,11 +769,10 @@ public class PayrollDAOImpl implements PayrollDAO {
                             }
                         }
 
-                        // Làm ngày lễ (từ attendance — không phải OT, mà là làm full ngày lễ)
-                        double holidayMultiplierSum = calculateHolidayWorkMultiplier(conn, empId, month, year, holidayMap);
+                        double holidayMultiplierSum = calculateHolidayWorkMultiplier(conn, empId, month, year,
+                                holidayMap);
                         double holidayWorkPay = 0;
                         if (holidayMultiplierSum > 0) {
-                            // Lương làm ngày lễ nhân theo hệ số cấu hình (đã tính 100% lương ngày ở Block 1)
                             holidayWorkPay = (basicSalary / stdDays) * holidayMultiplierSum;
                         }
 
@@ -734,7 +783,8 @@ public class PayrollDAOImpl implements PayrollDAO {
                         if (empBonuses != null) {
                             for (com.hrm.project.model.PayrollBonus b : empBonuses) {
                                 bonusAmount += b.getAmount();
-                                if (bonusNoteBuilder.length() > 0) bonusNoteBuilder.append("; ");
+                                if (bonusNoteBuilder.length() > 0)
+                                    bonusNoteBuilder.append("; ");
                                 bonusNoteBuilder.append(b.getBonusTypeLabel()).append(": ")
                                         .append(String.format("%,.0f", b.getAmount()));
                                 if (b.getNote() != null && !b.getNote().isEmpty()) {
@@ -776,7 +826,12 @@ public class PayrollDAOImpl implements PayrollDAO {
                         detPs.setDouble(idx++, otWeekendHours);
                         detPs.setDouble(idx++, otHolidayHours);
                         detPs.setDouble(idx++, overtimePay);
-                        detPs.setDouble(idx++, holidayMultiplierSum > 0 ? (holidayMultiplierSum / 3.0) : 0.0); // Rough estimation to satisfy DB column
+                        detPs.setDouble(idx++, holidayMultiplierSum > 0 ? (holidayMultiplierSum / 3.0) : 0.0); // Rough
+                                                                                                               // estimation
+                                                                                                               // to
+                                                                                                               // satisfy
+                                                                                                               // DB
+                                                                                                               // column
                         detPs.setDouble(idx++, holidayWorkPay);
                         detPs.setDouble(idx++, bonusAmount);
                         detPs.setString(idx++, bonusNote);
@@ -1010,13 +1065,13 @@ public class PayrollDAOImpl implements PayrollDAO {
     public List<Payroll> getPayrollsByDepartment(int departmentId) {
         List<Payroll> list = new ArrayList<>();
         String sql = PAYROLL_SELECT_WITH_NAMES +
-                     "WHERE EXISTS (" +
-                     "  SELECT 1 FROM payroll_details pd " +
-                     "  JOIN employees e ON pd.employee_id = e.id " +
-                     "  WHERE pd.payroll_id = p.id AND e.department_id = ?" +
-                     ") ORDER BY p.year DESC, p.month DESC";
+                "WHERE EXISTS (" +
+                "  SELECT 1 FROM payroll_details pd " +
+                "  JOIN employees e ON pd.employee_id = e.id " +
+                "  WHERE pd.payroll_id = p.id AND e.department_id = ?" +
+                ") ORDER BY p.year DESC, p.month DESC";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, departmentId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

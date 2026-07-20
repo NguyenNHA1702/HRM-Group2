@@ -100,7 +100,10 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
     public LeaveRequest getById(int id) {
 
         String sql =
-                "SELECT * FROM leave_requests WHERE id=?";
+                "SELECT lr.*, lt.name AS leave_type_name " +
+                "FROM leave_requests lr " +
+                "JOIN leave_types lt ON lr.leave_type_id = lt.id " +
+                "WHERE lr.id = ?";
 
         try (
                 Connection con = DBConnection.getConnection();
@@ -112,7 +115,9 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                return map(rs);
+                LeaveRequest r = map(rs);
+                r.setLeaveTypeName(rs.getString("leave_type_name"));
+                return r;
             }
 
         } catch (Exception e) {

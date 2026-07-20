@@ -7,12 +7,20 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface AttendanceDAO {
 
     List<Attendance> getAttendanceByMonth(int year, int month, int employeeId);
 
     int importAttendances(List<Attendance> attendances) throws SQLException;
+
+    /**
+     * Trả về tập hợp key "employeeId_yyyy-MM-dd" của các bản ghi attendance
+     * đang có status='LEAVE' trong danh sách đầu vào.
+     * Dùng để kiểm tra nhanh trước khi import Excel, tránh ghi đè ngày nghỉ phép đã duyệt.
+     */
+    Set<String> getApprovedLeaveDateKeys(List<Attendance> attendances);
 
     boolean submitExplanation(int employeeId, LocalDate date, String reason);
 

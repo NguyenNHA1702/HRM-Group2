@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/layout.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css"/>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/attendance.css"/>
@@ -42,7 +43,7 @@
                 </c:if>
                 <form method="get" action="${pageContext.request.contextPath}/cham-cong" class="filter-bar">
                     <c:if test="${not empty employeeList}">
-                        <select name="employeeId" onchange="this.form.submit()">
+                        <select name="employeeId" id="employeeSelect" style="width: 250px;">
                             <c:forEach var="emp" items="${employeeList}">
                                 <option value="${emp.employeeId}" ${emp.employeeId == viewEmployeeId ? 'selected' : ''}>
                                     [${emp.employeeCode}] <c:out value="${emp.fullName}"/>
@@ -144,6 +145,13 @@
             <div class="flash error"><c:out value="${sessionScope.flash_error}"/></div>
             <c:remove var="flash_error" scope="session"/>
         </c:if>
+        <c:if test="${not empty sessionScope.flash_warning}">
+            <div class="flash"
+                 style="background:#fffbeb;border-color:#fcd34d;color:#92400e;border-left:4px solid #f59e0b;">
+                <c:out value="${sessionScope.flash_warning}"/>
+            </div>
+            <c:remove var="flash_warning" scope="session"/>
+        </c:if>
         
         <c:if test="${isLocked}">
             <div class="flash error" style="background:#fee2e2; border-color:#fecaca; color:#991b1b;">
@@ -177,7 +185,7 @@
                 <div class="legend-item"><div class="legend-dot present"></div> Đủ công</div>
                 <div class="legend-item"><div class="legend-dot late"></div> Đi muộn / Về sớm</div>
                 <div class="legend-item"><div class="legend-dot absent"></div> Vắng mặt</div>
-                <div class="legend-item"><div class="legend-dot leave"></div> Nghỉ phép</div>
+                <div class="legend-item"><div class="legend-dot leave"></div> Nghỉ phép (theo loại)</div>
                 <div class="legend-item"><div class="legend-dot weekend"></div> Ngày nghỉ / Lễ</div>
             </div>
         </div>
@@ -201,15 +209,21 @@
             <div id="quick-action-bar" style="display:none"></div>
 
             <div class="current-values">
-                <div class="cv-item">
+                <div class="cv-item" id="cv-checkin-row">
                     <div class="cv-label">Giờ vào ghi nhận</div>
                     <div class="cv-val" id="cv-checkin">—</div>
                 </div>
-                <div class="cv-item">
+                <div class="cv-item" id="cv-checkout-row">
                     <div class="cv-label">Giờ ra ghi nhận</div>
                     <div class="cv-val" id="cv-checkout">—</div>
                 </div>
+                <div class="cv-item" id="cv-leave-type-row" style="display:none;">
+                    <div class="cv-label">Loại nghỉ phép</div>
+                    <div class="cv-val" id="cv-leave-type"
+                         style="color:#5b21b6;font-weight:600;">—</div>
+                </div>
             </div>
+            <div id="leave-approved-banner" style="display:none;"></div>
             <form id="explanation-form"
                   class="explanation-form"
                   method="post"
@@ -281,6 +295,26 @@
 
 <!-- ══ Scripts: external FIRST, then inline data ══ -->
 <script src="${pageContext.request.contextPath}/assets/js/attendance.js?v=20260701-1"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (document.getElementById('employeeSelect')) {
+            new TomSelect('#employeeSelect', {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                placeholder: "Tìm kiếm nhân viên...",
+                onChange: function(value) {
+                    if (value) {
+                        document.getElementById('employeeSelect').form.submit();
+                    }
+                }
+            });
+        }
+    });
+</script>
 <script>
     /*
      * attendance.js đã đăng ký DOMContentLoaded listener.
