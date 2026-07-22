@@ -465,6 +465,7 @@ input[type="file"][hidden] {
 .day-badge.late    { background: var(--clr-late-bd);    color: var(--clr-late); }
 .day-badge.absent  { background: var(--clr-absent-bd);  color: var(--clr-absent); }
 .day-badge.leave   { background: var(--clr-leave-bd);   color: var(--clr-leave); }
+.day-badge.holiday { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
 
 /* Explanation badge inside cell */
 .exp-badge {

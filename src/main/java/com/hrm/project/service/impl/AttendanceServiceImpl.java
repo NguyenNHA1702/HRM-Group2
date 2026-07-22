@@ -336,6 +336,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendance.setCheckIn(readTime(row, columns.get("check_in"), formatter));
         attendance.setCheckOut(readTime(row, columns.get("check_out"), formatter));
         attendance.setStatus(normalizeStatus(
+                attendance.getDate(),
                 readText(row, columns.get("status"), formatter),
                 attendance.getCheckIn(), attendance.getCheckOut()));
         attendance.setNote(readText(row, columns.get("note"), formatter));
@@ -399,7 +400,13 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
     }
 
-    private String normalizeStatus(String status, LocalTime checkIn, LocalTime checkOut) {
+    private String normalizeStatus(LocalDate date, String status, LocalTime checkIn, LocalTime checkOut) {
+        boolean isWeekend = date != null && (date.getDayOfWeek() == java.time.DayOfWeek.SATURDAY || date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY);
+        
+        if (checkIn == null && checkOut == null && isWeekend) {
+            return "HOLIDAY";
+        }
+
         if (status == null) {
             if (checkIn == null && checkOut == null) {
                 return "ABSENT";
