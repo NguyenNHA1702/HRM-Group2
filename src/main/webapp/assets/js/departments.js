@@ -178,13 +178,10 @@ $(document).ready(function() {
             return response.text();
         })
         .then(html => {
-            if (html.indexOf("Error: Cannot assign an Admin or HR personnel") !== -1) {
+            if (html.indexOf("Error:") !== -1 || html.indexOf("Lỗi:") !== -1) {
                 showModalError(html);
             } else {
-                // Replace page content to reflect changes and keep the success messages
-                document.open();
-                document.write(html);
-                document.close();
+                location.reload();
             }
         })
         .catch(error => {

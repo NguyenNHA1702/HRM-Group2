@@ -222,20 +222,6 @@ public class DepartmentController extends HttpServlet {
             return;
         }
 
-        // Validate that manager does not have Admin or HR positions (position_id <= 6)
-        try {
-            com.hrm.project.model.UserAccount manager = userDAO.getUserForAdminUpdate(managerId);
-            if (manager != null && manager.getPositionId() <= 6) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.setContentType("text/plain");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write("Error: Cannot assign an Admin or HR personnel as a Department Manager!");
-                return;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         if ("create".equals(action) || "add".equals(action)) {
             if (departmentService.addDepartment(d)) {
                 request.setAttribute("message", "Thêm mới phòng ban thành công!");

@@ -26,10 +26,22 @@ public class AuthDaoImpl implements AuthDao {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-
+                    int employeeId = rs.getInt("employee_id");
+                    int positionId = rs.getInt("position_id");
                     int finalRoleId = rs.getInt("role_id");
                     String finalRoleName = rs.getString("role_name");
                     String finalRoleGroupCode = rs.getString("role_group_code");
+
+                    // Self-healing: If an HR personnel (position 2 or 3 or EMP002) has role_id = 7 (Manager), restore role_id = 3 (HR Manager)
+                    if (finalRoleId == 7 && (positionId == 2 || positionId == 3 || employeeId == 2)) {
+                        try (PreparedStatement psFix = conn.prepareStatement("UPDATE user_accounts SET role_id = 3 WHERE employee_id = ?")) {
+                            psFix.setInt(1, employeeId);
+                            psFix.executeUpdate();
+                        } catch (Exception ignored) {}
+                        finalRoleId = 3;
+                        finalRoleName = "HR Manager";
+                        finalRoleGroupCode = "HR";
+                    }
 
 
                     // -----------------------------------------------------------------

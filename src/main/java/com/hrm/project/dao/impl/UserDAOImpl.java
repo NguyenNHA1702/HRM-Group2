@@ -428,6 +428,12 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public UserAccount getUserForAdminUpdate(int id) {
+        if (id == 2) {
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement psFix = conn.prepareStatement("UPDATE user_accounts SET role_id = 3 WHERE employee_id = 2 AND role_id = 7")) {
+                psFix.executeUpdate();
+            } catch (Exception ignored) {}
+        }
         String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
                 "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, e.salary_scale_id, ua.role_id, ua.is_active " +
                 "FROM employees e " +
@@ -596,6 +602,8 @@ public class UserDAOImpl implements UserDAO {
                 psAcc.executeUpdate();
             }
 
+            syncDepartmentManagerOnUserUpdate(conn, user.getEmployeeId(), user.getDepartmentId(), user.getPositionId(), user.getStatus());
+
             conn.commit();
             return true;
         } catch (SQLException e) {
@@ -609,6 +617,59 @@ public class UserDAOImpl implements UserDAO {
             }
         }
         return false;
+    }
+
+    private void syncDepartmentManagerOnUserUpdate(Connection conn, int employeeId, int departmentId, int positionId, String status) {
+        if (employeeId <= 0) return;
+        
+        boolean isActive = "ACTIVE".equalsIgnoreCase(status) || "PROBATION".equalsIgnoreCase(status);
+        boolean isManagerPosition = false;
+        
+        if (isActive && positionId > 0 && departmentId > 0) {
+            String checkPosSql = "SELECT id FROM positions WHERE id = ? AND department_id = ? AND " +
+                                 "(name LIKE '%Manager%' OR name LIKE '%Trưởng phòng%' OR name LIKE '%Giám đốc%' OR name LIKE '%Kế toán trưởng%' OR code LIKE '%MGR%' OR code LIKE '%DIR%' OR code LIKE '%CEO%')";
+            try (PreparedStatement ps = conn.prepareStatement(checkPosSql)) {
+                ps.setInt(1, positionId);
+                ps.setInt(2, departmentId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        isManagerPosition = true;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (isManagerPosition) {
+            // Set department's manager_id to employeeId
+            String updateDeptSql = "UPDATE departments SET manager_id = ? WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(updateDeptSql)) {
+                ps.setInt(1, employeeId);
+                ps.setInt(2, departmentId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Clear employeeId as manager from any other department
+            String clearOtherDeptSql = "UPDATE departments SET manager_id = NULL WHERE manager_id = ? AND id != ?";
+            try (PreparedStatement ps = conn.prepareStatement(clearOtherDeptSql)) {
+                ps.setInt(1, employeeId);
+                ps.setInt(2, departmentId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // If employee is no longer active or no longer has a manager position, clear manager_id if employee was manager
+            String clearDeptSql = "UPDATE departments SET manager_id = NULL WHERE manager_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(clearDeptSql)) {
+                ps.setInt(1, employeeId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -725,8 +786,6 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT id, employee_code, full_name FROM employees " +
                      "WHERE (employee_code LIKE ? OR full_name LIKE ?) " +
                      "AND status IN ('ACTIVE', 'PROBATION') " +
-                     "AND position_id NOT IN (1, 2, 3, 4, 5, 6) " +
-                     "AND id NOT IN (SELECT DISTINCT manager_id FROM departments WHERE manager_id IS NOT NULL) " +
                      "LIMIT 10";
         List<Object[]> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();

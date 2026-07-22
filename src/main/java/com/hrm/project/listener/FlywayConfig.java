@@ -17,7 +17,7 @@ public class FlywayConfig implements ServletContextListener {
         System.out.println("[FLYWAY LOGGER] BẮT ĐẦU KHỞI CHẠY LÝ TRÌNH ĐỒNG BỘ DB...");
 
         String dbName = "HRM_DB";
-        String serverUrl = "jdbc:mysql://127.0.0.1:3306/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
+        String serverUrl = "jdbc:mysql://127.0.0.1:3306/?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh";
         String user = "root";
         String pass = "123456";
 
@@ -33,7 +33,7 @@ public class FlywayConfig implements ServletContextListener {
 
         // Dùng khối try-catch bổ sung bắt RuntimeException từ Flyway
         try {
-            System.out.println("[FLYWAY LOGGER] Bước 2: Đang kết nối tới MySQL Server gốc (127.0.0.1:3309)...");
+            System.out.println("[FLYWAY LOGGER] Bước 2: Đang kết nối tới MySQL Server gốc (127.0.0.1:3306)...");
             try (Connection conn = DriverManager.getConnection(serverUrl, user, pass);
                  Statement stmt = conn.createStatement()) {
 
@@ -44,11 +44,12 @@ public class FlywayConfig implements ServletContextListener {
             }
 
             System.out.println("[FLYWAY LOGGER] Bước 4: Khởi cấu hình tham số cho Flyway Engine...");
-            String dbUrl = "jdbc:mysql://127.0.0.1:3306/" + dbName + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8";
+            String dbUrl = "jdbc:mysql://127.0.0.1:3306/" + dbName + "?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh";
 
             Flyway flyway = Flyway.configure()
                     .dataSource(dbUrl, user, pass)
                     .locations("classpath:db/migration") // Khóa cứng đường dẫn quét thư mục resources công khai
+                    .encoding("UTF-8")
                     .baselineOnMigrate(true)
                     .outOfOrder(true)
                     .load();
