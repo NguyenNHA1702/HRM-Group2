@@ -103,7 +103,7 @@
                                onchange="if (this.files.length > 0) { this.form.submit(); }"/>
                         <button type="button"
                                 class="btn btn-outline attendance-action"
-                                title="Cột hỗ trợ: ID nhân viên, Mã nhân viên, Ngày chấm công, Giờ vào, Giờ ra, Trạng thái, Ghi chú"
+                                title="Cột bắt buộc: Mã nhân viên, Ngày chấm công. Cột hỗ trợ thêm: Giờ vào, Giờ ra"
                                 onclick="document.getElementById('attendance-file').click()">
                             &#8593; Nhập Excel
                         </button>
@@ -124,10 +124,9 @@
 
         <c:if test="${canImportAttendance}">
             <div class="import-format-hint">
-                File .xlsx bắt buộc có <strong>ID nhân viên hoặc Mã nhân viên</strong> và
-                <strong>Ngày chấm công</strong>; hỗ trợ thêm Giờ vào, Giờ ra, Trạng thái, Ghi chú.
-                Trạng thái dùng: Đủ công, Đi muộn, Về sớm, Vắng mặt, Ngày nghỉ, Nghỉ lễ,
-                Nghỉ phép hoặc Tăng ca.
+                File .xlsx bắt buộc có <strong>Mã nhân viên</strong> và
+                <strong>Ngày chấm công</strong>; hỗ trợ thêm <strong>Giờ vào</strong>, <strong>Giờ ra</strong>.
+                Hệ thống tự động tính toán trạng thái (Đủ công, Đi muộn, Vắng mặt, v.v.).
                 <c:if test="${not empty sessionScope.pendingAttendanceFileName}">
                     <span class="pending-file">
                         File đang chờ insert:
