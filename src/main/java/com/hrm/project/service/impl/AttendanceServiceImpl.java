@@ -123,7 +123,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             if (headerRow == null) {
                 result.addError(
                         "Không tìm thấy dòng tiêu đề có Ngày chấm công và "
-                                + "ID nhân viên hoặc Mã nhân viên.");
+                                + "Mã nhân viên.");
                 return result;
             }
             Map<String, Integer> columns = readHeader(headerRow, formatter);
@@ -132,8 +132,8 @@ public class AttendanceServiceImpl implements AttendanceService {
                     result.addError("Thiếu cột bắt buộc: Ngày chấm công.");
                 }
             }
-            if (!columns.containsKey("employee_id") && !columns.containsKey("employee_code")) {
-                result.addError("Thiếu cột ID nhân viên hoặc Mã nhân viên.");
+            if (!columns.containsKey("employee_code")) {
+                result.addError("Thiếu cột bắt buộc: Mã nhân viên.");
             }
             if (!result.getErrors().isEmpty()) {
                 return result;
@@ -281,9 +281,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 continue;
             }
             Map<String, Integer> columns = readHeader(row, formatter);
-            if (columns.containsKey("date")
-                    && (columns.containsKey("employee_id")
-                    || columns.containsKey("employee_code"))) {
+            if (columns.containsKey("date") && columns.containsKey("employee_code")) {
                 return row;
             }
         }
@@ -325,12 +323,9 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private Attendance readAttendance(Row row, Map<String, Integer> columns, DataFormatter formatter) {
         Attendance attendance = new Attendance();
-        attendance.setEmployeeId(readInteger(row, columns.get("employee_id"), formatter));
         attendance.setEmployeeCode(readText(row, columns.get("employee_code"), formatter));
-        if (attendance.getEmployeeId() == null
-                && (attendance.getEmployeeCode() == null || attendance.getEmployeeCode().isBlank())) {
-            throw new IllegalArgumentException(
-                    "ID nhân viên hoặc Mã nhân viên không được để trống.");
+        if (attendance.getEmployeeCode() == null || attendance.getEmployeeCode().isBlank()) {
+            throw new IllegalArgumentException("Mã nhân viên không được để trống.");
         }
         attendance.setDate(readDate(row, columns.get("date"), formatter));
         attendance.setCheckIn(readTime(row, columns.get("check_in"), formatter));
