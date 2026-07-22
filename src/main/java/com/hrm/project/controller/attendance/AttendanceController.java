@@ -453,8 +453,11 @@ public class AttendanceController extends HttpServlet {
         if ("ABSENT".equals(status)) {
             return "absent";
         }
-        if ("LEAVE".equals(status) || "HOLIDAY".equals(status)) {
+        if ("LEAVE".equals(status)) {
             return "leave";
+        }
+        if ("HOLIDAY".equals(status)) {
+            return "holiday";
         }
         return "present";
     }

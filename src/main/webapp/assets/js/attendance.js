@@ -6,10 +6,10 @@
 
 /* ── Constants ── */
 const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-const STATUS_LABEL = { present: 'Đủ công', late: 'Đi muộn', absent: 'Vắng mặt', leave: 'Nghỉ phép' };
+const STATUS_LABEL = { present: 'Đủ công', late: 'Đi muộn', absent: 'Vắng mặt', leave: 'Nghỉ phép', holiday: 'Ngày nghỉ' };
 /* Nhãn hiển thị mặc định khi note rỗng */
 const LEAVE_DEFAULT_LABEL = 'Nghỉ phép';
-const STATUS_ICON = { present: '✓', late: '⚠', absent: '✕', leave: '◷' };
+const STATUS_ICON = { present: '✓', late: '⚠', absent: '✕', leave: '◷', holiday: '◷' };
 
 /* ── Global state – written by JSP inline script, read after DOMContentLoaded ── */
 window._attendanceBootData = window._attendanceBootData || null;
@@ -265,7 +265,11 @@ function buildDayHTML(day, att, isWeekend, isFuture, ot) {
         return numEl + expBadge + lateNote + timeEl + badge + otBadge;
     }
 
-    if (isWeekend) return numEl + expBadge;
+    if (isWeekend) {
+        var otBadge = getOtBadgeHTML(ot);
+        var weekendBadge = '<div class="day-badge" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;" title="Ngày nghỉ">◷ Ngày nghỉ</div>';
+        return numEl + expBadge + weekendBadge + otBadge;
+    }
 
     var otBadge = getOtBadgeHTML(ot);
 
