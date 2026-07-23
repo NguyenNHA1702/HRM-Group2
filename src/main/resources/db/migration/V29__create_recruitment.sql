@@ -1,5 +1,5 @@
 -- ============================================================
--- V26: Recruitment Module (Job Vacancies & Candidates)
+-- V29: Recruitment Module (Job Vacancies & Candidates)
 -- Luồng: OPEN/CLOSED vacancy, NEW -> INTERVIEWING -> OFFERED -> HIRED/REJECTED
 -- ============================================================
 
@@ -47,18 +47,21 @@ CREATE TABLE IF NOT EXISTS candidates
     INDEX idx_c_status (status)
 ) COMMENT = 'Hồ sơ ứng viên';
 
--- RBAC: thêm module Tuyển dụng
-INSERT INTO modules (code, name, is_admin_only, description)
+-- RBAC: thêm module Tuyển dụng (không hardcode id = 10 để tránh đụng độ PK khi auto-increment)
+INSERT IGNORE INTO modules (code, name, is_admin_only, description)
 VALUES ('RECRUITMENT', 'Tuyển dụng', 0, 'Quản lý vị trí tuyển dụng và ứng viên');
 
 INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
-SELECT 1, id, 1, 1, 1, 1 FROM modules WHERE code = 'RECRUITMENT'
-ON DUPLICATE KEY UPDATE can_view=1, can_create=1, can_edit=1, can_delete=1;
+SELECT r.role_id, m.id, r.can_view, r.can_create, r.can_edit, r.can_delete
+FROM (
+    SELECT 1 AS role_id, 1 AS can_view, 1 AS can_create, 1 AS can_edit, 1 AS can_delete
+    UNION ALL SELECT 3, 1, 1, 1, 0
+    UNION ALL SELECT 6, 1, 1, 1, 0
+) r
+CROSS JOIN modules m WHERE m.code = 'RECRUITMENT'
+ON DUPLICATE KEY UPDATE
+    can_view = VALUES(can_view),
+    can_create = VALUES(can_create),
+    can_edit = VALUES(can_edit),
+    can_delete = VALUES(can_delete);
 
-INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
-SELECT 3, id, 1, 1, 1, 0 FROM modules WHERE code = 'RECRUITMENT'
-ON DUPLICATE KEY UPDATE can_view=1, can_create=1, can_edit=1, can_delete=0;
-
-INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
-SELECT 6, id, 1, 1, 1, 0 FROM modules WHERE code = 'RECRUITMENT'
-ON DUPLICATE KEY UPDATE can_view=1, can_create=1, can_edit=1, can_delete=0;

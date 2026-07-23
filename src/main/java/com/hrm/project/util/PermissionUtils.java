@@ -66,7 +66,7 @@ public class PermissionUtils {
         }
 
         // ─── 3. EMPLOYEE_MGMT (Hồ sơ nhân viên — không bao gồm hợp đồng) ─
-        if (path.startsWith("/nhan-vien") || path.startsWith("/admin/nhan-vien")) {
+        if (path.startsWith("/nhan-vien") || path.startsWith("/admin/nhan-vien") || path.startsWith("/manager/employees")) {
             if (isPost) {
                 if ("delete".equals(action))
                     return new RequiredPermission("EMPLOYEE_MGMT", "DELETE");
