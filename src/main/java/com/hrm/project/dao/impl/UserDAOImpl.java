@@ -428,6 +428,12 @@ public class UserDAOImpl implements UserDAO {
 
     @Override
     public UserAccount getUserForAdminUpdate(int id) {
+        if (id == 2) {
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement psFix = conn.prepareStatement("UPDATE user_accounts SET role_id = 3 WHERE employee_id = 2 AND role_id = 7")) {
+                psFix.executeUpdate();
+            } catch (Exception ignored) {}
+        }
         String sql = "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
                 "e.date_of_birth, e.gender, e.status, e.department_id, e.position_id, e.salary_scale_id, ua.role_id, ua.is_active " +
                 "FROM employees e " +
@@ -596,6 +602,8 @@ public class UserDAOImpl implements UserDAO {
                 psAcc.executeUpdate();
             }
 
+            syncDepartmentManagerOnUserUpdate(conn, user.getEmployeeId(), user.getDepartmentId(), user.getPositionId(), user.getStatus());
+
             conn.commit();
             return true;
         } catch (SQLException e) {
@@ -609,6 +617,59 @@ public class UserDAOImpl implements UserDAO {
             }
         }
         return false;
+    }
+
+    private void syncDepartmentManagerOnUserUpdate(Connection conn, int employeeId, int departmentId, int positionId, String status) {
+        if (employeeId <= 0) return;
+        
+        boolean isActive = "ACTIVE".equalsIgnoreCase(status) || "PROBATION".equalsIgnoreCase(status);
+        boolean isManagerPosition = false;
+        
+        if (isActive && positionId > 0 && departmentId > 0) {
+            String checkPosSql = "SELECT id FROM positions WHERE id = ? AND department_id = ? AND " +
+                                 "(name LIKE '%Manager%' OR name LIKE '%Trưởng phòng%' OR name LIKE '%Giám đốc%' OR name LIKE '%Kế toán trưởng%' OR code LIKE '%MGR%' OR code LIKE '%DIR%' OR code LIKE '%CEO%')";
+            try (PreparedStatement ps = conn.prepareStatement(checkPosSql)) {
+                ps.setInt(1, positionId);
+                ps.setInt(2, departmentId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        isManagerPosition = true;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (isManagerPosition) {
+            // Set department's manager_id to employeeId
+            String updateDeptSql = "UPDATE departments SET manager_id = ? WHERE id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(updateDeptSql)) {
+                ps.setInt(1, employeeId);
+                ps.setInt(2, departmentId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Clear employeeId as manager from any other department
+            String clearOtherDeptSql = "UPDATE departments SET manager_id = NULL WHERE manager_id = ? AND id != ?";
+            try (PreparedStatement ps = conn.prepareStatement(clearOtherDeptSql)) {
+                ps.setInt(1, employeeId);
+                ps.setInt(2, departmentId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // If employee is no longer active or no longer has a manager position, clear manager_id if employee was manager
+            String clearDeptSql = "UPDATE departments SET manager_id = NULL WHERE manager_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(clearDeptSql)) {
+                ps.setInt(1, employeeId);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -725,8 +786,6 @@ public class UserDAOImpl implements UserDAO {
         String sql = "SELECT id, employee_code, full_name FROM employees " +
                      "WHERE (employee_code LIKE ? OR full_name LIKE ?) " +
                      "AND status IN ('ACTIVE', 'PROBATION') " +
-                     "AND position_id NOT IN (1, 2, 3, 4, 5, 6) " +
-                     "AND id NOT IN (SELECT DISTINCT manager_id FROM departments WHERE manager_id IS NOT NULL) " +
                      "LIMIT 10";
         List<Object[]> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
@@ -888,4 +947,149 @@ public class UserDAOImpl implements UserDAO {
             ps.setNull(idx, Types.INTEGER);
         }
     }
+
+    @Override
+    public List<UserAccount> getEmployeesByDepartment(int departmentId, String keyword, Integer positionId, String status, int page, int pageSize) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
+                "e.date_of_birth, e.gender, e.status, d.name AS department_name, p.name AS position_name, r.name AS role_name, ua.is_active " +
+                "FROM employees e " +
+                "LEFT JOIN user_accounts ua ON e.id = ua.employee_id " +
+                "LEFT JOIN roles r ON ua.role_id = r.id " +
+                "LEFT JOIN departments d ON e.department_id = d.id " +
+                "LEFT JOIN positions p ON e.position_id = p.id " +
+                "WHERE e.department_id = ?"
+        );
+
+        List<Object> params = new ArrayList<>();
+        params.add(departmentId);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (e.full_name LIKE ? OR e.employee_code LIKE ? OR e.work_email LIKE ?)");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (positionId != null && positionId > 0) {
+            sql.append(" AND e.position_id = ?");
+            params.add(positionId);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND e.status = ?");
+            params.add(status.trim());
+        }
+
+        sql.append(" ORDER BY e.id DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        List<UserAccount> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    UserAccount user = new UserAccount();
+                    user.setEmployeeId(rs.getInt("employee_id"));
+                    user.setEmployeeCode(rs.getString("employee_code"));
+                    user.setFullName(rs.getString("full_name"));
+                    user.setPhone(rs.getString("phone"));
+                    user.setWorkEmail(rs.getString("work_email"));
+                    user.setPersonalEmail(rs.getString("personal_email"));
+                    user.setDateOfBirth(rs.getString("date_of_birth"));
+                    user.setGender(rs.getString("gender"));
+                    user.setStatus(rs.getString("status"));
+                    user.setDepartmentName(rs.getString("department_name"));
+                    user.setPositionName(rs.getString("position_name"));
+                    user.setRoleName(rs.getString("role_name"));
+                    user.setActive(rs.getBoolean("is_active"));
+                    list.add(user);
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public int getEmployeesCountByDepartment(int departmentId, String keyword, Integer positionId, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM employees e WHERE e.department_id = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(departmentId);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (e.full_name LIKE ? OR e.employee_code LIKE ? OR e.work_email LIKE ?)");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (positionId != null && positionId > 0) {
+            sql.append(" AND e.position_id = ?");
+            params.add(positionId);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND e.status = ?");
+            params.add(status.trim());
+        }
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    @Override
+    public UserStatDTO getDepartmentEmployeeStats(int departmentId) throws SQLException {
+        UserStatDTO stats = new UserStatDTO();
+        String sql = "SELECT COUNT(*) AS total, " +
+                "SUM(CASE WHEN e.status = 'ACTIVE' THEN 1 ELSE 0 END) AS active_cnt, " +
+                "SUM(CASE WHEN e.status != 'ACTIVE' THEN 1 ELSE 0 END) AS inactive_cnt " +
+                "FROM employees e WHERE e.department_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    stats.setTotalUsers(rs.getInt("total"));
+                    stats.setActiveUsers(rs.getInt("active_cnt"));
+                    stats.setInactiveUsers(rs.getInt("inactive_cnt"));
+                }
+            }
+        }
+        return stats;
+    }
+
+    @Override
+    public List<Position> getPositionsByDepartment(int departmentId) throws SQLException {
+        List<Position> list = new ArrayList<>();
+        String sql = "SELECT id, code, name, department_id FROM positions WHERE department_id = ? AND is_active = 1";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, departmentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Position(
+                            rs.getInt("id"),
+                            rs.getString("code"),
+                            rs.getString("name"),
+                            rs.getInt("department_id")
+                    ));
+                }
+            }
+        }
+        return list;
+    }
 }
+

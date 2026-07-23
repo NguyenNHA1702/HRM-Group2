@@ -1,9 +1,9 @@
 -- ============================================================
--- V26: Recruitment Module (Job Vacancies & Candidates)
+-- V29: Recruitment Module (Job Vacancies & Candidates)
 -- Luồng: OPEN/CLOSED vacancy, NEW -> INTERVIEWING -> OFFERED -> HIRED/REJECTED
 -- ============================================================
 
-CREATE TABLE job_vacancies
+CREATE TABLE IF NOT EXISTS job_vacancies
 (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     title         VARCHAR(200) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE job_vacancies
     INDEX idx_jv_department (department_id)
 ) COMMENT = 'Vị trí tuyển dụng';
 
-CREATE TABLE candidates
+CREATE TABLE IF NOT EXISTS candidates
 (
     id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     vacancy_id  INT UNSIGNED  NOT NULL,
@@ -47,11 +47,21 @@ CREATE TABLE candidates
     INDEX idx_c_status (status)
 ) COMMENT = 'Hồ sơ ứng viên';
 
--- RBAC: thêm module Tuyển dụng
-INSERT INTO modules (id, code, name, is_admin_only, description)
-VALUES (10, 'RECRUITMENT', 'Tuyển dụng', 0, 'Quản lý vị trí tuyển dụng và ứng viên');
+-- RBAC: thêm module Tuyển dụng (không hardcode id = 10 để tránh đụng độ PK khi auto-increment)
+INSERT IGNORE INTO modules (code, name, is_admin_only, description)
+VALUES ('RECRUITMENT', 'Tuyển dụng', 0, 'Quản lý vị trí tuyển dụng và ứng viên');
 
 INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
-VALUES (1, 10, 1, 1, 1, 1),
-       (3, 10, 1, 1, 1, 0),
-       (6, 10, 1, 1, 1, 0);
+SELECT r.role_id, m.id, r.can_view, r.can_create, r.can_edit, r.can_delete
+FROM (
+    SELECT 1 AS role_id, 1 AS can_view, 1 AS can_create, 1 AS can_edit, 1 AS can_delete
+    UNION ALL SELECT 3, 1, 1, 1, 0
+    UNION ALL SELECT 6, 1, 1, 1, 0
+) r
+CROSS JOIN modules m WHERE m.code = 'RECRUITMENT'
+ON DUPLICATE KEY UPDATE 
+    can_view = VALUES(can_view),
+    can_create = VALUES(can_create),
+    can_edit = VALUES(can_edit),
+    can_delete = VALUES(can_delete);
+
