@@ -54,6 +54,7 @@ public class HrLeaveSummaryController extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session == null) { response.sendRedirect(request.getContextPath() + "/login"); return; }
         String roleGroup = (String) session.getAttribute("roleGroup");
+        Integer userId = (Integer) session.getAttribute("employeeId");
         if (!"HR".equals(roleGroup) && !"MANAGER".equals(roleGroup)) {
             response.sendRedirect(request.getContextPath() + "/login"); return;
         }
@@ -75,7 +76,7 @@ public class HrLeaveSummaryController extends HttpServlet {
         }
 
         // Lấy dữ liệu phẳng
-        List<LeaveSummaryDto> flat = leaveRequestService.getLeaveSummaryReport(fromDate, toDate, deptId);
+        List<LeaveSummaryDto> flat = leaveRequestService.getLeaveSummaryReport(fromDate, toDate, deptId, roleGroup, userId);
 
         // Group theo employee_id, giữ thứ tự
         Map<Integer, List<LeaveSummaryDto>> grouped = flat.stream()

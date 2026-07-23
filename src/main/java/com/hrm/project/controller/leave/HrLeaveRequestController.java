@@ -21,9 +21,20 @@ public class HrLeaveRequestController extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession(false);
+        String roleGroup = session != null ? (String) session.getAttribute("roleGroup") : null;
+        Integer employeeId = session != null ? (Integer) session.getAttribute("employeeId") : null;
+
+        java.util.List<com.hrm.project.model.LeaveRequest> requests;
+        if ("MANAGER".equalsIgnoreCase(roleGroup) && employeeId != null) {
+            requests = leaveRequestService.getRequestsForManager(employeeId);
+        } else {
+            requests = leaveRequestService.getAllRequests();
+        }
+
         request.setAttribute(
                 "requests",
-                leaveRequestService.getAllRequests());
+                requests);
 
         request.getRequestDispatcher(
                         "/WEB-INF/views/hr/leave-requests.jsp")

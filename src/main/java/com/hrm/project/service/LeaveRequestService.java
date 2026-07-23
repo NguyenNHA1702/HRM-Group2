@@ -9,6 +9,8 @@ public interface LeaveRequestService {
 
     List<LeaveRequest> getEmployeeRequests(int employeeId);
 
+    List<LeaveRequest> getRequestsForManager(int managerId);
+
     List<LeaveRequest> getAllRequests();
 
     LeaveRequest getById(int id);
@@ -21,5 +23,5 @@ public interface LeaveRequestService {
 
     boolean cancelRequest(int requestId);
 
-    List<LeaveSummaryDto> getLeaveSummaryReport(Date fromDate, Date toDate, Integer departmentId);
+    List<LeaveSummaryDto> getLeaveSummaryReport(Date fromDate, Date toDate, Integer departmentId, String roleGroup, Integer userId);
 }

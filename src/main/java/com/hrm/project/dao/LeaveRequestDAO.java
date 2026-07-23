@@ -9,6 +9,8 @@ public interface LeaveRequestDAO {
 
     List<LeaveRequest> getByEmployee(int employeeId);
 
+    List<LeaveRequest> getRequestsForManager(int managerId);
+
     List<LeaveRequest> getAll();
 
     LeaveRequest getById(int id);
