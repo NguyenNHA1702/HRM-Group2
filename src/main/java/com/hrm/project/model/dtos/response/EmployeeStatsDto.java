@@ -5,7 +5,7 @@ public class EmployeeStatsDto {
     private int    workDays;           // ngày công tháng này
     private double leaveRemain;        // phép còn lại
     private long   estimatedSalary;    // VND
-    private double weekHours;          // giờ tuần này
+    private int    pendingRequests;    // tổng đơn chờ duyệt
 
     public int    getWorkDays()               { return workDays; }
     public void   setWorkDays(int v)          { this.workDays = v; }
@@ -13,8 +13,8 @@ public class EmployeeStatsDto {
     public void   setLeaveRemain(double v)    { this.leaveRemain = v; }
     public long   getEstimatedSalary()        { return estimatedSalary; }
     public void   setEstimatedSalary(long v)  { this.estimatedSalary = v; }
-    public double getWeekHours()              { return weekHours; }
-    public void   setWeekHours(double v)      { this.weekHours = v; }
+    public int    getPendingRequests()        { return pendingRequests; }
+    public void   setPendingRequests(int v)   { this.pendingRequests = v; }
 
     public String getEstimatedSalaryFormatted() {
         if (estimatedSalary >= 1_000_000_000L)

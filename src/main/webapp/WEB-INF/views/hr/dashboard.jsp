@@ -67,30 +67,68 @@
       </div>
     </div>
 
-    <div class="grid-2 mb-24">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Nhân viên theo Phòng ban</span></div>
-        <div class="card-body"><canvas id="deptChart" height="150"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">Tuyển dụng gần đây</span></div>
-        <div class="card-body"><canvas id="recruitChart" height="150"></canvas></div>
+    <!-- Quick Shortcuts Panel -->
+    <div class="card mb-24">
+      <div class="card-header"><span class="card-title">Truy cập nhanh phân hệ HR</span></div>
+      <div class="card-body" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <a href="${pageContext.request.contextPath}/hr/contracts" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#e0e7ff; color:#4f46e5; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">📄</span>
+          <span>Hợp đồng lao động</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/hr/departments" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#f3e8ff; color:#9333ea; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">🏢</span>
+          <span>Quản lý Phòng ban</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/payroll/list" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#dcfce7; color:#16a34a; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">💸</span>
+          <span>Danh sách Bảng lương</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/hr/candidates" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#fef3c7; color:#d97706; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">👨‍💼</span>
+          <span>Quản lý Ứng viên</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/hr/leave-summary" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#e0f2fe; color:#0284c7; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">📊</span>
+          <span>Báo cáo Nghỉ phép</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/hr/attendance-statistics" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#ffe4e6; color:#e11d48; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">⏱️</span>
+          <span>Thống kê Chấm công</span>
+        </a>
       </div>
     </div>
 
     <div class="grid-2 mb-24">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Tình trạng chấm công hôm nay</span></div>
-        <div class="card-body" style="display:flex; justify-content:center;">
-          <canvas id="attendPieChart" height="180" style="max-width:280px;"></canvas>
+      <div class="card" style="border-left: 4px solid #4F46E5;">
+        <div class="card-header"><span class="card-title">Công việc Cần xử lý</span></div>
+        <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
+          <a href="${pageContext.request.contextPath}/hr/leave-requests" style="display:flex; justify-content:space-between; align-items:center; text-decoration:none; color:inherit; padding:12px; background:#f8fafc; border-radius:8px;">
+            <div>
+              <p style="margin:0; font-weight:600; color:#1e293b;">Đơn nghỉ phép chờ duyệt</p>
+              <p style="margin:4px 0 0; font-size:13px; color:#64748b;">Xem danh sách đơn cần phê duyệt</p>
+            </div>
+            <span style="font-size:24px; font-weight:700; color:#4F46E5;">${stats.pendingLeaves}</span>
+          </a>
+          <a href="${pageContext.request.contextPath}/hr/attendance-explanations" style="display:flex; justify-content:space-between; align-items:center; text-decoration:none; color:inherit; padding:12px; background:#f8fafc; border-radius:8px;">
+            <div>
+              <p style="margin:0; font-weight:600; color:#1e293b;">Giải trình chấm công chờ duyệt</p>
+              <p style="margin:4px 0 0; font-size:13px; color:#64748b;">Xem danh sách giải trình cần xét duyệt</p>
+            </div>
+            <span style="font-size:24px; font-weight:700; color:#F59E0B;">${stats.pendingExplanations}</span>
+          </a>
+          <a href="${pageContext.request.contextPath}/hr/vacancies" style="display:flex; justify-content:space-between; align-items:center; text-decoration:none; color:inherit; padding:12px; background:#f8fafc; border-radius:8px;">
+            <div>
+              <p style="margin:0; font-weight:600; color:#1e293b;">Vị trí tuyển dụng đang mở</p>
+              <p style="margin:4px 0 0; font-size:13px; color:#64748b;">Xem danh sách vị trí đang tuyển</p>
+            </div>
+            <span style="font-size:24px; font-weight:700; color:#10B981;">${stats.openVacancies}</span>
+          </a>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-header"><span class="card-title">Đơn từ cần xử lý</span></div>
-        <div class="card-body">
-          <p class="text-muted text-sm" style="padding:8px 0;">Hệ thống ghi nhận có đơn nghỉ phép đang chờ xem xét duyệt trên toàn công ty.</p>
-        </div>
+        <div class="card-header"><span class="card-title">Top 5 Phòng ban đông nhân sự nhất</span></div>
+        <div class="card-body"><canvas id="deptChart" height="150"></canvas></div>
       </div>
     </div>
 
@@ -130,13 +168,6 @@
     } else {
       createBarChart('recruitChart', ['Tháng 3', 'Tháng 4', 'Tháng 5'], [0, 0, 0], '#10B981');
     }
-
-    // 3. Attendance Doughnut
-    createDoughnutChart('attendPieChart',
-            ['Đúng giờ', 'Đi muộn', 'Nghỉ phép'],
-            [6, 2, 2],
-            ['#10B981', '#F59E0B', '#EF4444']
-    );
   });
 </script>
 </body>

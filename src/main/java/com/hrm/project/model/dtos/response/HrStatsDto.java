@@ -6,6 +6,9 @@ public class HrStatsDto {
     private int    newThisMonth;
     private int    terminated;
     private long   payrollFund;      // VND
+    private int    pendingLeaves;
+    private int    pendingExplanations;
+    private int    openVacancies;
 
     public int    getTotalEmployees()        { return totalEmployees; }
     public void   setTotalEmployees(int v)   { this.totalEmployees = v; }
@@ -15,6 +18,13 @@ public class HrStatsDto {
     public void   setTerminated(int v)       { this.terminated = v; }
     public long   getPayrollFund()           { return payrollFund; }
     public void   setPayrollFund(long v)     { this.payrollFund = v; }
+
+    public int    getPendingLeaves()         { return pendingLeaves; }
+    public void   setPendingLeaves(int v)    { this.pendingLeaves = v; }
+    public int    getPendingExplanations()   { return pendingExplanations; }
+    public void   setPendingExplanations(int v) { this.pendingExplanations = v; }
+    public int    getOpenVacancies()         { return openVacancies; }
+    public void   setOpenVacancies(int v)    { this.openVacancies = v; }
 
     /** Hiển thị quỹ lương dạng "2.5 tỷ" / "500 triệu" */
     public String getPayrollFundFormatted() {

@@ -25,9 +25,7 @@ public interface DashboardDao {
     ManagerStatsDto          fetchManagerStats(int managerId)              throws Exception;
     List<Map<String, Object>> fetchTeamStatusToday(int managerId)          throws Exception;
     List<Map<String, Object>> fetchPendingLeavesForManager(int managerId)  throws Exception;
-    List<Map<String, Object>> fetchTeamKpi(int managerId)                  throws Exception;
 
     EmployeeStatsDto         fetchEmployeeStats(int employeeId)            throws Exception;
-    Map<String, Object>      fetchTodayAttendance(int employeeId)          throws Exception;
     List<Map<String, Object>> fetchMyRecentLeaves(int employeeId, int limit) throws Exception;
 }
