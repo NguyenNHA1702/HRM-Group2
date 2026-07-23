@@ -3,7 +3,7 @@
 -- Luồng: OPEN/CLOSED vacancy, NEW -> INTERVIEWING -> OFFERED -> HIRED/REJECTED
 -- ============================================================
 
-CREATE TABLE job_vacancies
+CREATE TABLE IF NOT EXISTS job_vacancies
 (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     title         VARCHAR(200) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE job_vacancies
     INDEX idx_jv_department (department_id)
 ) COMMENT = 'Vị trí tuyển dụng';
 
-CREATE TABLE candidates
+CREATE TABLE IF NOT EXISTS candidates
 (
     id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     vacancy_id  INT UNSIGNED  NOT NULL,
@@ -48,10 +48,17 @@ CREATE TABLE candidates
 ) COMMENT = 'Hồ sơ ứng viên';
 
 -- RBAC: thêm module Tuyển dụng
-INSERT INTO modules (id, code, name, is_admin_only, description)
-VALUES (10, 'RECRUITMENT', 'Tuyển dụng', 0, 'Quản lý vị trí tuyển dụng và ứng viên');
+INSERT INTO modules (code, name, is_admin_only, description)
+VALUES ('RECRUITMENT', 'Tuyển dụng', 0, 'Quản lý vị trí tuyển dụng và ứng viên');
 
 INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
-VALUES (1, 10, 1, 1, 1, 1),
-       (3, 10, 1, 1, 1, 0),
-       (6, 10, 1, 1, 1, 0);
+SELECT 1, id, 1, 1, 1, 1 FROM modules WHERE code = 'RECRUITMENT'
+ON DUPLICATE KEY UPDATE can_view=1, can_create=1, can_edit=1, can_delete=1;
+
+INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
+SELECT 3, id, 1, 1, 1, 0 FROM modules WHERE code = 'RECRUITMENT'
+ON DUPLICATE KEY UPDATE can_view=1, can_create=1, can_edit=1, can_delete=0;
+
+INSERT INTO role_permissions (role_id, module_id, can_view, can_create, can_edit, can_delete)
+SELECT 6, id, 1, 1, 1, 0 FROM modules WHERE code = 'RECRUITMENT'
+ON DUPLICATE KEY UPDATE can_view=1, can_create=1, can_edit=1, can_delete=0;

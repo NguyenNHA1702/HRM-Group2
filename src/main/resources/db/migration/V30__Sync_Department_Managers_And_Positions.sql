@@ -1,11 +1,11 @@
--- V30__Sync_Department_Managers_And_Positions.sql
+﻿-- V30__Sync_Department_Managers_And_Positions.sql
 -- 1. Seed manager positions for departments that do not have manager positions
 INSERT INTO positions (code, name, department_id, base_salary, allowance, is_active)
-SELECT 'TESTDEPT_MGR', 'Trưởng phòng Test Department', 6, 20000000.00, 2000000.00, 1
+SELECT 'TESTDEPT_MGR', 'Trưởng phòng Test Department', 6, 20000000.00, 2000000.00, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM positions WHERE department_id = 6 AND (name LIKE '%Trưởng phòng%' OR code LIKE '%MGR%'));
 
 INSERT INTO positions (code, name, department_id, base_salary, allowance, is_active)
-SELECT 'IO_MGR', 'Trưởng phòng Hạ tầng và Vận hành', 7, 20000000.00, 2000000.00, 1
+SELECT 'IO_MGR', 'Trưởng phòng Hạ tầng và Vận hành', 7, 20000000.00, 2000000.00, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM positions WHERE department_id = 7 AND (name LIKE '%Trưởng phòng%' OR code LIKE '%MGR%'));
 
 -- 2. Synchronize departments.manager_id with active employees holding manager positions

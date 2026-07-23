@@ -13,12 +13,11 @@ public class PayrollDAOImpl implements PayrollDAO {
     private static final double PERSONAL_DEDUCTION = 11_000_000;
     private static final double DEPENDENT_DEDUCTION = 4_400_000;
 
-    private static final double[] TAX_BRACKETS = { 5_000_000, 10_000_000, 18_000_000, 32_000_000, 52_000_000,
-            80_000_000 };
-    private static final double[] TAX_RATES = { 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35 };
+    private static final double[] TAX_BRACKETS = { 10_000_000, 30_000_000, 60_000_000, 100_000_000 };
+    private static final double[] TAX_RATES = { 0.05, 0.10, 0.20, 0.30, 0.35 };
 
     /**
-     * Tính thuế TNCN theo biểu lũy tiến 7 bậc.
+     * Tính thuế TNCN theo biểu lũy tiến 5 bậc.
      * 
      * @param taxableIncome Thu nhập chịu thuế (sau giảm trừ)
      */
@@ -39,7 +38,7 @@ public class PayrollDAOImpl implements PayrollDAO {
             prevBracket = TAX_BRACKETS[i];
         }
 
-        tax += remaining * TAX_RATES[6];
+        tax += remaining * TAX_RATES[TAX_BRACKETS.length];
         return tax;
     }
 

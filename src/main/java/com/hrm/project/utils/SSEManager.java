@@ -8,6 +8,25 @@ public class SSEManager {
     // Lưu trữ PrintWriter của từng user_id đang online
     private static final Map<Integer, PrintWriter> clients = new ConcurrentHashMap<>();
 
+    // Dùng 1 luồng nền duy nhất để gửi heartbeat cho tất cả client
+    static {
+        java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+            .scheduleAtFixedRate(() -> {
+                for (Map.Entry<Integer, PrintWriter> entry : clients.entrySet()) {
+                    PrintWriter writer = entry.getValue();
+                    try {
+                        writer.print(": heartbeat\n\n");
+                        writer.flush();
+                        if (writer.checkError()) {
+                            clients.remove(entry.getKey());
+                        }
+                    } catch (Exception e) {
+                        clients.remove(entry.getKey());
+                    }
+                }
+            }, 15, 15, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
     public static void addClient(int userId, PrintWriter writer) {
         clients.put(userId, writer);
     }

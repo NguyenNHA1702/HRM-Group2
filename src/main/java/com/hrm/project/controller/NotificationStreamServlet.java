@@ -12,7 +12,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet(name = "NotificationStreamServlet", urlPatterns = {"/api/notifications/stream"})
+@WebServlet(name = "NotificationStreamServlet", urlPatterns = {"/api/notifications/stream"}, asyncSupported = true)
 public class NotificationStreamServlet extends HttpServlet {
 
     @Override
@@ -36,25 +36,23 @@ public class NotificationStreamServlet extends HttpServlet {
         
         int userId = (Integer) session.getAttribute("employeeId");
 
+        // 3. Bật chế độ Async để giải phóng luồng (thread) của Tomcat
+        javax.servlet.AsyncContext asyncContext = request.startAsync();
+        asyncContext.setTimeout(0); // Kết nối giữ vô hạn cho đến khi client ngắt
+
         PrintWriter writer = response.getWriter();
         
-        // 3. Đăng ký kết nối này vào SSE Manager
+        // 4. Đăng ký kết nối này vào SSE Manager
         SSEManager.addClient(userId, writer);
 
-        // 4. Giữ cho kết nối không bị đóng
-        while (!writer.checkError()) {
-            try {
-                // Sleep lâu một chút để giảm tải server
-                Thread.sleep(15000); 
-                // Heartbeat để trình duyệt không đóng kết nối
-                writer.print(": heartbeat\n\n");
-                writer.flush();
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-
-        // 5. Xóa client khi kết nối đứt
-        SSEManager.removeClient(userId);
+        // Xóa client khi kết nối bất ngờ đứt (client đóng tab)
+        asyncContext.addListener(new javax.servlet.AsyncListener() {
+            public void onComplete(javax.servlet.AsyncEvent event) { SSEManager.removeClient(userId); }
+            public void onTimeout(javax.servlet.AsyncEvent event) { SSEManager.removeClient(userId); }
+            public void onError(javax.servlet.AsyncEvent event) { SSEManager.removeClient(userId); }
+            public void onStartAsync(javax.servlet.AsyncEvent event) {}
+        });
+        
+        // Không dùng while(true) Thread.sleep ở đây nữa để tránh cạn kiệt thread!
     }
 }

@@ -13,7 +13,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Map;
 
-@WebFilter("/*")
+@WebFilter(urlPatterns = "/*", asyncSupported = true)
 public class SecurityFilter implements Filter {
 
     private final UserDAO userDAO = new UserDAOImpl();

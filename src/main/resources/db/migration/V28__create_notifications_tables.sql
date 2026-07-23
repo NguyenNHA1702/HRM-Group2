@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS user_notifications;
+DROP TABLE IF EXISTS notifications;
+
 -- Bảng lưu trữ nội dung thông báo
 CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,

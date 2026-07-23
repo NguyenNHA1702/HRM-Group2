@@ -287,18 +287,7 @@
                         Bảng lương
                     </a>
                 </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/overtime') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/overtime">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        Tăng ca
-                    </a>
-                </li>
-                <li class="nav-item ${pageContext.request.requestURI.contains('/admin/payroll-bonuses') ? 'active' : ''}">
-                    <a href="${pageContext.request.contextPath}/admin/payroll-bonuses">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                        Thưởng
-                    </a>
-                </li>
+
                 <li class="nav-item ${pageContext.request.requestURI.contains('/admin/salary-scales') ? 'active' : ''}">
                     <a href="${pageContext.request.contextPath}/admin/salary-scales">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
