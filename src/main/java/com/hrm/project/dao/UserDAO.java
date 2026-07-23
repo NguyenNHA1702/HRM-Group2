@@ -79,4 +79,11 @@ public interface UserDAO {
     boolean employeeExists(int employeeId) throws SQLException;
 
     List<com.hrm.project.model.SalaryHistory> getSalaryHistoryByEmployeeId(int employeeId);
+
+    // Manager: Department employee management methods
+    List<UserAccount> getEmployeesByDepartment(int departmentId, String keyword, Integer positionId, String status, int page, int pageSize) throws SQLException;
+    int getEmployeesCountByDepartment(int departmentId, String keyword, Integer positionId, String status) throws SQLException;
+    UserStatDTO getDepartmentEmployeeStats(int departmentId) throws SQLException;
+    List<Position> getPositionsByDepartment(int departmentId) throws SQLException;
 }
+

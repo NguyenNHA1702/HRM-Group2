@@ -3,8 +3,8 @@
 -- Thêm 3 module mới tách từ EMPLOYEE_MGMT, ATTENDANCE, PAYROLL
 -- ============================================================
 
--- Thêm 3 module mới (id tự tăng sau 9)
-INSERT INTO modules (code, name, is_admin_only, description) VALUES
+-- Thêm 3 module mới (id tự tăng sau 9) (dùng IGNORE để tránh lỗi trùng lặp khi chạy lại)
+INSERT IGNORE INTO modules (code, name, is_admin_only, description) VALUES
     ('CONTRACT_MGMT',  'Hợp đồng',       0, 'Quản lý hợp đồng lao động'),
     ('SCHEDULE_MGMT',  'Lịch làm việc',  0, 'Ca làm việc, ngày lễ, phân lịch'),
     ('SALARY_CONFIG',  'Cấu hình lương', 0, 'Thang bảng lương, phụ cấp, bảo hiểm');
