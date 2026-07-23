@@ -258,7 +258,7 @@
                                     <c:when test="${r.status eq 'REJECTED'}">
                                         <span class="badge badge-red">Từ chối</span>
                                     </c:when>
-                                    <c:when test="${r.status eq 'PENDING'}">
+                                    <c:when test="${r.status eq 'PENDING' || r.status.startsWith('PENDING')}">
                                         <span class="badge badge-orange">Chờ duyệt</span>
                                     </c:when>
                                     <c:otherwise>
@@ -267,7 +267,7 @@
                                 </c:choose>
                             </td>
                             <td>
-                                <c:if test="${r.status eq 'PENDING'}">
+                                <c:if test="${r.status eq 'PENDING' || r.status.startsWith('PENDING')}">
                                     <form method="post"
                                           action="${pageContext.request.contextPath}/nghi-phep/cancel">
                                         <input type="hidden" name="id" value="${r.id}">
@@ -353,7 +353,7 @@
             const rowStatus = (row.dataset.status || '');
 
             const matchKeyword = !keyword || leaveType.includes(keyword);
-            const matchStatus  = !status  || rowStatus === status;
+            const matchStatus  = !status  || rowStatus === status || (status === 'PENDING' && rowStatus.startsWith('PENDING'));
 
             return matchKeyword && matchStatus;
         });

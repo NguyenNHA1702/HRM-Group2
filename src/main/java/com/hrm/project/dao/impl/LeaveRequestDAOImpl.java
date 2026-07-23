@@ -51,6 +51,56 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
     }
 
     @Override
+    public List<LeaveRequest> getRequestsForManager(int managerId) {
+
+        List<LeaveRequest> list = new ArrayList<>();
+
+        String sql =
+                "SELECT lr.*, " +
+                        "e.full_name, " +
+                        "d.name AS department_name, " +
+                        "lt.name AS leave_type_name " +
+                        "FROM leave_requests lr " +
+                        "JOIN employees e ON lr.employee_id = e.id " +
+                        "JOIN departments d ON e.department_id = d.id " +
+                        "JOIN leave_types lt ON lr.leave_type_id = lt.id " +
+                        "WHERE d.manager_id = ? AND lr.employee_id != ? " +
+                        "ORDER BY lr.created_at DESC";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+
+            ps.setInt(1, managerId);
+            ps.setInt(2, managerId);
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+                LeaveRequest r = map(rs);
+
+                r.setEmployeeName(
+                        rs.getString("full_name"));
+
+                r.setDepartmentName(
+                        rs.getString("department_name"));
+
+                r.setLeaveTypeName(
+                        rs.getString("leave_type_name"));
+
+                list.add(r);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    @Override
     public List<LeaveRequest> getAll() {
 
         List<LeaveRequest> list = new ArrayList<>();
@@ -130,10 +180,40 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
     @Override
     public boolean create(LeaveRequest request) {
 
+        String checkManagerSql =
+                "SELECT e.department_id, d.manager_id " +
+                "FROM employees e " +
+                "LEFT JOIN departments d ON e.department_id = d.id " +
+                "WHERE e.id = ?";
+
+        String initialStatus = "PENDING_HR";
+
+        try (
+                Connection con = DBConnection.getConnection();
+                PreparedStatement psCheck = con.prepareStatement(checkManagerSql)
+        ) {
+            psCheck.setInt(1, request.getEmployeeId());
+            try (ResultSet rs = psCheck.executeQuery()) {
+                if (rs.next()) {
+                    Object mgrObj = rs.getObject("manager_id");
+                    if (mgrObj != null) {
+                        int mgrId = rs.getInt("manager_id");
+                        if (mgrId != request.getEmployeeId()) {
+                            initialStatus = "PENDING_MANAGER";
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        request.setStatus(initialStatus);
+
         String sql =
                 "INSERT INTO leave_requests " +
                         "(employee_id,leave_type_id,start_date,end_date,total_days,reason,status) " +
-                        "VALUES(?,?,?,?,?,?,'PENDING')";
+                        "VALUES(?,?,?,?,?,?,?)";
 
         try (
                 Connection con = DBConnection.getConnection();
@@ -146,6 +226,7 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
             ps.setDate(4, request.getEndDate());
             ps.setDouble(5, request.getTotalDays());
             ps.setString(6, request.getReason());
+            ps.setString(7, initialStatus);
 
             return ps.executeUpdate() > 0;
 
@@ -273,7 +354,7 @@ public class LeaveRequestDAOImpl implements LeaveRequestDAO {
         String sql =
                 "UPDATE leave_requests " +
                         "SET status='CANCELLED' " +
-                        "WHERE id=? AND status='PENDING'";
+                        "WHERE id=? AND status LIKE 'PENDING%'";
 
         try (
                 Connection con = DBConnection.getConnection();
