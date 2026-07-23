@@ -80,12 +80,10 @@ public class DashboardController extends HttpServlet {
                     ManagerStatsDto managerStats = dashboardService.getManagerStats(employeeId);
                     List<Map<String, Object>> teamStatus = dashboardService.getTeamStatusToday(employeeId);
                     List<Map<String, Object>> pendingLeaves = dashboardService.getPendingLeavesForManager(employeeId);
-                    List<Map<String, Object>> teamKpi = dashboardService.getTeamKpi(employeeId);
 
                     request.setAttribute("stats", managerStats);
                     request.setAttribute("teamStatus", teamStatus);
                     request.setAttribute("pendingLeaves", pendingLeaves);
-                    request.setAttribute("teamKpi", teamKpi);
 
                     request.getRequestDispatcher("/WEB-INF/views/manager/dashboard.jsp").forward(request, response);
                     break;
@@ -96,11 +94,9 @@ public class DashboardController extends HttpServlet {
                         return;
                     }
                     EmployeeStatsDto employeeStats = dashboardService.getEmployeeStats(employeeId);
-                    Map<String, Object> todayAttendance = dashboardService.getTodayAttendance(employeeId);
                     List<Map<String, Object>> myRecentLeaves = dashboardService.getMyRecentLeaves(employeeId, 5);
 
                     request.setAttribute("stats", employeeStats);
-                    request.setAttribute("todayAttendance", todayAttendance);
                     request.setAttribute("myRecentLeaves", myRecentLeaves);
 
                     request.getRequestDispatcher("/WEB-INF/views/employee/dashboard.jsp").forward(request, response);

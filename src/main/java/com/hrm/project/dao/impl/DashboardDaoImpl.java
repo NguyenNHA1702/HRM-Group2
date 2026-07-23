@@ -14,7 +14,7 @@ public class DashboardDaoImpl implements DashboardDao {
     @Override
     public AdminStatsDto fetchAdminStats() throws Exception {
         String sql = "SELECT total_active_users, active_today, total_roles, " +
-                "       total_employees, growth_percent " +
+                "       total_employees " +
                 "FROM vw_dashboard_admin_stats LIMIT 1";
         try (Connection con = DBConnection.getConnection();
              Statement st = con.createStatement();
@@ -25,7 +25,6 @@ public class DashboardDaoImpl implements DashboardDao {
                 dto.setActiveToday(rs.getInt("active_today"));
                 dto.setTotalRoles(rs.getInt("total_roles"));
                 dto.setTotalEmployees(rs.getInt("total_employees"));
-                dto.setGrowthPercent(rs.getDouble("growth_percent"));
             }
             return dto;
         }
@@ -79,6 +78,21 @@ public class DashboardDaoImpl implements DashboardDao {
             try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql2)) {
                 if (rs.next()) dto.setPayrollFund(rs.getLong("fund"));
             }
+            // Đơn nghỉ phép chờ duyệt
+            String sql3 = "SELECT COUNT(*) AS cnt FROM leave_requests WHERE status = 'PENDING'";
+            try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql3)) {
+                if (rs.next()) dto.setPendingLeaves(rs.getInt("cnt"));
+            }
+            // Giải trình chấm công chờ duyệt
+            String sql4 = "SELECT COUNT(*) AS cnt FROM attendance_explanations WHERE status = 'PENDING'";
+            try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql4)) {
+                if (rs.next()) dto.setPendingExplanations(rs.getInt("cnt"));
+            }
+            // Vị trí tuyển dụng đang mở
+            String sql5 = "SELECT COUNT(*) AS cnt FROM job_vacancies WHERE status = 'OPEN'";
+            try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql5)) {
+                if (rs.next()) dto.setOpenVacancies(rs.getInt("cnt"));
+            }
         }
         return dto;
     }
@@ -86,7 +100,7 @@ public class DashboardDaoImpl implements DashboardDao {
     @Override
     public List<Map<String, Object>> fetchHeadcountByDept() throws Exception {
         String sql = "SELECT department_name, total_employees, active_count " +
-                "FROM vw_headcount_by_dept ORDER BY total_employees DESC";
+                "FROM vw_headcount_by_dept ORDER BY total_employees DESC LIMIT 5";
         return queryToList(sql);
     }
 
@@ -106,26 +120,43 @@ public class DashboardDaoImpl implements DashboardDao {
     public ManagerStatsDto fetchManagerStats(int managerId) throws Exception {
         ManagerStatsDto dto = new ManagerStatsDto();
         try (Connection con = DBConnection.getConnection()) {
-            String sql = "SELECT " +
-                    "  COUNT(*)                                             AS team_size, " +
-                    "  SUM(a.status IN ('PRESENT','LATE'))                 AS present_today, " +
-                    "  SUM(a.status = 'ON_LEAVE')                         AS on_leave, " +
-                    "  (SELECT COUNT(*) FROM leave_requests lr2 " +
-                    "   JOIN employees e2 ON e2.id = lr2.employee_id " +
-                    "   WHERE e2.direct_manager_id = ? AND lr2.status = 'PENDING') AS pending " +
-                    "FROM employees e " +
-                    "LEFT JOIN attendance_records a ON a.employee_id = e.id AND a.work_date = CURDATE() " +
-                    "WHERE e.direct_manager_id = ? AND e.status IN ('ACTIVE','PROBATION')";
-            try (PreparedStatement ps = con.prepareStatement(sql)) {
+            // Team size + pending leave approvals
+            String sql1 = "SELECT " +
+                    "  (SELECT COUNT(*) FROM employees " +
+                    "   WHERE direct_manager_id = ? AND status IN ('ACTIVE','PROBATION')) AS team_size, " +
+                    "  (SELECT COUNT(*) FROM leave_requests lr " +
+                    "   JOIN employees e ON e.id = lr.employee_id " +
+                    "   WHERE e.direct_manager_id = ? AND lr.status = 'PENDING') AS pending";
+            try (PreparedStatement ps = con.prepareStatement(sql1)) {
                 ps.setInt(1, managerId);
                 ps.setInt(2, managerId);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
                         dto.setTeamSize(rs.getInt("team_size"));
-                        dto.setPresentToday(rs.getInt("present_today"));
-                        dto.setOnLeave(rs.getInt("on_leave"));
                         dto.setPendingApprovals(rs.getInt("pending"));
                     }
+                }
+            }
+            // Giải trình chấm công chờ duyệt từ team
+            String sql2 = "SELECT COUNT(*) AS cnt FROM attendance_explanations ae " +
+                    "JOIN employees e ON e.id = ae.employee_id " +
+                    "WHERE e.direct_manager_id = ? AND ae.status = 'PENDING'";
+            try (PreparedStatement ps = con.prepareStatement(sql2)) {
+                ps.setInt(1, managerId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) dto.setPendingExplanations(rs.getInt("cnt"));
+                }
+            }
+            // Số ngày phép đã duyệt trong tháng này của team
+            String sql3 = "SELECT COUNT(*) AS cnt FROM leave_requests lr " +
+                    "JOIN employees e ON e.id = lr.employee_id " +
+                    "WHERE e.direct_manager_id = ? AND lr.status = 'APPROVED' " +
+                    "AND MONTH(lr.start_date) = MONTH(CURDATE()) " +
+                    "AND YEAR(lr.start_date) = YEAR(CURDATE())";
+            try (PreparedStatement ps = con.prepareStatement(sql3)) {
+                ps.setInt(1, managerId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) dto.setApprovedLeavesMonth(rs.getInt("cnt"));
                 }
             }
         }
@@ -137,12 +168,9 @@ public class DashboardDaoImpl implements DashboardDao {
         String sql = "SELECT e.full_name, e.avatar_url, " +
                 "  DATE_FORMAT(a.check_in_time,'%H:%i')  AS check_in, " +
                 "  DATE_FORMAT(a.check_out_time,'%H:%i') AS check_out, " +
-                "  COALESCE(a.status,'ABSENT')            AS status, " +
-                "  COALESCE(k.actual_score, 0)            AS kpi_score " +
+                "  COALESCE(a.status,'ABSENT')            AS status " +
                 "FROM employees e " +
                 "LEFT JOIN attendance_records a ON a.employee_id = e.id AND a.work_date = CURDATE() " +
-                "LEFT JOIN kpi_records k ON k.employee_id = e.id " +
-                "  AND k.year = YEAR(CURDATE()) AND k.month = MONTH(CURDATE()) " +
                 "WHERE e.direct_manager_id = ? AND e.status IN ('ACTIVE','PROBATION') " +
                 "ORDER BY e.full_name";
         return queryToList(sql, managerId);
@@ -157,16 +185,6 @@ public class DashboardDaoImpl implements DashboardDao {
                 "JOIN leave_types lt ON lt.id = lr.leave_type_id " +
                 "WHERE e.direct_manager_id = ? AND lr.status = 'PENDING' " +
                 "ORDER BY lr.created_at DESC LIMIT 10";
-        return queryToList(sql, managerId);
-    }
-
-    @Override
-    public List<Map<String, Object>> fetchTeamKpi(int managerId) throws Exception {
-        String sql = "SELECT e.full_name, COALESCE(k.actual_score, 0) AS score " +
-                "FROM employees e " +
-                "LEFT JOIN kpi_records k ON k.employee_id = e.id " +
-                "  AND k.year = YEAR(CURDATE()) AND k.month = MONTH(CURDATE()) " +
-                "WHERE e.direct_manager_id = ? AND e.status IN ('ACTIVE','PROBATION')";
         return queryToList(sql, managerId);
     }
 
@@ -205,27 +223,20 @@ public class DashboardDaoImpl implements DashboardDao {
                     if (rs.next()) dto.setEstimatedSalary(rs.getLong("sal"));
                 }
             }
-            // Giờ tuần này
-            String sql4 = "SELECT COALESCE(SUM(work_minutes)/60.0, 0) AS hrs FROM attendance_records " +
-                    "WHERE employee_id = ? AND work_date >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)";
+            // Tổng đơn chờ duyệt (nghỉ phép + giải trình chấm công)
+            String sql4 = "SELECT " +
+                    "  (SELECT COUNT(*) FROM leave_requests WHERE employee_id = ? AND status = 'PENDING') + " +
+                    "  (SELECT COUNT(*) FROM attendance_explanations WHERE employee_id = ? AND status = 'PENDING') " +
+                    "AS total_pending";
             try (PreparedStatement ps = con.prepareStatement(sql4)) {
                 ps.setInt(1, employeeId);
+                ps.setInt(2, employeeId);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) dto.setWeekHours(rs.getDouble("hrs"));
+                    if (rs.next()) dto.setPendingRequests(rs.getInt("total_pending"));
                 }
             }
         }
         return dto;
-    }
-
-    @Override
-    public Map<String, Object> fetchTodayAttendance(int employeeId) throws Exception {
-        String sql = "SELECT DATE_FORMAT(check_in_time,'%H:%i') AS check_in_time, " +
-                "  DATE_FORMAT(check_out_time,'%H:%i') AS check_out_time, status " +
-                "FROM attendance_records " +
-                "WHERE employee_id = ? AND work_date = CURDATE() LIMIT 1";
-        List<Map<String, Object>> rows = queryToList(sql, employeeId);
-        return rows.isEmpty() ? null : rows.get(0);
     }
 
     @Override

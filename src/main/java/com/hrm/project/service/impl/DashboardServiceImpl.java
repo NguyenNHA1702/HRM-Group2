@@ -78,11 +78,6 @@ public class DashboardServiceImpl implements DashboardService {
         return dashboardDao.fetchPendingLeavesForManager(managerId);
     }
 
-    @Override
-    public List<Map<String, Object>> getTeamKpi(int managerId) throws Exception {
-        return dashboardDao.fetchTeamKpi(managerId);
-    }
-
     // ============================================================
     // ── EMPLOYEE ROLE
     // ============================================================
@@ -90,11 +85,6 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public EmployeeStatsDto getEmployeeStats(int employeeId) throws Exception {
         return dashboardDao.fetchEmployeeStats(employeeId);
-    }
-
-    @Override
-    public Map<String, Object> getTodayAttendance(int employeeId) throws Exception {
-        return dashboardDao.fetchTodayAttendance(employeeId);
     }
 
     @Override

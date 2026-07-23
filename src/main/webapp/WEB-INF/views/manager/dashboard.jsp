@@ -37,8 +37,18 @@
 
             <div class="stat-card">
                 <div>
-                    <p class="stat-label">Có mặt hôm nay</p>
-                    <p class="stat-value">${stats.presentToday}</p>
+                    <p class="stat-label">Giải trình chờ duyệt</p>
+                    <p class="stat-value">${stats.pendingExplanations}</p>
+                </div>
+                <div class="stat-icon icon-orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Phép đã duyệt tháng này</p>
+                    <p class="stat-value">${stats.approvedLeavesMonth}</p>
                 </div>
                 <div class="stat-icon icon-green">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -47,38 +57,17 @@
 
             <div class="stat-card">
                 <div>
-                    <p class="stat-label">Nghỉ phép</p>
-                    <p class="stat-value">${stats.onLeave}</p>
-                </div>
-                <div class="stat-icon icon-red">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div>
                     <p class="stat-label">Đơn chờ duyệt</p>
                     <p class="stat-value">${stats.pendingApprovals}</p>
                 </div>
-                <div class="stat-icon icon-orange">
+                <div class="stat-icon icon-red">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 </div>
             </div>
         </div>
 
-        <div class="grid-2 mb-24">
-            <div class="card">
-                <div class="card-header"><span class="card-title">KPI Team</span></div>
-                <div class="card-body"><canvas id="kpiChart" height="150"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-header"><span class="card-title">Trạng thái làm việc hôm nay</span></div>
-                <div class="card-body"><canvas id="attendChart" height="150"></canvas></div>
-            </div>
-        </div>
-
         <div class="card mb-24">
-            <div class="card-header"><span class="card-title">Tình trạng team hôm nay</span></div>
+            <div class="card-header"><span class="card-title">Tình trạng team</span></div>
             <div class="table-wrap">
                 <table style="width:100%; border-collapse:collapse; text-align:left;">
                     <thead>
@@ -87,7 +76,6 @@
                         <th style="padding:12px;">Check-in</th>
                         <th style="padding:12px;">Check-out</th>
                         <th style="padding:12px;">Trạng thái</th>
-                        <th style="padding:12px;">KPI</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -115,14 +103,11 @@
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td style="padding:12px;">
-                                        <span class="fw-600">${emp['kpi_score'] != null ? emp['kpi_score'] : 0}%</span>
-                                    </td>
                                 </tr>
                             </c:forEach>
                         </c:when>
                         <c:otherwise>
-                            <tr><td colspan="5" class="text-muted" style="text-align:center; padding:20px;">Không có dữ liệu team.</td></tr>
+                            <tr><td colspan="4" class="text-muted" style="text-align:center; padding:20px;">Không có dữ liệu team.</td></tr>
                         </c:otherwise>
                     </c:choose>
                     </tbody>
@@ -164,43 +149,5 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
-<script>
-    window.addEventListener("DOMContentLoaded", function () {
-        // 1. KPI Chart
-        const kpiLabels = [];
-        const kpiValues = [];
-        <c:forEach var="k" items="${teamKpi}">
-        if ("${k['employee_name']}" !== "" || "${k['full_name']}" !== "") {
-            <c:set var="kpiName" value="${k['employee_name'] != null ? k['employee_name'] : k['full_name']}" />
-            kpiLabels.push("${kpiName}");
-            kpiValues.push(Number("${k['kpi_score'] != null ? k['kpi_score'] : 0}"));
-        }
-        </c:forEach>
-        if (kpiLabels.length > 0) {
-            createBarChart('kpiChart', kpiLabels, kpiValues, '#4F46E5');
-        } else {
-            createBarChart('kpiChart', ['Chưa có dữ liệu'], [0], '#4F46E5');
-        }
-
-        // 2. Attendance Status Doughnut
-        let presentCount = 0;
-        let absentCount = 0;
-        <c:forEach var="emp" items="${teamStatus}">
-        var st = "${emp['attendance_status'] != null ? emp['attendance_status'] : emp['status']}";
-        if (st === 'PRESENT' || st === 'LATE' || st === 'EARLY_LEAVE') {
-            presentCount++;
-        } else if (st !== "") {
-            absentCount++;
-        }
-        </c:forEach>
-
-        // Nếu cả 2 bằng 0 tức là mảng rỗng, cho số liệu mặc định 0 để không lỗi canvas
-        createDoughnutChart('attendChart',
-            ['Có mặt / Muộn', 'Vắng / Nghỉ'],
-            [presentCount, absentCount],
-            ['#10B981', '#EF4444']
-        );
-    });
-</script>
 </body>
 </html>

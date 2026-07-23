@@ -40,25 +40,19 @@ public interface DashboardService {
 
     // ── MANAGER ────────────────────────────────────────────────────
 
-    /** Thống kê team: size, có mặt, nghỉ phép, đơn chờ duyệt */
+    /** Thống kê team: size, đơn chờ duyệt, giải trình chờ duyệt, phép tháng */
     ManagerStatsDto getManagerStats(int managerId) throws Exception;
 
-    /** Tình trạng team hôm nay: checkin, status, KPI score */
+    /** Tình trạng team: checkin, status */
     List<Map<String, Object>> getTeamStatusToday(int managerId) throws Exception;
 
     /** Đơn nghỉ phép PENDING cần duyệt */
     List<Map<String, Object>> getPendingLeavesForManager(int managerId) throws Exception;
 
-    /** Dữ liệu KPI tháng này của từng thành viên team */
-    List<Map<String, Object>> getTeamKpi(int managerId) throws Exception;
-
     // ── EMPLOYEE ───────────────────────────────────────────────────
 
-    /** Thống kê cá nhân: ngày công, phép còn lại, lương dự kiến, giờ tuần */
+    /** Thống kê cá nhân: ngày công, phép còn lại, lương dự kiến, đơn chờ duyệt */
     EmployeeStatsDto getEmployeeStats(int employeeId) throws Exception;
-
-    /** Bản ghi chấm công hôm nay */
-    Map<String, Object> getTodayAttendance(int employeeId) throws Exception;
 
     /** Danh sách đơn nghỉ phép gần đây của nhân viên */
     List<Map<String, Object>> getMyRecentLeaves(int employeeId, int limit) throws Exception;

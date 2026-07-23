@@ -58,13 +58,43 @@
 
       <div class="stat-card">
         <div>
-          <p class="stat-label">Tăng trưởng</p>
-          <p class="stat-value"><fmt:formatNumber value="${stats.growthPercent}" maxFractionDigits="1"/>%</p>
-          <p class="stat-sub">↑ so với tháng trước</p>
+          <p class="stat-label">Tổng nhân viên</p>
+          <p class="stat-value">${stats.totalEmployees}</p>
         </div>
         <div class="stat-icon icon-orange">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
         </div>
+      </div>
+    </div>
+
+    <!-- Quick Shortcuts Panel -->
+    <div class="card mb-24">
+      <div class="card-header"><span class="card-title">Truy cập nhanh phím chức năng</span></div>
+      <div class="card-body" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <a href="${pageContext.request.contextPath}/admin/users" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#e0e7ff; color:#4f46e5; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">👤</span>
+          <span>Quản lý người dùng</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/roles" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#f3e8ff; color:#9333ea; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">🔑</span>
+          <span>Phân quyền Vai trò</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/work-shifts" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#dcfce7; color:#16a34a; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">⏰</span>
+          <span>Quản lý Ca làm việc</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/holidays" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#fef3c7; color:#d97706; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">📅</span>
+          <span>Cấu hình Ngày lễ</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/salary-scales" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#e0f2fe; color:#0284c7; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">💰</span>
+          <span>Thang bảng lương</span>
+        </a>
+        <a href="${pageContext.request.contextPath}/admin/insurance" style="display:flex; align-items:center; gap:10px; padding:12px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; text-decoration:none; color:#1e293b; font-weight:500;">
+          <span style="background:#ffe4e6; color:#e11d48; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">🛡️</span>
+          <span>Cấu hình Bảo hiểm</span>
+        </a>
       </div>
     </div>
 
