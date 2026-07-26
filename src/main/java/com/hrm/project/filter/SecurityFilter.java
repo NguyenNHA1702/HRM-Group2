@@ -35,9 +35,16 @@ public class SecurityFilter implements Filter {
         String path = req.getServletPath();
         String method = req.getMethod();
 
-        System.out.println("[BẢO VỆ FILTER] Đang quét qua URL: " + path);
+        // 1. Bỏ qua tài nguyên tĩnh ngay lập tức (CSS, JS, Images, Fonts...)
+        if (path != null && (path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".png") ||
+                path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".gif") ||
+                path.endsWith(".ico") || path.endsWith(".svg") || path.endsWith(".woff") ||
+                path.endsWith(".woff2") || path.endsWith(".ttf") || path.endsWith(".map"))) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-        // 1. Bỏ qua tài nguyên tĩnh, trang public (login, assets, v.v.)
+        // 1.1 Bỏ qua trang public (login, assets, v.v.)
         if (path == null || path.equals("") || path.equals("/") || path.equals("/index.jsp") ||
                 path.startsWith("/login") || path.startsWith("/logout") ||
                 path.startsWith("/forgot-password") || path.startsWith("/assets") ||
@@ -50,16 +57,24 @@ public class SecurityFilter implements Filter {
 
         // 2. Kiểm tra đăng nhập
         if (session == null || session.getAttribute("roleGroup") == null) {
-            System.out.println("[BẢO VỆ FILTER] -> CHẶN: Chưa đăng nhập. Đá về /login");
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        // 2.1 Kiểm tra vai trò còn hoạt động không (Real-time Auth)
+        // 2.1 Kiểm tra vai trò còn hoạt động không (Cache 30s để tránh truy vấn DB trên mỗi click/redirect)
         Integer employeeId = (Integer) session.getAttribute("employeeId");
         if (employeeId != null) {
-            boolean isRoleActive = userDAO.isUserRoleActive(employeeId);
-            if (!isRoleActive) {
+            Long lastCheck = (Long) session.getAttribute("lastRoleActiveCheckTime");
+            Boolean isRoleActive = (Boolean) session.getAttribute("cachedIsRoleActive");
+            long now = System.currentTimeMillis();
+
+            if (lastCheck == null || isRoleActive == null || (now - lastCheck > 30000)) {
+                isRoleActive = userDAO.isUserRoleActive(employeeId);
+                session.setAttribute("lastRoleActiveCheckTime", now);
+                session.setAttribute("cachedIsRoleActive", isRoleActive);
+            }
+
+            if (!Boolean.TRUE.equals(isRoleActive)) {
                 System.out.println("[BẢO VỆ FILTER] -> CHẶN: Vai trò bị vô hiệu hóa!");
                 session.invalidate();
                 resp.sendRedirect(req.getContextPath() + "/login?error=RoleDeactivated");

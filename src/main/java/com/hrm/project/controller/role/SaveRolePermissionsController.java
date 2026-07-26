@@ -65,47 +65,75 @@ public class SaveRolePermissionsController extends HttpServlet {
 
             // 2. Phân tích chuỗi JSON thô thành đối tượng JsonObject của Gson
             JsonObject jsonPayload = gson.fromJson(sb.toString(), JsonObject.class);
+            if (jsonPayload == null || !jsonPayload.has("roleId") || !jsonPayload.has("permissions")) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                JsonObject errObj = new JsonObject();
+                errObj.addProperty("error", "Dữ liệu JSON không đúng cấu trúc.");
+                response.getWriter().write(gson.toJson(errObj));
+                return;
+            }
+
             int roleId = jsonPayload.get("roleId").getAsInt();
             JsonArray permsArray = jsonPayload.getAsJsonArray("permissions");
 
             // 3. Duyệt mảng JSON để bóc tách từng ô tích chọn đổi về List DTO trong Java
             List<ModulePermissionDTO> permissions = new ArrayList<>();
-            for (JsonElement el : permsArray) {
-                JsonObject obj = el.getAsJsonObject();
-                ModulePermissionDTO dto = new ModulePermissionDTO();
+            if (permsArray != null) {
+                for (JsonElement el : permsArray) {
+                    if (el == null || !el.isJsonObject()) continue;
+                    JsonObject obj = el.getAsJsonObject();
+                    ModulePermissionDTO dto = new ModulePermissionDTO();
 
-                dto.setModuleId(obj.get("moduleId").getAsInt());
+                    if (obj.has("moduleId") && !obj.get("moduleId").isJsonNull()) {
+                        dto.setModuleId(obj.get("moduleId").getAsInt());
+                    }
 
-                // Hỗ trợ đọc cả hai kiểu đặt tên 'isView' hoặc 'view' để tuyệt đối không bị dính null/false ngầm
-                boolean view = obj.has("isView") ? obj.get("isView").getAsBoolean() : obj.get("view").getAsBoolean();
-                boolean create = obj.has("isCreate") ? obj.get("isCreate").getAsBoolean() : obj.get("create").getAsBoolean();
-                boolean edit = obj.has("isEdit") ? obj.get("isEdit").getAsBoolean() : obj.get("edit").getAsBoolean();
-                boolean delete = obj.has("isDelete") ? obj.get("isDelete").getAsBoolean() : obj.get("delete").getAsBoolean();
+                    boolean view = getBooleanSafely(obj, "isView", "view");
+                    boolean create = getBooleanSafely(obj, "isCreate", "create");
+                    boolean edit = getBooleanSafely(obj, "isEdit", "edit");
+                    boolean delete = getBooleanSafely(obj, "isDelete", "delete");
 
-                dto.setView(view);
-                dto.setCreate(create);
-                dto.setEdit(edit);
-                dto.setDelete(delete);
+                    dto.setView(view);
+                    dto.setCreate(create);
+                    dto.setEdit(edit);
+                    dto.setDelete(delete);
 
-                permissions.add(dto);
+                    permissions.add(dto);
+                }
             }
 
             // 4. Gọi Service thực thi xóa quyền cũ và chèn loạt quyền mới vào MySQL
             boolean success = rolePermissionService.savePermissions(roleId, permissions);
 
             // 5. Trả kết quả phản hồi về lại phía giao diện
+            JsonObject resultObj = new JsonObject();
             if (success) {
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().write("{\"status\": \"success\", \"message\": \"Cập nhật ma trận thành công!\"}");
+                resultObj.addProperty("status", "success");
+                resultObj.addProperty("message", "Cập nhật ma trận thành công!");
             } else {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("{\"error\": \"Lỗi hệ thống: Không thể ghi dữ liệu vào MySQL Server.\"}");
+                resultObj.addProperty("error", "Lỗi hệ thống: Không thể ghi dữ liệu vào MySQL Server.");
             }
+            response.getWriter().write(gson.toJson(resultObj));
 
         } catch (Exception e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\": \"Lỗi xử lý dữ liệu: " + e.getMessage() + "\"}");
+            JsonObject errObj = new JsonObject();
+            errObj.addProperty("error", "Lỗi xử lý dữ liệu: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
+            response.getWriter().write(gson.toJson(errObj));
         }
+    }
+
+    private boolean getBooleanSafely(JsonObject obj, String... keys) {
+        for (String key : keys) {
+            if (obj.has(key) && !obj.get(key).isJsonNull()) {
+                try {
+                    return obj.get(key).getAsBoolean();
+                } catch (Exception ignored) {}
+            }
+        }
+        return false;
     }
 }
