@@ -108,7 +108,7 @@
                     </tr>
                     </thead>
                     <tbody style="font-size: 14px; color: #4a5568;">
-                    <c:forEach var="c" items="${contracts}">
+                    <c:forEach var="c" items="${contracts}" varStatus="loop">
                         <tr class="contract-row"
                             data-empcode="${c.employeeCode != null ? c.employeeCode.toLowerCase() : ''}"
                             data-empname="${c.employeeFullName != null ? c.employeeFullName.toLowerCase() : ''}"
@@ -116,7 +116,7 @@
                             data-type="${c.contractType}"
                             data-status="${c.status}"
                             style="border-bottom: 1px solid #f1f5f9; transition: all 0.2s;">
-                            <td class="px-4 text-muted row-index" data-id="${c.id}">${c.id}</td>
+                            <td class="px-4 text-muted row-index" data-id="${c.id}">${loop.count}</td>
                             <td><span class="font-weight-bold text-dark" style="letter-spacing: 0.5px;">${c.employeeCode}</span></td>
                             <td class="font-weight-normal text-dark">${c.employeeFullName}</td>
                             <td>

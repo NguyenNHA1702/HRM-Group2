@@ -217,6 +217,11 @@ public class PermissionUtils {
         ModulePermissionDTO modulePerm = userPermissions.get(req.moduleCode);
         if (modulePerm == null) return false;
 
+        // Nếu KHÔNG CÓ quyền VIEW trên module thì KHÔNG ĐƯỢC phép thực hiện bất kỳ hành động nào khác (CREATE, EDIT, DELETE)
+        if (!modulePerm.isView()) {
+            return false;
+        }
+
         switch (req.actionType) {
             case "VIEW":   return modulePerm.isView();
             case "CREATE": return modulePerm.isCreate();
