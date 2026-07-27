@@ -403,6 +403,13 @@
                         text-transform: uppercase;
                         font-weight: 500;
                     }
+                    @media print {
+                        body * { visibility: hidden !important; }
+                        #payslipModal, #payslipModal * { visibility: visible !important; }
+                        #payslipModal { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #fff; z-index: 99999; }
+                        .no-print, .btn-close { display: none !important; }
+                        .payslip-container { max-height: none !important; overflow: visible !important; padding: 0 !important; border: none !important; }
+                    }
                 </style>
             </head>
 
@@ -477,7 +484,7 @@
                                                     </td>
                                                     <td style="text-align: center;">
                                                         <button type="button" class="btn btn-sm btn-outline"
-                                                            onclick="openPayslipModal(${d.id}, '${d.status}', '${d.month}/${d.year}', ${d.basicSalary}, ${d.allowanceAmount}, ${d.insuranceDeduction}, ${d.taxDeduction}, ${d.unpaidLeaveDeduction}, ${d.netSalary}, ${d.standardDays}, ${d.actualWorkedDays})">
+                                                            onclick="openPayslipModal(${d.id}, '${d.status}', '${d.month}/${d.year}', ${d.basicSalary}, ${d.allowanceAmount}, ${d.insuranceDeduction}, ${d.taxDeduction}, ${d.unpaidLeaveDeduction}, ${d.netSalary}, ${d.standardDays}, ${d.actualWorkedDays}, `${d.employeeName}`, `${d.employeeCode}`, `${d.departmentName}`, `${d.positionName}`)">
                                                             <i class="fa-solid fa-eye"></i> Xem Chi Tiết
                                                         </button>
                                                     </td>
@@ -493,16 +500,10 @@
                 <!-- MOCKUP STYLE PAYSLIP MODAL -->
                 <div class="modal" id="payslipModal">
                     <div class="modal-content" style="width: 850px; max-width: 95%;">
-                        <div class="modal-header" style="background: #f8fafc; padding: 12px 24px;">
-                            <h3 class="modal-title" style="font-size: 16px;">Chi Tiết Phiếu Lương</h3>
-                            <div style="display: flex; gap: 10px;">
-                                <a href="#" id="btnDownloadPdf" class="btn btn-sm"
-                                    style="background: #ef4444; color: white; display: none; text-decoration: none;">
-                                    <i class="fa-solid fa-file-pdf"></i> Download PDF
-                                </a>
-                                <button class="btn-close" onclick="closePayslipModal()"><i
-                                        class="fa-solid fa-xmark"></i></button>
-                            </div>
+                        <div class="modal-header no-print" style="background: #f8fafc; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="modal-title" style="font-size: 16px; margin: 0; color: #1e293b; font-weight: 600;">Chi Tiết Phiếu Lương</h3>
+                            <button class="btn-close" onclick="closePayslipModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;"><i
+                                    class="fa-solid fa-xmark"></i></button>
                         </div>
                         
                         <div class="payslip-container">
@@ -515,21 +516,21 @@
                                 <div>
                                     <div class="emp-info-row">
                                         <span class="emp-info-label">HỌ VÀ TÊN:</span>
-                                        <span class="emp-info-value">${sessionScope.user.fullName != null ? sessionScope.user.fullName : 'NGUYỄN VĂN AN'}</span>
+                                        <span class="emp-info-value" id="mEmpName"></span>
                                     </div>
                                     <div class="emp-info-row">
                                         <span class="emp-info-label">MÃ NHÂN VIÊN:</span>
-                                        <span class="emp-info-value">NV${sessionScope.user.id != null ? String.format("%03d", sessionScope.user.id) : '001'}</span>
+                                        <span class="emp-info-value" id="mEmpCode"></span>
                                     </div>
                                     <div class="emp-info-row">
                                         <span class="emp-info-label">PHÒNG BAN:</span>
-                                        <span class="emp-info-value">${sessionScope.user.departmentName != null ? sessionScope.user.departmentName : 'Phòng Công Nghệ'}</span>
+                                        <span class="emp-info-value" id="mEmpDept"></span>
                                     </div>
                                 </div>
                                 <div>
                                     <div class="emp-info-row">
                                         <span class="emp-info-label">VỊ TRÍ:</span>
-                                        <span class="emp-info-value">${sessionScope.user.positionName != null ? sessionScope.user.positionName : 'Senior Developer'}</span>
+                                        <span class="emp-info-value" id="mEmpPosition"></span>
                                     </div>
                                     <div class="emp-info-row">
                                         <span class="emp-info-label">NGÀY CÔNG CHUẨN:</span>
@@ -614,6 +615,14 @@
                                 <div class="note">* Mọi thắc mắc về phiếu lương vui lòng phản hồi với phòng Nhân sự trong vòng 48h kể từ khi nhận được phiếu này.</div>
                                 <div class="date" id="mIssueDate">NGÀY PHÁT HÀNH: --/--/----</div>
                             </div>
+                            <div class="payslip-actions no-print" style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px;">
+                                <button type="button" onclick="window.print()" class="btn" style="background: #ffffff; border: 1px solid #1e293b; color: #1e293b; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                                    <i class="fa-solid fa-print"></i> In phiếu lương
+                                </button>
+                                <a href="#" id="btnDownloadPdf" class="btn" style="background: #1e293b; border: 1px solid #1e293b; color: #ffffff; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 14px; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                                    <i class="fa-solid fa-download"></i> Tải PDF
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -627,7 +636,12 @@
                         return new Intl.NumberFormat('vi-VN').format(amount);
                     }
 
-                    function openPayslipModal(id, status, period, basic, allow, ins, tax, unpaid, net, stdDays, actDays) {
+                    function openPayslipModal(id, status, period, basic, allow, ins, tax, unpaid, net, stdDays, actDays, empName, empCode, empDept, empPosition) {
+                        document.getElementById('mEmpName').innerText = empName;
+                        document.getElementById('mEmpCode').innerText = empCode;
+                        document.getElementById('mEmpDept').innerText = empDept;
+                        document.getElementById('mEmpPosition').innerText = empPosition;
+
                         document.getElementById('mPeriod').innerText = period;
                         document.getElementById('mStandardDays').innerText = stdDays;
                         document.getElementById('mActualDays').innerText = actDays;
@@ -651,13 +665,8 @@
                         document.getElementById('mIssueDate').innerText = 'NGÀY PHÁT HÀNH: ' + today.toLocaleDateString('en-GB');
 
                         var pdfBtn = document.getElementById('btnDownloadPdf');
-                        if (status === 'APPROVED' || status === 'PAID') {
-                            pdfBtn.style.display = 'inline-flex';
-                            pdfBtn.href = '${pageContext.request.contextPath}/luong/export-pdf?detailId=' + id;
-                        } else {
-                            pdfBtn.style.display = 'none';
-                            pdfBtn.href = '#';
-                        }
+                        pdfBtn.style.display = 'inline-flex';
+                        pdfBtn.href = '${pageContext.request.contextPath}/luong/export-pdf?detailId=' + id;
 
                         document.getElementById('payslipModal').classList.add('active');
                     }

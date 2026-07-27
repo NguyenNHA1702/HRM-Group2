@@ -43,7 +43,7 @@ public class PermissionUtils {
         boolean isPost = "POST".equalsIgnoreCase(method);
 
         // Bỏ qua filter cho các trang dành cho mọi nhân viên (Controller sẽ tự kiểm tra quyền riêng)
-        if ("/admin/insurance".equals(path) || path.startsWith("/manager/department-payroll") || "/dashboard".equals(path)) {
+        if ("/admin/insurance".equals(path) || "/hr/insurance".equals(path) || path.startsWith("/manager/department-payroll") || "/dashboard".equals(path) || "/hr/users".equals(path)) {
             return null;
         }
 
@@ -121,7 +121,7 @@ public class PermissionUtils {
         }
 
         // ─── 7. SCHEDULE_MGMT (Ca làm việc, ngày nghỉ lễ, lịch phân công) ─
-        if ("/admin/work-shifts".equals(path) || "/admin/holidays".equals(path)) {
+        if ("/admin/work-shifts".equals(path) || "/hr/work-shifts".equals(path) || "/admin/holidays".equals(path)) {
             if (isPost) {
                 if ("delete".equals(action) || path.contains("/delete"))
                     return new RequiredPermission("SCHEDULE_MGMT", "DELETE");
@@ -151,6 +151,7 @@ public class PermissionUtils {
         // ─── 9. PAYROLL (Tạo/xem/duyệt bảng lương) ─────────────────────
         // Lưu ý: thang lương/phụ cấp/bảo hiểm đã được tách sang SALARY_CONFIG
         if ("/admin/payrolls".equals(path) || path.startsWith("/admin/payroll")
+                || "/hr/payrolls".equals(path) || path.startsWith("/hr/payroll")
                 || "/luong".equals(path) || "/luong/export-pdf".equals(path)) {
             if (isPost) {
                 if ("delete".equals(action) || path.contains("/delete"))
@@ -166,7 +167,10 @@ public class PermissionUtils {
         // ─── 10. SALARY_CONFIG (Thang bảng lương, phụ cấp, bảo hiểm) ───
         if ("/admin/salary-scales".equals(path) || "/admin/allowance-types".equals(path)
                 || "/admin/position-allowances".equals(path) || "/admin/insurance".equals(path)
-                || "/admin/insurance/action".equals(path)) {
+                || "/admin/insurance/action".equals(path)
+                || "/hr/salary-scales".equals(path) || "/hr/allowance-types".equals(path)
+                || "/hr/position-allowances".equals(path) || "/hr/insurance".equals(path)
+                || "/hr/insurance/action".equals(path)) {
             if (isPost) {
                 if ("delete".equals(action))
                     return new RequiredPermission("SALARY_CONFIG", "DELETE");

@@ -20,7 +20,7 @@ import java.util.Map;
  * Cấu hình phụ cấp theo chức vụ (position).
  * Chỉ HR/ADMIN mới được truy cập.
  */
-@WebServlet(name = "PositionAllowanceController", urlPatterns = {"/admin/position-allowances"})
+@WebServlet(name = "PositionAllowanceController", urlPatterns = {"/admin/position-allowances", "/hr/position-allowances"})
 public class PositionAllowanceController extends HttpServlet {
     private PositionAllowanceDAO positionAllowanceDAO;
     private com.hrm.project.dao.AllowanceTypeDAO allowanceTypeDAO;

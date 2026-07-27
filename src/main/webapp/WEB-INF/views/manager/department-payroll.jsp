@@ -194,8 +194,8 @@
                                         <td style="text-align:right" class="currency positive">+<fmt:formatNumber value="${d.allowanceAmount}" type="number" maxFractionDigits="0"/></td>
                                         <td style="text-align:right" class="currency negative">-<fmt:formatNumber value="${d.insuranceDeduction}" type="number" maxFractionDigits="0"/></td>
                                         <td style="text-align:right; font-size:16px;" class="currency positive"><fmt:formatNumber value="${d.netSalary}" type="number" maxFractionDigits="0"/> đ</td>
-                                        <td style="text-align:center">
                                             <button class="btn-icon" onclick="viewSalaryDetail(this)"
+                                                data-detail-id="${d.id}"
                                                 data-emp-id="EMP${d.employeeId}"
                                                 data-emp-name="${d.employeeName}"
                                                 data-position="${d.positionName}"

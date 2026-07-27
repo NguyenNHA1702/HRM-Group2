@@ -61,14 +61,14 @@ public class SecurityFilter implements Filter {
             return;
         }
 
-        // 2.1 Kiểm tra vai trò còn hoạt động không (Cache 30s để tránh truy vấn DB trên mỗi click/redirect)
+        // 2.1 Kiểm tra vai trò còn hoạt động không (Cache 5 phút để tránh truy vấn DB trên mỗi click/redirect)
         Integer employeeId = (Integer) session.getAttribute("employeeId");
         if (employeeId != null) {
             Long lastCheck = (Long) session.getAttribute("lastRoleActiveCheckTime");
             Boolean isRoleActive = (Boolean) session.getAttribute("cachedIsRoleActive");
             long now = System.currentTimeMillis();
 
-            if (lastCheck == null || isRoleActive == null || (now - lastCheck > 30000)) {
+            if (lastCheck == null || isRoleActive == null || (now - lastCheck > 300_000L)) {
                 isRoleActive = userDAO.isUserRoleActive(employeeId);
                 session.setAttribute("lastRoleActiveCheckTime", now);
                 session.setAttribute("cachedIsRoleActive", isRoleActive);
@@ -127,8 +127,10 @@ public class SecurityFilter implements Filter {
                         path.equals("/admin/payroll/generate") || path.equals("/admin/payroll/detail") ||
                         path.equals("/admin/payroll/approve") ||
                         path.equals("/admin/payroll/export-excel") ||
+                        path.equals("/admin/payroll/bonus/save") ||
                         path.equals("/admin/attendance/lock") ||
                         path.equals("/admin/position-allowances") ||
+                        path.equals("/admin/work-shifts") ||             // Trang quản lý ca làm việc
                         path.equals("/admin/notifications") ||           // Trang gửi thông báo
                         path.equals("/api/admin/notifications/send"));   // API gửi thông báo
 

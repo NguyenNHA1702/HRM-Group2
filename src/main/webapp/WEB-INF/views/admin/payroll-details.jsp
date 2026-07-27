@@ -89,7 +89,6 @@
         .pagination-container { display: flex; justify-content: flex-end; align-items: center; padding: 16px; gap: 8px; border-top: 1px solid #e2e8f0; background: #fff; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;}
         .page-btn { padding: 6px 12px; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
         .page-btn:hover { background: #f8fafc; border-color: #94a3b8; }
-        .page-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
         .page-info { font-size: 13px; color: #64748b; margin-right: 16px; }
     </style>
 </head>

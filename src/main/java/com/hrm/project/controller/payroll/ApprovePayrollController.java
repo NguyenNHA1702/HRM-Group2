@@ -16,7 +16,7 @@ import java.io.IOException;
  * - MANAGER: DRAFT → MANAGER_CONFIRMED (cho dept mình)
  * - HR: MANAGER_CONFIRMED → HR_FINALIZED (chốt lương cuối cùng)
  */
-@WebServlet(name = "ApprovePayrollController", urlPatterns = {"/admin/payroll/approve"})
+@WebServlet(name = "ApprovePayrollController", urlPatterns = {"/admin/payroll/approve", "/hr/payroll/approve"})
 public class ApprovePayrollController extends HttpServlet {
     private PayrollDAO payrollDAO;
 

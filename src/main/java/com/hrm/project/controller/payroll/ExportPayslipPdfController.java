@@ -63,14 +63,16 @@ public class ExportPayslipPdfController extends HttpServlet {
             return;
         }
 
-        // Ownership check
-        if (detail.getEmployeeId() != sessionEmployeeId) {
+        // Ownership & Permission check (cho phép chính nhân viên đó HOẶC Admin/HR/Manager)
+        String roleGroup = (String) session.getAttribute("roleGroup");
+        boolean isManagement = "ADMIN".equals(roleGroup) || "HR".equals(roleGroup) || "MANAGER".equals(roleGroup);
+        if (!isManagement && detail.getEmployeeId() != sessionEmployeeId) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền tải phiếu lương của người khác.");
             return;
         }
 
-        // Status check
-        if (!"APPROVED".equals(detail.getStatus()) && !"PAID".equals(detail.getStatus())
+        // Status check (nhân viên chỉ được tải khi phiếu lương đã duyệt/xác nhận, Admin/HR/Manager được tải mọi trạng thái)
+        if (!isManagement && !"APPROVED".equals(detail.getStatus()) && !"PAID".equals(detail.getStatus())
                 && !"HR_FINALIZED".equals(detail.getStatus()) && !"MANAGER_CONFIRMED".equals(detail.getStatus())) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ được phép tải phiếu lương đã được duyệt.");
             return;
