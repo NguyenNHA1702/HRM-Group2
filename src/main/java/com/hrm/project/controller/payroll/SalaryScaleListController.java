@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "SalaryScaleListController", urlPatterns = {"/admin/salary-scales"})
+@WebServlet(name = "SalaryScaleListController", urlPatterns = {"/admin/salary-scales", "/hr/salary-scales"})
 public class SalaryScaleListController extends HttpServlet {
 
     private final SalaryScaleDAO dao = new SalaryScaleDAOImpl();

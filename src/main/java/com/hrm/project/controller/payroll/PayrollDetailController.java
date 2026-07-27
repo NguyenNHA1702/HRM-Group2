@@ -17,7 +17,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "PayrollDetailController", urlPatterns = {"/admin/payroll/detail"})
+@WebServlet(name = "PayrollDetailController", urlPatterns = {"/admin/payroll/detail", "/hr/payroll/detail"})
 public class PayrollDetailController extends HttpServlet {
     private PayrollDAO payrollDAO;
     private DepartmentDAO departmentDAO;

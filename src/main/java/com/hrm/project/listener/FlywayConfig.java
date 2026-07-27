@@ -78,6 +78,8 @@ public class FlywayConfig implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        // Hàm để trống khi kết thúc vòng đời ứng dụng
+        // Đóng HikariCP pool khi Tomcat shutdown, tránh leak connection
+        com.hrm.project.dao.impl.DBConnection.shutdown();
+        System.out.println("[FLYWAY LOGGER] Đã đóng HikariCP Connection Pool.");
     }
 }

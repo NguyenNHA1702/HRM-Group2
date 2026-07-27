@@ -949,7 +949,7 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public List<UserAccount> getEmployeesByDepartment(int departmentId, String keyword, Integer positionId, String status, int page, int pageSize) throws SQLException {
+    public List<UserAccount> getEmployeesByDepartment(Integer departmentId, String keyword, Integer positionId, String status, int page, int pageSize) throws SQLException {
         StringBuilder sql = new StringBuilder(
                 "SELECT e.id AS employee_id, e.employee_code, e.full_name, e.phone, e.work_email, e.personal_email, " +
                 "e.date_of_birth, e.gender, e.status, d.name AS department_name, p.name AS position_name, r.name AS role_name, ua.is_active " +
@@ -958,11 +958,14 @@ public class UserDAOImpl implements UserDAO {
                 "LEFT JOIN roles r ON ua.role_id = r.id " +
                 "LEFT JOIN departments d ON e.department_id = d.id " +
                 "LEFT JOIN positions p ON e.position_id = p.id " +
-                "WHERE e.department_id = ?"
+                "WHERE 1=1"
         );
 
         List<Object> params = new ArrayList<>();
-        params.add(departmentId);
+        if (departmentId != null) {
+            sql.append(" AND e.department_id = ?");
+            params.add(departmentId);
+        }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND (e.full_name LIKE ? OR e.employee_code LIKE ? OR e.work_email LIKE ?)");
@@ -1016,10 +1019,14 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public int getEmployeesCountByDepartment(int departmentId, String keyword, Integer positionId, String status) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM employees e WHERE e.department_id = ?");
+    public int getEmployeesCountByDepartment(Integer departmentId, String keyword, Integer positionId, String status) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM employees e WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        params.add(departmentId);
+        
+        if (departmentId != null) {
+            sql.append(" AND e.department_id = ?");
+            params.add(departmentId);
+        }
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND (e.full_name LIKE ? OR e.employee_code LIKE ? OR e.work_email LIKE ?)");
@@ -1051,15 +1058,20 @@ public class UserDAOImpl implements UserDAO {
     }
 
     @Override
-    public UserStatDTO getDepartmentEmployeeStats(int departmentId) throws SQLException {
+    public UserStatDTO getDepartmentEmployeeStats(Integer departmentId) throws SQLException {
         UserStatDTO stats = new UserStatDTO();
         String sql = "SELECT COUNT(*) AS total, " +
                 "SUM(CASE WHEN e.status = 'ACTIVE' THEN 1 ELSE 0 END) AS active_cnt, " +
                 "SUM(CASE WHEN e.status != 'ACTIVE' THEN 1 ELSE 0 END) AS inactive_cnt " +
-                "FROM employees e WHERE e.department_id = ?";
+                "FROM employees e WHERE 1=1";
+        if (departmentId != null) {
+            sql += " AND e.department_id = ?";
+        }
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, departmentId);
+            if (departmentId != null) {
+                ps.setInt(1, departmentId);
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     stats.setTotalUsers(rs.getInt("total"));

@@ -1,6 +1,5 @@
 package com.hrm.project.controller;
 
-import com.hrm.project.model.UserAccount;
 import com.hrm.project.utils.SSEManager;
 
 import javax.servlet.ServletException;
@@ -36,19 +35,23 @@ public class NotificationStreamServlet extends HttpServlet {
         
         int userId = (Integer) session.getAttribute("employeeId");
 
-        // 3. Bật chế độ Async để giải phóng luồng (thread) của Tomcat
+        // 3. Bật chế độ Async — timeout 10 phút để tránh treo vô hạn
         javax.servlet.AsyncContext asyncContext = request.startAsync();
-        asyncContext.setTimeout(0); // Kết nối giữ vô hạn cho đến khi client ngắt
+        asyncContext.setTimeout(600_000); // 10 phút thay vì vô hạn
 
         PrintWriter writer = response.getWriter();
         
         // 4. Đăng ký kết nối này vào SSE Manager
         SSEManager.addClient(userId, writer);
 
-        // Xóa client khi kết nối bất ngờ đứt (client đóng tab)
+        // Xóa client khi kết nối đứt (client đóng tab / timeout / lỗi)
         asyncContext.addListener(new javax.servlet.AsyncListener() {
             public void onComplete(javax.servlet.AsyncEvent event) { SSEManager.removeClient(userId); }
-            public void onTimeout(javax.servlet.AsyncEvent event) { SSEManager.removeClient(userId); }
+            public void onTimeout(javax.servlet.AsyncEvent event) { 
+                SSEManager.removeClient(userId);
+                // Kết thúc async context khi timeout
+                try { event.getAsyncContext().complete(); } catch (Exception ignored) {}
+            }
             public void onError(javax.servlet.AsyncEvent event) { SSEManager.removeClient(userId); }
             public void onStartAsync(javax.servlet.AsyncEvent event) {}
         });

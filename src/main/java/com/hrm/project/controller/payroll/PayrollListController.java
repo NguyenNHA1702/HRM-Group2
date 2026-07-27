@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "PayrollListController", urlPatterns = {"/admin/payrolls", "/admin/payroll/bonus/save"})
+@WebServlet(name = "PayrollListController", urlPatterns = {"/admin/payrolls", "/admin/payroll/bonus/save", "/hr/payrolls", "/hr/payroll/bonus/save"})
 public class PayrollListController extends HttpServlet {
     private PayrollDAO payrollDAO;
     private DepartmentDAO departmentDAO;
@@ -41,7 +41,7 @@ public class PayrollListController extends HttpServlet {
         Integer year = yearParam != null && !yearParam.isEmpty() ? Integer.parseInt(yearParam) : currentYear;
         
         int page = 1;
-        int limit = 10;
+        int limit = 5;
         if (pageParam != null && !pageParam.isEmpty()) {
             try { page = Integer.parseInt(pageParam); } catch (NumberFormatException e) { page = 1; }
         }
@@ -51,7 +51,6 @@ public class PayrollListController extends HttpServlet {
         int totalCount = payrollDAO.getTotalPayrollsCount(year, searchParam);
         int totalPages = (int) Math.ceil((double) totalCount / limit);
 
-        // Lấy danh sách phòng ban cho dropdown filter
         List<Department> departments = departmentDAO.getAllDepartments();
 
         if ("HR".equalsIgnoreCase(roleGroup) || "ADMIN".equalsIgnoreCase(roleGroup)) {
@@ -66,6 +65,8 @@ public class PayrollListController extends HttpServlet {
         request.setAttribute("payrolls", payrolls);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalRecords", totalCount);
+        request.setAttribute("pageSize", limit);
         request.setAttribute("selectedYear", year);
         request.setAttribute("searchKeyword", searchParam);
         request.setAttribute("currentMonth", java.time.LocalDate.now().getMonthValue());
@@ -106,7 +107,7 @@ public class PayrollListController extends HttpServlet {
             bonus.setEmployeeId(employeeId);
             bonus.setBonusMonth(month);
             bonus.setBonusYear(year);
-            bonus.setBonusType("OTHER"); // Default type if not provided from form
+            bonus.setBonusType("OTHER");
             bonus.setAmount(amount);
             bonus.setNote(note);
             bonus.setCreatedBy(createdBy != null ? createdBy : 0);

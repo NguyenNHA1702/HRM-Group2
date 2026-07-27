@@ -527,7 +527,19 @@ public class AttendanceDAOImpl implements AttendanceDAO {
             stmt.setInt(2, month);
             stmt.setInt(3, lockedBy);
             stmt.setInt(4, lockedBy);
-            return stmt.executeUpdate() > 0;
+            boolean res = stmt.executeUpdate() > 0;
+            if (res) {
+                String syncSql = "INSERT INTO department_attendance_locks (department_id, year, month, is_locked, locked_by, locked_at) "
+                        + "SELECT id, ?, ?, true, ?, NOW() FROM departments "
+                        + "ON DUPLICATE KEY UPDATE is_locked = true, locked_by = VALUES(locked_by), locked_at = VALUES(locked_at)";
+                try (PreparedStatement syncStmt = conn.prepareStatement(syncSql)) {
+                    syncStmt.setInt(1, year);
+                    syncStmt.setInt(2, month);
+                    syncStmt.setInt(3, lockedBy);
+                    syncStmt.executeUpdate();
+                }
+            }
+            return res;
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể khóa chấm công.", e);
         }
@@ -540,7 +552,14 @@ public class AttendanceDAOImpl implements AttendanceDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, year);
             stmt.setInt(2, month);
-            return stmt.executeUpdate() > 0;
+            boolean res = stmt.executeUpdate() > 0;
+            String syncSql = "UPDATE department_attendance_locks SET is_locked = false WHERE year = ? AND month = ?";
+            try (PreparedStatement syncStmt = conn.prepareStatement(syncSql)) {
+                syncStmt.setInt(1, year);
+                syncStmt.setInt(2, month);
+                syncStmt.executeUpdate();
+            }
+            return res;
         } catch (SQLException e) {
             throw new IllegalStateException("Không thể mở khóa chấm công.", e);
         }
@@ -574,6 +593,9 @@ public class AttendanceDAOImpl implements AttendanceDAO {
 
     @Override
     public boolean isDepartmentAttendanceLocked(int departmentId, int year, int month) {
+        if (isAttendanceLocked(year, month)) {
+            return true;
+        }
         String sql = "SELECT is_locked FROM department_attendance_locks WHERE department_id = ? AND year = ? AND month = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -593,6 +615,9 @@ public class AttendanceDAOImpl implements AttendanceDAO {
 
     @Override
     public boolean areAllDepartmentsLocked(int year, int month) {
+        if (isAttendanceLocked(year, month)) {
+            return true;
+        }
         String sql = "SELECT (SELECT COUNT(*) FROM departments) AS total_depts, " +
                      "(SELECT COUNT(*) FROM department_attendance_locks WHERE year = ? AND month = ? AND is_locked = true) AS locked_depts";
         try (java.sql.Connection conn = com.hrm.project.util.DBUtil.getConnection();

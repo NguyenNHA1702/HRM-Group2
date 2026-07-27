@@ -92,6 +92,32 @@
       <version>1.3.30</version>
     </dependency>
 
+    <!-- HikariCP — Connection Pool tốc độ cao, chống nghẽn DB -->
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>4.0.3</version>
+    </dependency>
+
+    <!-- SLF4J simple — required by HikariCP for logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.36</version>
+    </dependency>
+
+    <!-- Log4j2 — Required by Apache POI / StatusLogger -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.21.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.21.1</version>
+    </dependency>
+
   </dependencies>
 
   <build>

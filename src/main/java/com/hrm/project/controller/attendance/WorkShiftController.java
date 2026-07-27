@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.sql.Time;
 import java.util.List;
 
-@WebServlet(name = "WorkShiftController", urlPatterns = {"/admin/work-shifts"})
+@WebServlet(name = "WorkShiftController", urlPatterns = {"/admin/work-shifts", "/hr/work-shifts"})
 public class WorkShiftController extends HttpServlet {
 
     private final WorkShiftDAO dao = new WorkShiftDAOImpl();

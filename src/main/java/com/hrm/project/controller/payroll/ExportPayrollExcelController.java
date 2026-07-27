@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-@WebServlet(name = "ExportPayrollExcelController", urlPatterns = {"/admin/payroll/export-excel"})
+@WebServlet(name = "ExportPayrollExcelController", urlPatterns = {"/admin/payroll/export-excel", "/hr/payroll/export-excel"})
 public class ExportPayrollExcelController extends HttpServlet {
     private PayrollDAO payrollDAO;
 

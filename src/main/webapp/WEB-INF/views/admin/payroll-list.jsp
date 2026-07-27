@@ -43,9 +43,13 @@
         .card { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; }
         .card-body { padding:0; }
 
-        .pagination { display:flex; justify-content:center; gap:8px; margin-top:20px; }
-        .pagination a, .pagination span { padding:8px 14px; border-radius:8px; border:1px solid #e2e8f0; text-decoration:none; color:#475569; font-size:14px; }
+        .pagination-container { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-top:1px solid #e2e8f0; background:#fff; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
+        .pagination-info { font-size:13.5px; color:#64748b; }
+        .pagination { display:flex; justify-content:flex-end; align-items:center; gap:6px; margin:0; list-style:none; padding:0; }
+        .pagination a, .pagination span { padding:6px 12px; border-radius:6px; border:1px solid #cbd5e1; text-decoration:none; color:#475569; font-size:13.5px; font-weight:500; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px; }
+        .pagination a:hover { background:#f8fafc; border-color:#94a3b8; color:#0f172a; }
         .pagination .active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+        .pagination .disabled { color:#cbd5e1; border-color:#e2e8f0; pointer-events:none; background:#f8fafc; }
 
         .alert { padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:14px; }
         .alert-success { background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; }
@@ -193,17 +197,30 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <!-- Pagination -->
-            <c:if test="${totalPages > 0}">
-                <div class="pagination">
-                    <c:forEach var="i" begin="1" end="${totalPages}">
-                        <a href="${pageContext.request.contextPath}/admin/payrolls?year=${selectedYear}&search=${searchKeyword}&page=${i}"
-                           class="${i == currentPage ? 'active' : ''}">${i}</a>
-                    </c:forEach>
-                </div>
-            </c:if>
+                <!-- Pagination -->
+                <c:if test="${totalPages > 0}">
+                    <div class="pagination-container" style="${empty totalRecords or totalRecords == 0 ? 'justify-content:flex-end;' : ''}">
+                        <c:if test="${not empty totalRecords and totalRecords > 0}">
+                            <div class="pagination-info">
+                                Hiển thị từ <strong>${(currentPage - 1) * pageSize + 1}</strong> đến <strong>${currentPage * pageSize > totalRecords ? totalRecords : currentPage * pageSize}</strong> trên tổng số <strong>${totalRecords}</strong> bảng lương
+                            </div>
+                        </c:if>
+                        <div class="pagination">
+                            <c:if test="${currentPage > 1}">
+                                <a href="${pageContext.request.contextPath}/admin/payrolls?year=${selectedYear}&search=${searchKeyword}&page=${currentPage - 1}" title="Trang trước">&laquo; Trước</a>
+                            </c:if>
+                            <c:forEach var="i" begin="1" end="${totalPages}">
+                                <a href="${pageContext.request.contextPath}/admin/payrolls?year=${selectedYear}&search=${searchKeyword}&page=${i}"
+                                   class="${i == currentPage ? 'active' : ''}">${i}</a>
+                            </c:forEach>
+                            <c:if test="${currentPage < totalPages}">
+                                <a href="${pageContext.request.contextPath}/admin/payrolls?year=${selectedYear}&search=${searchKeyword}&page=${currentPage + 1}" title="Trang sau">Sau &raquo;</a>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:if>
+            </div>
 
         </div>
     </main>

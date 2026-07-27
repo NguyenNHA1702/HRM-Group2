@@ -13,7 +13,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "AllowanceTypeController", urlPatterns = {"/admin/allowance-types"})
+@WebServlet(name = "AllowanceTypeController", urlPatterns = {"/admin/allowance-types", "/hr/allowance-types"})
 public class AllowanceTypeController extends HttpServlet {
 
     private final AllowanceTypeDAO dao = new AllowanceTypeDAOImpl();
